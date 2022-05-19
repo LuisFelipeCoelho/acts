@@ -63,6 +63,14 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_MEMBER(compatSeedLimit);
     ACTS_PYTHON_MEMBER(curvatureSortingInFilter);
+    ACTS_PYTHON_MEMBER(seedConfirmation);
+    ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(useDeltaRorTopRadius);
+    ACTS_PYTHON_MEMBER(seedWeightIncrement);
+    ACTS_PYTHON_MEMBER(numSeedIncrement);
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpMConf);
+    ACTS_PYTHON_MEMBER(maxQualitySeedsPerSpMConf);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }

@@ -9,12 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/SeedConfirmationRange.hpp"
 
 // System include(s).
 #include <cstddef>
 
 namespace Acts {
-
 struct SeedFilterConfig {
   // the allowed delta between two inverted seed radii for them to be considered
   // compatible.
@@ -37,11 +37,40 @@ struct SeedFilterConfig {
   // sort vectors vectors by curvature
   bool curvatureSortingInFilter = false;
 
+  // increment in seed weight if number of compatible seeds is larger than
+  // numSeedIncrement
+  float seedWeightIncrement = 0;
+  float numSeedIncrement = std::numeric_limits<float>::infinity();
+
+  // seed confirmation
+  bool seedConfirmation = false;
+  // contains parameters for central seed confirmation
+  SeedConfirmationRange centralSeedConfirmationRange;
+  // contains parameters for forward seed confirmation
+  SeedConfirmationRange forwardSeedConfirmationRange;
+  // minimum radius for bottom SP in seed confirmation
+  float seedConfMinBottomRadius = 60. * Acts::UnitConstants::mm;
+  // maximum zOrigin in seed confirmation
+  float seedConfMaxZOrigin = 150. * Acts::UnitConstants::mm;
+  // minimum impact parameter for seed confirmation
+  float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
+
+  // maximum number of lower quality seeds in seed confirmation
+  float maxSeedsPerSpMConf = std::numeric_limits<float>::infinity();
+  // maximum number of quality seeds in seed confirmation
+  float maxQualitySeedsPerSpMConf = std::numeric_limits<float>::infinity();
+
+  // use deltaR instead of top radius
+  bool useDeltaRorTopRadius = false;
+
   SeedFilterConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
     SeedFilterConfig config = *this;
     config.deltaRMin /= 1_mm;
     config.deltaInvHelixDiameter /= 1. / 1_mm;
+    config.seedConfMinBottomRadius /= 1_mm;
+    config.seedConfMaxZOrigin /= 1_mm;
+    config.minImpactSeedConf /= 1_mm;
 
     return config;
   }
