@@ -185,6 +185,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
                                      m_cfg.numPhiNeighbors));
   auto grid =
       Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig);
+  std::cout << "phiBins, zBins = " << (grid->numLocalBins())[0] << ", "
+            << (grid->numLocalBins())[1] << std::endl;
+  std::cout << "phi min, z min = " << (grid->minPosition())[0] << ", "
+            << (grid->minPosition())[1] << std::endl;
+  std::cout << "phi max, z max = " << (grid->maxPosition())[0] << ", "
+            << (grid->maxPosition())[1] << std::endl;
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       bottomBinFinder, topBinFinder, std::move(grid), m_cfg.seedFinderConfig);
@@ -197,10 +203,72 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   auto group = spacePointsGrouping.begin();
   auto groupEnd = spacePointsGrouping.end();
+
+  int i = 0;
+  int phibin = 1;
+  int zbin = 1;
+  bool pass = false;
+  std::string s_mid = "|Groups Mid| (0) ==> |";
+
   for (; !(group == groupEnd); ++group) {
+    auto bot = group.bottom();
+    auto mid = group.middle();
+    auto top = group.top();
+    int n_bot = 0;
+    int n_mid = 0;
+    int n_top = 0;
+    // auto mid_bin = grid->
+    if (bot.begin() != bot.end() && mid.begin() != mid.end() &&
+        top.begin() != top.end()) {
+      std::cout << "------> Group " << i << " (phi,z)= " << phibin - 1 << ", "
+                << zbin - 1 << std::endl;
+      //          std::cout << "phi, z =" << oi << std::endl;
+      for (auto sp : bot) {
+        n_bot++;
+        std::cout << std::setprecision(10) << "Bottom layer:  x= " << sp->x()
+                  << " y= " << sp->y() << " z= " << sp->z()
+                  << " r= " << sp->radius() << std::endl;
+      }
+      for (auto sp : mid) {
+        n_mid++;
+        std::cout << std::setprecision(10) << "Middle layer:  x= " << sp->x()
+                  << " y= " << sp->y() << " z= " << sp->z()
+                  << " r= " << sp->radius() << std::endl;
+      }
+      for (auto sp : top) {
+        n_top++;
+        std::cout << std::setprecision(10) << "Top layer:  x= " << sp->x()
+                  << " y= " << sp->y() << " z= " << sp->z()
+                  << " r= " << sp->radius() << std::endl;
+      }
+      i++;
+      std::cout << "|Groups "
+                << "| n_group, n_mid, n_top, n_bot, phi_bin, z_bin: " << i
+                << ", " << n_mid << ", " << n_top << ", " << n_bot << ", "
+                << phibin - 1 << ", " << zbin - 1 << std::endl;
+    }
+
     finder.createSeedsForGroup(state, std::back_inserter(seeds), group.bottom(),
                                group.middle(), group.top(), rRangeSPExtent);
+
+    if (zbin % 11 == 0 && pass != true) {
+      phibin++;
+      zbin = 1;
+      pass = true;
+      s_mid += std::string("\n");
+      s_mid += std::string("|Groups Mid| (") + std::to_string(phibin - 1) +
+               std::string(") ==> |");
+    } else if (zbin % 11 == 0 && pass == true) {
+      zbin++;
+      pass = false;
+      s_mid += std::to_string(n_mid) + std::string("|");
+    } else {
+      zbin++;
+      pass = false;
+      s_mid += std::to_string(n_mid) + std::string("|");
+    }
   }
+  s_mid += std::string("|Groups Mid| ( z ) ==> |0|1|2|3|4|5|6|7|8|9|10|");
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
   size_t nSeeds = seeds.size();
@@ -214,7 +282,60 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     for (auto spacePointPtr : seed.sp()) {
       protoTrack.push_back(spacePointPtr->measurementIndex());
     }
+    // *******************
+
+    auto lb = seed.sp()[0];
+    auto lm = seed.sp()[1];
+    auto lt = seed.sp()[2];
+
+    float deltaXt = lt->x() - lm->x();
+    float deltaYt = lt->y() - lm->y();
+    float deltaZt = lt->z() - lm->z();
+    float iDeltaR2t = 1. / (deltaXt * deltaXt + deltaYt * deltaYt);
+
+    float deltaXb = lb->x() - lm->x();
+    float deltaYb = lb->y() - lm->y();
+    float deltaZb = lb->z() - lm->z();
+    float iDeltaR2b = 1. / (deltaXb * deltaXb + deltaYb * deltaYb);
+
+    //		float varianceZM = lm.varianceZ();
+    //		float varianceRM = lm.varianceR();
+    float cosPhiM = lm->x() / lm->r();
+    float sinPhiM = lm->y() / lm->r();
+
+    float Ut = (deltaXt * cosPhiM + deltaYt * sinPhiM) * iDeltaR2t;
+    float Ub = (deltaXb * cosPhiM + deltaYb * sinPhiM) * iDeltaR2b;
+
+    float Vt = (deltaYt * cosPhiM - deltaXt * sinPhiM) * iDeltaR2t;
+    float Vb = (deltaYb * cosPhiM - deltaXb * sinPhiM) * iDeltaR2b;
+
+    float dU = Ut - Ub;
+    float A = (Vt - Vb) / dU;
+    float S2 = 1. + A * A;
+    float B = Vb - A * Ub;
+    float B2 = B * B;
+
+    float pT = 300. * 1.997244311 * std::sqrt(S2 / B2) / 2.;
+
+    float cotThetaBt = deltaZt * std::sqrt(iDeltaR2t) * 1;
+    float cotThetaBb = deltaZb * std::sqrt(iDeltaR2b) * (-1);
+
+    float Im = std::abs((A - B * lm->r()) * lm->r());
+
+    float eta = -std::log(
+        std::tan(0.5 * std::atan(1. / std::sqrt(cotThetaBt * cotThetaBb))));
+
+    std::cout << "|Seeds Map "
+              << "| pT_filter, eta_filter, dScore_filter, curvature_filter, "
+                 "Im_filter: "
+              << std::setprecision(10) << pT / 1000 << " " << eta << " "
+              << 0 / 10 << " " << B / std::sqrt(S2) << " " << Im << std::endl;
+
+    // *******************
   }
+
+  std::cout << "|Seeds Map "
+            << "| seeds.size() " << seeds.size() << std::endl;
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
