@@ -140,8 +140,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       // ratio Z/R (forward angle) of space point duplet
       float cotTheta = deltaZ / deltaR;
       if (std::fabs(cotTheta) > m_config.cotThetaMax) {
-        // std::cout << "|Seeds| !!! fabs(cotTheta) > cotThetaMax == TRUE !!!"
-        // << std::endl;
+         std::cout << "|Seeds| !!! fabs(cotTheta) > cotThetaMax == TRUE !!!"
+         << std::endl;
         continue;
       }
       // check if duplet origin on z axis within collision region
@@ -151,11 +151,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       // << " collisionRegionMin: " << m_config.collisionRegionMin << std::endl;
       if (zOrigin < m_config.collisionRegionMin ||
           zOrigin > m_config.collisionRegionMax) {
-        // std::cout << "|Seeds| !!! zOrigin < collisionRegionMin || zOrigin >
-        // collisionRegionMax == TRUE !!!" << std::endl;
+         std::cout << "|Seeds| !!! zOrigin < collisionRegionMin || zOrigin > collisionRegionMax == TRUE !!!" << std::endl;
         continue;
       }
       if (std::abs(deltaZ) > m_config.deltaZMax) {
+				std::cout << "|Seeds| !!! std::abs(deltaZ) > m_config.deltaZMax !!!" << std::abs(deltaZ) << " " << m_config.deltaZMax << std::endl;
         continue;
       }
       // cut on the max curvature between top SP and interaction point
@@ -246,10 +246,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       std::cout << "|Seeds| cotTheta: " << cotTheta
                 << " cotThetaMax: " << m_config.cotThetaMax << std::endl;
       if (std::fabs(cotTheta) > m_config.cotThetaMax) {
-        //				//std::cout << "|Seeds| cotTheta: " <<
-        // cotTheta << " cotThetaMax: " << m_config.cotThetaMax << std::endl;
-        // std::cout << "|Seeds| !!! fabs(cotTheta) > cotThetaMax == TRUE !!!"
-        // << std::endl;
+				 std::cout << "|Seeds| cotTheta: " <<     cotTheta << " cotThetaMax: " << m_config.cotThetaMax << std::endl;
+         std::cout << "|Seeds| !!! fabs(cotTheta) > cotThetaMax == TRUE !!!"
+         << std::endl;
         continue;
       }
       // check if duplet origin on z axis within collision region
@@ -259,11 +258,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       //        std::endl;
       if (zOrigin < m_config.collisionRegionMin ||
           zOrigin > m_config.collisionRegionMax) {
-        // std::cout << "|Seeds| !!! zOrigin < collisionRegionMin || zOrigin >
-        // collisionRegionMax == TRUE !!!" << std::endl;
+         std::cout << "|Seeds| !!! zOrigin < collisionRegionMin || zOrigin >   collisionRegionMax == TRUE !!!" << std::endl;
         continue;
       }
       if (std::abs(deltaZ) > m_config.deltaZMax) {
+				std::cout << "|Seeds| !!! std::abs(deltaZ) > m_config.deltaZMax !!!" << std::abs(deltaZ) << " " << m_config.deltaZMax << std::endl;
         continue;
       }
       // cut on the max curvature between bottom SP and interaction point

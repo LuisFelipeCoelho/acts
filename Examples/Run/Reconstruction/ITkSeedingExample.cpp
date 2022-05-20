@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
   seedingCfg.seedFinderConfig.arithmeticAverageCotTheta = false;  // pixel: false (uses geometric average), strip: true (uses
               // arithmetic average)
 
-  seedingCfg.seedFinderConfig.deltaZMax = 600._mm;
+  seedingCfg.seedFinderConfig.deltaZMax = 10000000000000000._mm;
 
   seedingCfg.gridConfig.minPt = 900._MeV;
   seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
@@ -253,6 +253,7 @@ int main(int argc, char* argv[]) {
   seedingCfg.seedFilterConfig.impactWeightFactor = 100.; // pixel: 100, strip: 1
   seedingCfg.seedFilterConfig.compatSeedWeight = 100.;
   // maximum number of seeds allowed after the filter
+	seedingCfg.numPhiNeighbors = 1;
   seedingCfg.seedFilterConfig.compatSeedLimit = 3;  // pixel: 3, strip: 4
 
   // enable curvature sorting in SeedFilter
