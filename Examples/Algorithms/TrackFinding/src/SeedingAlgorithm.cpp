@@ -77,7 +77,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   if (m_cfg.gridConfig.bFieldInZ != m_cfg.seedFinderConfig.bFieldInZ) {
-    throw std::invalid_argument("Inconsistent config bFieldInZ");
+//    throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 
   if (m_cfg.gridConfig.zBinEdges.size() - 1 != m_cfg.zBinNeighborsTop.size() &&

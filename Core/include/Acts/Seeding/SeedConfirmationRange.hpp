@@ -21,5 +21,15 @@ struct SeedConfirmationRange {
       std::numeric_limits<float>::max() * Acts::UnitConstants::mm;
   size_t nTopForLargeR = 0;
   size_t nTopForSmallR = 0;
+	
+	SeedConfirmationRange(float zMin = std::numeric_limits<float>::min(),
+												float zMax = std::numeric_limits<float>::max(),
+												float rMax = std::numeric_limits<float>::max(),
+												size_t nTopLargeR = 0, size_t nTopSmallR = 0)
+	: zMinSeedConf(zMin),
+	zMaxSeedConf(zMax),
+	rMaxSeedConf(rMax),
+	nTopForLargeR(nTopLargeR),
+	nTopForSmallR(nTopSmallR) {}
 };
 }  // namespace Acts

@@ -59,6 +59,9 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
 
   dfe::NamedTupleCsvReader<SpacePointData> reader(path);
   SpacePointData data;
+	
+	std::cout << " ================ EVENT " << ctx.eventNumber
+	<< " ====================" << std::endl;
 
   while (reader.read(data)) {
     Acts::Vector3 globalPos(data.sp_x, data.sp_y, data.sp_z);

@@ -119,6 +119,18 @@ target_link_libraries(
       ActsExamplesRecTracksCommon)
 # =================================================
 
+# Seeding for ITk detector
+add_executable(
+  ActsExampleSeedingITk
+  ITkSeedingExample.cpp)
+target_link_libraries(
+  ActsExampleSeedingITk
+  PRIVATE
+    ActsExamplesRecTracksCommon
+    ActsExamplesDetectorGeneric
+)
+
+
 install(
   TARGETS
     ActsExampleTruthTracksGeneric

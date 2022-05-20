@@ -204,6 +204,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         }
       }
       state.compatTopSP.push_back(topSP);
+			std::cout << "|Seeds| # Fill SP" << std::endl;
     }
     if (state.compatTopSP.empty()) {
       // std::cout << "|Seeds| !!! top SP empty == TRUE !!!" << std::endl;
@@ -667,6 +668,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           float eta = -std::log(std::tan(0.5 * theta));
           state.etaVec.push_back(eta);
           state.ptVec.push_back(pT);
+					
+					nSeeds += 1;
 
           std::cout << "|Seeds Map "
                     << "| pT, eta, dScore, curvature, Im: "
