@@ -195,6 +195,9 @@ int main(int argc, char* argv[]) {
                                                     9, 8, 6, 5, 7};
   // enable cotTheta sorting in SeedFinder
 	seedingCfg.seedFinderConfig.skipPreviousTopSP = true;
+	seedingCfg.seedFilterConfig.useDeltaRorTopRadius = true;
+	seedingCfg.seedFilterConfig.maxSeedsPerSpMConf = 5;
+	seedingCfg.seedFilterConfig.maxQualitySeedsPerSpMConf = 5;
 
   // LUT for building neighbors
   /* Guide for the following:
