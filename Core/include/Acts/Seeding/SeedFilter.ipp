@@ -50,7 +50,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
   size_t minWeightSeedIndex = 0;
   bool minWeightSeed = false;
-  
+  float weightMin = -std::numeric_limits<float>::max();
 
   // initialize original index locations
   std::vector<size_t> idx(topSpVec.size());
