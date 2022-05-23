@@ -50,7 +50,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
   size_t minWeightSeedIndex = 0;
   bool minWeightSeed = false;
-  float weightMin = std::numeric_limits<float>::min();
+  
 
   // initialize original index locations
   std::vector<size_t> idx(topSpVec.size());
@@ -263,6 +263,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         std::cout << "|seed filter 1| weight > weightMin " << numQualitySeeds
                   << " " << minWeightSeedIndex << " " << weightMin << std::endl;
       }
+			std::cout << "|seed filter 1| weightMin " << numQualitySeeds
+			<< " " << minWeightSeedIndex << " " << weightMin << std::endl;
     } else {
       // keep the normal behavior without seed quality confirmation
       // if we have not yet reached our max number of seeds we add the new seed

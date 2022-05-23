@@ -660,9 +660,24 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           // positive/negative in phi
           state.curvatures.push_back(B / std::sqrt(S2));
           state.impactParameters.push_back(Im);
+					
+//					if (m_config.smallValueProtection) {
+//						if (B2 < m_config.smallValueProtectionFactor) {
+//							B2 = m_config.smallValueProtectionFactor;
+//							pT = m_config.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+//						}
+//						if (std::abs(cotTheta) < m_config.smallValueProtectionFactor) {
+//							cotTheta = m_config.smallValueProtectionFactor;
+//						}
+//					}
 
           // evaluate eta and pT of the seed
           float cotThetaAvg = std::sqrt(cotThetaAvg2);
+					
+					//						if (state.compatTopSP[t]->z() < 0) {
+					//							cotThetaAvg = -cotThetaAvg;
+					//						}
+					
           float theta = std::atan(1. / cotThetaAvg);
           float eta = -std::log(std::tan(0.5 * theta));
           state.etaVec.push_back(eta);
