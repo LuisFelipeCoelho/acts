@@ -56,9 +56,9 @@ struct SeedFilterConfig {
   float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
 
   // maximum number of lower quality seeds in seed confirmation
-  float maxSeedsPerSpMConf = std::numeric_limits<float>::infinity();
+  float maxSeedsPerSpMConf = 5;
   // maximum number of quality seeds in seed confirmation
-  float maxQualitySeedsPerSpMConf = std::numeric_limits<float>::infinity();
+  float maxQualitySeedsPerSpMConf = 5;
 
   // use deltaR instead of top radius
   bool useDeltaRorTopRadius = false;
