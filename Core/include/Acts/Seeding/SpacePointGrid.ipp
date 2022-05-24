@@ -81,7 +81,7 @@ Acts::SpacePointGridCreator::createGrid(
 
   Acts::detail::Axis<detail::AxisType::Equidistant,
                      detail::AxisBoundaryType::Closed>
-      phiAxis(-M_PI, M_PI,
+      phiAxis(0, 2*M_PI,
               phiBins);  // ********************* mudar (-MPI, MPI) para (0,
                          // 2MPI) faz diferença??
 

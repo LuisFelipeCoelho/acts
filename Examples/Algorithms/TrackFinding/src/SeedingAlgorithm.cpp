@@ -280,8 +280,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   static thread_local ProtoTrackContainer protoTracks;
   protoTracks.clear();
 
-  //	std::cout << "|Seeds Map| nSeeds_filter: " << nSeeds << " " << 0 <<
-  //std::endl;
+// 	std::cout << "|Seeds Map| nSeeds_filter: " << nSeeds << " " << 0 <<  std::endl;
 
   protoTracks.reserve(nSeeds);
   for (const auto& seed : seeds) {

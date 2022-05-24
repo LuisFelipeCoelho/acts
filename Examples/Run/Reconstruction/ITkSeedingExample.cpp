@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
               // arithmetic average)
 
   // enable cotTheta cut
-  seedingCfg.seedFinderConfig.cotThetaMaxCut = true;  // pixel: true , strip: false
+  seedingCfg.seedFinderConfig.cotThetaMaxCut = true;  // pixel: true , strip: false **** check value for strip
 
   // enable delta z cut
   seedingCfg.seedFinderConfig.deltaZCut = false;  // pixel: false , strip: true
@@ -253,6 +253,12 @@ int main(int argc, char* argv[]) {
 
   // enable curvature sorting in SeedFilter
   seedingCfg.seedFilterConfig.curvatureSortingInFilter = true;
+//	seedingCfg.seedFilterConfig.useDeltaRorTopRadius = true;
+	seedingCfg.seedFilterConfig.maxSeedsPerSpMConf = 5;
+	seedingCfg.seedFilterConfig.maxQualitySeedsPerSpMConf = 5;
+
+//	seedingCfg.seedFinderConfig.smallValueProtection = true;
+//	seedingCfg.seedFinderConfig.smallValueProtectionFactor = 1e-8;
 
   // delete
   seedingCfg.seedFinderConfig.inputCollectionTest = "pixel";
@@ -262,8 +268,8 @@ int main(int argc, char* argv[]) {
   sequencer.addAlgorithm(
       std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
 
-//  // ====== Strip SP =======
-//
+  // ====== Strip SP =======
+
 //  // read extend SP parameters
 //  	bool extendCollection = true; // pixel: false, strip: true
 //

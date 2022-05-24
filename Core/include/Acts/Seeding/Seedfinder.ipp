@@ -582,7 +582,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           //					lt.cotTheta = zT * lt.iDeltaR;
           std::cout << xB << " " << yB << " " << zB << " " << xT << " " << yT
                     << " " << zT << " " << iDeltaRB2 << " " << iDeltaRT2 << " "
-                    << lb.cotTheta << " " << cotThetaT << std::endl;
+                    << cotThetaBB << " " << cotThetaT << std::endl;
 
           rMCoord = std::sqrt(rTestM[0] * rTestM[0] + rTestM[1] * rTestM[1]);
           float Ax = rTestM[0] / rMCoord;
@@ -593,7 +593,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           ut = (xT * Ax + yT * Ay) * iDeltaRT2;
           vt = (yT * Ax - xT * Ay) * iDeltaRT2;
 
-          std::cout << rM << " " << Ax << " " << Ay << std::endl;
+          std::cout << rMCoord << " " << Ax << " " << Ay << std::endl;
 
         } else {
 //          cotThetaBB = cotThetaB;
