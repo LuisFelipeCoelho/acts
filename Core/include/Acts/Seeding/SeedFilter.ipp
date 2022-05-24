@@ -425,7 +425,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     std::cout << "|set quality| Acepted" << std::endl;
   }
 
-  std::cout << "|Seeds Map strip| nSeeds_filter: " << nSeeds << " " << 0
+  std::cout << "|Seeds Map pixel| nSeeds_filter: " << nSeeds << " " << 0
             << std::endl;
 }
 
@@ -482,7 +482,7 @@ void SeedFilter<external_spacepoint_t>::checkReplaceSeeds(
                           return outIt.at(a).first < outIt.at(b).first;
                         });
   // replace that seed with the new one if new one is better
-  if (outIt.at(index).first <= weight) {
+  if (outIt.at(index).first < weight) {
     outIt.at(index) = std::make_pair(
         weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                     bottomSP, middleSP, topSp, zOrigin, isQualitySeed));

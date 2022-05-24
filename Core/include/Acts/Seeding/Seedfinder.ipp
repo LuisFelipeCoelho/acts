@@ -685,7 +685,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 					
 					nSeeds += 1;
 
-          std::cout << "|Seeds Map strip"
+          std::cout << "|Seeds Map pixel"
                     << "| pT, eta, dScore, curvature, Im: "
                     << std::setprecision(10) << pT / 1000 << " " << eta << " "
                     << 0 << " " << B / std::sqrt(S2) << " " << Im << std::endl;
@@ -703,11 +703,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM,
                                               numQualitySeeds, outIt);
 
-    std::cout << "|Seeds Map strip"
+    std::cout << "|Seeds Map pixel"
               << "| nSeeds, zBin, phiBin: " << nSeeds << " " << zBin << " "
               << std::abs(std::ceil(spM->phi() * 1 / (2 * 3.14159265359 / 138)))
               << std::endl;
-    std::cout << "|Seeds Map strip"
+    std::cout << "|Seeds Map pixel"
               << "| nSeeds_test: " << nSeeds_test1 << " " << nSeeds_test2 << " "
               << nSeeds_test3 << std::endl;
   }

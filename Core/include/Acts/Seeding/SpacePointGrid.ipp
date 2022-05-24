@@ -87,7 +87,7 @@ Acts::SpacePointGridCreator::createGrid(
 
   Acts::detail::Axis<detail::AxisType::Equidistant,
                      detail::AxisBoundaryType::Closed>
-      phiAxis(-M_PI, M_PI, phiBins);
+      phiAxis(0, 2*M_PI, phiBins);
 
   std::cout << "Phi axis (-" << M_PI << "," << M_PI
             << ") number of bins: " << phiBins << std::endl;
