@@ -425,7 +425,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     std::cout << "|set quality| Acepted" << std::endl;
   }
 
-  std::cout << "|Seeds Map pixel| nSeeds_filter: " << nSeeds << " " << 0
+  std::cout << "|Seeds Map strip| nSeeds_filter: " << nSeeds << " " << 0
             << std::endl;
 }
 

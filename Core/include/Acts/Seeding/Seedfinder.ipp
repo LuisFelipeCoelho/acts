@@ -464,12 +464,12 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           }
 
           // correcting other variables
-          float xB = rBTransf[0] - rTTransf[0];
-          float yB = rBTransf[1] - rTTransf[1];
-          float zB = rBTransf[2] - rTTransf[2];
-          float xT = rBTransf[0] - rTTransf[0];
-          float yT = rBTransf[1] - rTTransf[1];
-          float zT = rBTransf[2] - rTTransf[2];
+					float xB = rBTransf[0] - rMTransf[0];
+					float yB = rBTransf[1] - rMTransf[1];
+					float zB = rBTransf[2] - rMTransf[2];
+					float xT = rTTransf[0] - rMTransf[0];
+					float yT = rTTransf[1] - rMTransf[1];
+					float zT = rTTransf[2] - rMTransf[2];
 
           float iDeltaRB2 = 1. / (xB * xB + yB * yB);
           float iDeltaRT2 = 1. / (xT * xT + yT * yT);
@@ -685,7 +685,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 					
 					nSeeds += 1;
 
-          std::cout << "|Seeds Map pixel"
+          std::cout << "|Seeds Map strip"
                     << "| pT, eta, dScore, curvature, Im: "
                     << std::setprecision(10) << pT / 1000 << " " << eta << " "
                     << 0 << " " << B / std::sqrt(S2) << " " << Im << std::endl;
@@ -703,11 +703,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM,
                                               numQualitySeeds, outIt);
 
-    std::cout << "|Seeds Map pixel"
+    std::cout << "|Seeds Map strip"
               << "| nSeeds, zBin, phiBin: " << nSeeds << " " << zBin << " "
               << std::abs(std::ceil(spM->phi() * 1 / (2 * 3.14159265359 / 138)))
               << std::endl;
-    std::cout << "|Seeds Map pixel"
+    std::cout << "|Seeds Map strip"
               << "| nSeeds_test: " << nSeeds_test1 << " " << nSeeds_test2 << " "
               << nSeeds_test3 << std::endl;
   }
