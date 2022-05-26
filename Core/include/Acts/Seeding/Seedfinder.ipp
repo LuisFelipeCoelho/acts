@@ -102,7 +102,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     size_t nTopSeedConf = 0;
     if (m_config.seedConfirmation == true) {
       // check if middle SP is in the central or forward region
-      SeedConfirmationRange seedConfRange =
+      SeedConfirmationRangeConfig seedConfRange =
           (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
            zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
               ? m_config.forwardSeedConfirmationRange
@@ -463,13 +463,13 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
             continue;
           }
 
-          // correcting other variables
-					float xB = rBTransf[0] - rMTransf[0];
-					float yB = rBTransf[1] - rMTransf[1];
-					float zB = rBTransf[2] - rMTransf[2];
-					float xT = rTTransf[0] - rMTransf[0];
-					float yT = rTTransf[1] - rMTransf[1];
-					float zT = rTTransf[2] - rMTransf[2];
+          // bottom and top coordinates in the spM reference frame
+          float xB = rBTransf[0] - rMTransf[0];
+          float yB = rBTransf[1] - rMTransf[1];
+          float zB = rBTransf[2] - rMTransf[2];
+          float xT = rTTransf[0] - rMTransf[0];
+          float yT = rTTransf[1] - rMTransf[1];
+          float zT = rTTransf[2] - rMTransf[2];
 
           float iDeltaRB2 = 1. / (xB * xB + yB * yB);
           float iDeltaRT2 = 1. / (xT * xT + yT * yT);
