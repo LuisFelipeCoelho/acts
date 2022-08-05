@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -275,7 +275,7 @@ class AtlasStepper {
     double pathAccumulated = 0.;
 
     // Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize;
 
     // Previous step size for overstep estimation
     double previousStepSize = 0.;
@@ -417,7 +417,7 @@ class AtlasStepper {
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor,
                    bool release = true) const {
-    state.previousStepSize = state.stepSize;
+    state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
 
@@ -1113,7 +1113,7 @@ class AtlasStepper {
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const {
     // we use h for keeping the nominclature with the original atlas code
-    auto& h = state.stepping.stepSize;
+    auto h = state.stepping.stepSize.value();
     bool Jac = state.stepping.useJacobian;
 
     double* R = &(state.stepping.pVector[0]);  // Coordinates
@@ -1140,6 +1140,7 @@ class AtlasStepper {
     bool Helix = false;
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
+    size_t nStepTrials = 0;
     while (h != 0.) {
       // PS2 is h/(2*momentum) in EigenStepper
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
@@ -1223,7 +1224,9 @@ class AtlasStepper {
            std::abs((C1 + C6) - (C3 + C4)));
       if (EST > state.options.tolerance) {
         h = h * .5;
+        state.stepping.stepSize.setValue(h);
         //        dltm = 0.;
+        nStepTrials++;
         continue;
       }
 
@@ -1354,6 +1357,7 @@ class AtlasStepper {
       }
 
       state.stepping.pathAccumulated += h;
+      state.stepping.stepSize.nStepTrials = nStepTrials;
       return h;
     }
 

@@ -5,11 +5,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#include "Acts/Material/MaterialGridHelper.hpp"
-
-#include <cstdio>
-#include <iostream>
-
 template <typename external_spacepoint_t>
 template <typename spacepoint_iterator_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
@@ -38,7 +33,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // add magnitude of beamPos to rMax to avoid excluding measurements
   // create number of bins equal to number of millimeters rMax
   // (worst case minR: configured minR + 1mm)
-  size_t numRBins = (config.rMax + config.beamPos.norm());
+  // binSizeR allows to increase or reduce numRBins if needed
+  size_t numRBins = (config.rMax + config.beamPos.norm()) / config.binSizeR;
   std::vector<
       std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
       rBins(numRBins);
@@ -66,50 +62,41 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
         sp, spPosition, config.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
-    size_t rIndex = isp->radius();
+    size_t rIndex = isp->radius() / config.binSizeR;
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins) {
       continue;
     }
     rBins[rIndex].push_back(std::move(isp));
   }
+
+  // if requested, it is possible to force sorting in R for each (z, phi) grid
+  // bin
+  if (config.forceRadialSorting) {
+    for (auto& rbin : rBins) {
+      std::sort(
+          rbin.begin(), rbin.end(),
+          [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
+             std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
+            return a->radius() < b->radius();
+          });
+    }
+  }
+
   // fill rbins into grid such that each grid bin is sorted in r
-  // space points with delta r < rbin size can be out of order
+  // space points with delta r < rbin size can be out of order is sorting is not
+  // requested
   for (auto& rbin : rBins) {
     for (auto& isp : rbin) {
-      //			std::cout << "|a|" << isp->radius() <<
-      //std::endl;
-
       Acts::Vector2 spLocation(isp->phi(), isp->z());
       std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
           bin = grid->atPosition(spLocation);
       bin.push_back(std::move(isp));
     }
   }
-
-  std::string s = "";
-
-  Acts::Grid2D::index_t nBins = grid->numLocalBins();
-  for (unsigned int phiBin = 0; phiBin <= nBins[0]; phiBin++) {
-    s += std::string("(") + std::to_string(phiBin) + std::string(") ===> |");
-    for (unsigned int zBin = 1; zBin <= nBins[1]; zBin++) {
-      Acts::Grid2D::index_t indices = {{phiBin, zBin}};
-      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-          bin = grid->atLocalBins(indices);
-      // s+=std::string(std::to_string(n));
-      s += std::to_string(bin.size()) + std::string("|");
-      for (unsigned int i_bin = 0; i_bin < bin.size(); i_bin++) {
-        // s += std::string(",")+std::to_string(bin[i_bin]->x());
-      }
-    }
-    s += std::string("\n");
-  }
-  s += std::string("( z ) ==> |1|2|3|4|5|6|7|8|9|10|11|");
-  std::cout << s << std::endl;
-
   m_binnedSP = std::move(grid);
   m_bottomBinFinder = botBinFinder;
   m_topBinFinder = tBinFinder;
 
-  m_bins = _config.zBinsCustomLooping;
+  m_bins = config.zBinsCustomLooping;
 }

@@ -8,8 +8,6 @@
 
 #include "Acts/Utilities/detail/Axis.hpp"
 
-#include <iomanip>  /// for set precision
-#include <iostream>
 #include <memory>
 
 template <typename SpacePoint>
@@ -76,21 +74,11 @@ Acts::SpacePointGridCreator::createGrid(
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on this
     // number) of the maximum expected azimutal deflection.
-
-    std::cout << "deltaPhi =" << std::setprecision(10) << deltaPhi << std::endl;
-    std::cout << "outerAngle= " << outerAngle << " innerAngle= " << innerAngle
-              << std::endl;
-    std::cout << "deltaAngleWithMaxD0= " << deltaAngleWithMaxD0
-              << " impactMax= " << config.impactMax << std::endl;
-    std::cout << "Rmin= " << rMin << " rMax= " << config.rMax << std::endl;
   }
 
   Acts::detail::Axis<detail::AxisType::Equidistant,
                      detail::AxisBoundaryType::Closed>
-      phiAxis(0, 2*M_PI, phiBins);
-
-  std::cout << "Phi axis (-" << M_PI << "," << M_PI
-            << ") number of bins: " << phiBins << std::endl;
+      phiAxis(config.phiMin, config.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
   std::vector<AxisScalar> zValues;

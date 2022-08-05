@@ -91,7 +91,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
   }
 
-  if (m_cfg.seedFinderConfig.zBinsCustomLooping.size() != 0) {
+  if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
     // check if zBinsCustomLooping contains numbers from 1 to the total number
     // of bin in zBinEdges
     for (size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
@@ -131,9 +131,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
           return sp.stripCenterDistance();
         });
 
-    m_cfg.seedFinderConfig.getBottomStripCenterPosition.connect(
+    m_cfg.seedFinderConfig.getTopStripCenterPosition.connect(
         [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-          return sp.bottomStripCenterPosition();
+          return sp.topStripCenterPosition();
         });
   }
 
