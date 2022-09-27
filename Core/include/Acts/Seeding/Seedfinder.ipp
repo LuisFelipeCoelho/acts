@@ -12,6 +12,8 @@
 #include <numeric>
 #include <type_traits>
 
+#include <chrono>
+
 namespace Acts {
 
 template <typename external_spacepoint_t, typename platform_t>
@@ -44,6 +46,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
     const Acts::Vector2 rMiddleSPRange) const {
   for (auto spM : middleSPs) {
+		
+		auto t_start_duplets = std::chrono::high_resolution_clock::now();
+		
     float rM = spM->radius();
     float zM = spM->z();
     float varianceRM = spM->varianceR();
@@ -263,6 +268,13 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     int numSeeds = 0;
 
     size_t t0 = 0;
+		
+		auto t_end_duplets = std::chrono::high_resolution_clock::now();
+		
+		double time_elapsed_duplets = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end_duplets - t_start_duplets).count();
+		std::cout << "|TIMER ACTS| duplets: " << time_elapsed_duplets << " ns" << std::endl;
+		
+		auto t_start_triplets = std::chrono::high_resolution_clock::now();
 
     for (size_t b = 0; b < numBotSP; b++) {
       auto lb = state.linCircleBottom[b];
@@ -516,15 +528,37 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           state.ptVec.push_back(pT);
         }
       }
+			
+			auto t_start_filter1 = std::chrono::high_resolution_clock::now();
+			
       if (!state.topSpVec.empty()) {
         m_config.seedFilter->filterSeeds_2SpFixed(
             *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
             state.impactParameters, Zob, numQualitySeeds, numSeeds,
             state.seedsPerSpM);
       }
+			
+			auto t_end_filter1 = std::chrono::high_resolution_clock::now();
+			
+			double time_elapsed_filter1 = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end_filter1 - t_start_filter1).count();
+			std::cout << "|TIMER ACTS| filter 1: " << time_elapsed_filter1 << " ns" << std::endl;
+			
     }
+		
+		auto t_end_triplets = std::chrono::high_resolution_clock::now();
+		
+		double time_elapsed_triplets = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end_triplets - t_start_triplets).count();
+		std::cout << "|TIMER ACTS| triplets + filter 1: " << time_elapsed_triplets << " ns" << std::endl;
+		
+		auto t_start_filter2 = std::chrono::high_resolution_clock::now();
+		
     m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM,
                                               numQualitySeeds, outIt);
+		
+		auto t_end_filter2 = std::chrono::high_resolution_clock::now();
+		
+		double time_elapsed_filter2 = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end_filter2 - t_start_filter2).count();
+		std::cout << "|TIMER ACTS| filter 2: " << time_elapsed_filter2 << " ns" << std::endl;
   }
 }
 
