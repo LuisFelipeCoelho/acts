@@ -48,7 +48,7 @@ class SeedFilter {
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
       std::vector<float>& impactParametersVec, float zOrigin,
-      int& numQualitySeeds, int& numSeeds,
+      size_t& nTopSeedConf, int& numQualitySeeds, int& numSeeds,
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
           outCont) const;

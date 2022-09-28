@@ -28,25 +28,26 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
     std::vector<float>& impactParametersVec, float zOrigin,
-    int& numQualitySeeds, int& numSeeds,
+    size_t& nTopSeedConf, int& numQualitySeeds, int& numSeeds,
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
         outCont) const {
   // seed confirmation
-  int nTopSeedConf = 0;
-  if (m_cfg.seedConfirmation) {
-    // check if bottom SP is in the central or forward region
-    SeedConfirmationRangeConfig seedConfRange =
-        (bottomSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
-         bottomSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
-            ? m_cfg.forwardSeedConfirmationRange
-            : m_cfg.centralSeedConfirmationRange;
-    // set the minimum number of top SP depending on whether the bottom SP is
-    // in the central or forward region
-    nTopSeedConf = bottomSP.radius() > seedConfRange.rMaxSeedConf
-                       ? seedConfRange.nTopForLargeR
-                       : seedConfRange.nTopForSmallR;
-  }
+  //  int nTopSeedConf = 0;
+  //  if (m_cfg.seedConfirmation) {
+  //    // check if bottom SP is in the central or forward region
+  //    SeedConfirmationRangeConfig seedConfRange =
+  //        (bottomSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+  //         bottomSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
+  //            ? m_cfg.forwardSeedConfirmationRange
+  //            : m_cfg.centralSeedConfirmationRange;
+  //    // set the minimum number of top SP depending on whether the bottom SP
+  //    is
+  //    // in the central or forward region
+  //    nTopSeedConf = bottomSP.radius() > seedConfRange.rMaxSeedConf
+  //                       ? seedConfRange.nTopForLargeR
+  //                       : seedConfRange.nTopForSmallR;
+  //  }
 
   size_t maxWeightSeedIndex = 0;
   bool maxWeightSeed = false;
@@ -64,6 +65,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
               });
   }
 
+  size_t j0 = 0;
   for (auto& i : idx) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
@@ -79,7 +81,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float impact = impactParametersVec[i];
 
     float weight = -(impact * m_cfg.impactWeightFactor);
-    for (auto& j : idx) {
+
+    for (size_t j = j0; j < idx.size(); j++) {
+      //    for (auto& j : idx) {
       if (i == j) {
         continue;
       }
@@ -89,6 +93,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       // curvature difference within limits?
       if (invHelixDiameterVec[j] < lowerLimitCurv) {
+        j0 = j + 1;
         continue;
       }
       if (invHelixDiameterVec[j] > upperLimitCurv) {
@@ -100,6 +105,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTop_r - otherTop_r;
       if (std::abs(deltaR) < m_cfg.deltaRMin) {
+        if (m_cfg.curvatureSortingInFilter) {
+          break;
+        }
         continue;
       }
       bool newCompSeed = true;
