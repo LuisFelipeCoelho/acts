@@ -530,7 +530,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         }
       }
 
-      auto t_start_filter1 = std::chrono::high_resolution_clock::now();
+//      auto t_start_filter1 = std::chrono::high_resolution_clock::now();
 
       if (!state.topSpVec.empty()) {
         m_config.seedFilter->filterSeeds_2SpFixed(
@@ -539,14 +539,14 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
             numSeeds, state.seedsPerSpM);
       }
 
-      auto t_end_filter1 = std::chrono::high_resolution_clock::now();
-
-      double time_elapsed_filter1 =
-          std::chrono::duration_cast<std::chrono::nanoseconds>(t_end_filter1 -
-                                                               t_start_filter1)
-              .count();
-      std::cout << "|TIMER ACTS| filter 1: " << time_elapsed_filter1 << " ns"
-                << std::endl;
+//      auto t_end_filter1 = std::chrono::high_resolution_clock::now();
+//
+//      double time_elapsed_filter1 =
+//          std::chrono::duration_cast<std::chrono::nanoseconds>(t_end_filter1 -
+//                                                               t_start_filter1)
+//              .count();
+//      std::cout << "|TIMER ACTS| filter 1: " << time_elapsed_filter1 << " ns"
+//                << std::endl;
     }
 
     auto t_end_triplets = std::chrono::high_resolution_clock::now();
