@@ -278,6 +278,10 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 //    auto t_start_triplets = std::chrono::high_resolution_clock::now();
 
     for (size_t b = 0; b < numBotSP; b++) {
+			// break to avoid iterating over bottom SPs if we reached the last top SP
+			if (it0 == numTopSP)
+				break;
+			
       auto lb = state.linCircleBottom[b];
       float Zob = lb.Zo;
       float cotThetaB = lb.cotTheta;
