@@ -169,26 +169,26 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(pTPerHelixRadius);
     ACTS_PYTHON_MEMBER(minHelixDiameter2);
     ACTS_PYTHON_MEMBER(pT2perRadius);
-		ACTS_PYTHON_MEMBER(seedConfirmation);
-		ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
-		ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(seedConfirmation);
+    ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
-	
-	{
-		using seedConf = Acts::SeedConfirmationRangeConfig;
-		auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
-		.def(py::init<>());
-		ACTS_PYTHON_STRUCT_BEGIN(c, seedConf);
-		ACTS_PYTHON_MEMBER(zMinSeedConf);
-		ACTS_PYTHON_MEMBER(zMaxSeedConf);
-		ACTS_PYTHON_MEMBER(rMaxSeedConf);
-		ACTS_PYTHON_MEMBER(nTopForLargeR);
-		ACTS_PYTHON_MEMBER(nTopForSmallR);
-		ACTS_PYTHON_STRUCT_END();
-		patchKwargsConstructor(c);
-	}
+
+  {
+    using seedConf = Acts::SeedConfirmationRangeConfig;
+    auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, seedConf);
+    ACTS_PYTHON_MEMBER(zMinSeedConf);
+    ACTS_PYTHON_MEMBER(zMaxSeedConf);
+    ACTS_PYTHON_MEMBER(rMaxSeedConf);
+    ACTS_PYTHON_MEMBER(nTopForLargeR);
+    ACTS_PYTHON_MEMBER(nTopForSmallR);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
 
   {
     using Config = Acts::SpacePointGridConfig;

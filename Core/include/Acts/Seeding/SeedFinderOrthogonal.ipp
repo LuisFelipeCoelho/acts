@@ -206,27 +206,27 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     SeedConfQuantitiesConfig seedConfQuantities,
     output_container_t &cont) const {
   float rM = middle.radius();
-	float zM = middle.z();
+  float zM = middle.z();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
-	
-	// apply cut on the number of top SP if seedConfirmation is true
-	if (m_config.seedConfirmation == true) {
-		// check if middle SP is in the central or forward region
-		SeedConfirmationRangeConfig seedConfRange =
-		(zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-		 zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
-		? m_config.forwardSeedConfirmationRange
-		: m_config.centralSeedConfirmationRange;
-		// set the minimum number of top SP depending on whether the middle SP is
-		// in the central or forward region
-		seedConfQuantities.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
-		? seedConfRange.nTopForLargeR
-		: seedConfRange.nTopForSmallR;
-		if (top.size() < seedConfQuantities.nTopSeedConf) {
-			return;
-		}
-	}
+
+  // apply cut on the number of top SP if seedConfirmation is true
+  if (m_config.seedConfirmation == true) {
+    // check if middle SP is in the central or forward region
+    SeedConfirmationRangeConfig seedConfRange =
+        (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_config.forwardSeedConfirmationRange
+            : m_config.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the middle SP is
+    // in the central or forward region
+    seedConfQuantities.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                                          ? seedConfRange.nTopForLargeR
+                                          : seedConfRange.nTopForSmallR;
+    if (top.size() < seedConfQuantities.nTopSeedConf) {
+      return;
+    }
+  }
 
   std::vector<internal_sp_t *> top_valid;
   std::vector<float> curvatures;
@@ -527,7 +527,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
       float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
       protoseeds;
 
-	SeedConfQuantitiesConfig seedConfQuantities;
+  SeedConfQuantitiesConfig seedConfQuantities;
 
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
