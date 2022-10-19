@@ -75,6 +75,10 @@ struct SeedFinderOrthogonalConfig {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
+  // cut to the maximum value of delta z between SPs
+  float deltaZMax =
+      std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
+
   // seed confirmation
   bool seedConfirmation = false;
   // parameters for central seed confirmation

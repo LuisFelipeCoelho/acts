@@ -42,7 +42,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     State& state,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
-    Extent rRangeSPExtent) const {
+    const float rMiddleMinSPRange, const float rMiddleMaxSPRange) const {
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -51,11 +51,14 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     /// check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
-      float rMinMiddleSP = std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
-                           m_config.deltaRMiddleMinSPRange;
-      float rMaxMiddleSP = std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
-                           m_config.deltaRMiddleMaxSPRange;
-      if (rM < rMinMiddleSP || rM > rMaxMiddleSP) {
+      if (rM < rMiddleMinSPRange) {
+        continue;
+      }
+      if (rM > rMiddleMaxSPRange) {
+        // break if SP are sorted in r
+        if (m_config.forceRadialSorting) {
+          break;
+        }
         continue;
       }
     } else if (not m_config.rRangeMiddleSP.empty()) {
@@ -65,8 +68,14 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
       /// protects against zM at the limit of zBinEdges
       zBin == 0 ? zBin : --zBin;
-      if (rM < m_config.rRangeMiddleSP[zBin][0] ||
-          rM > m_config.rRangeMiddleSP[zBin][1]) {
+      if (rM < m_config.rRangeMiddleSP[zBin][0]) {
+        continue;
+      }
+      if (rM > m_config.rRangeMiddleSP[zBin][1]) {
+        // break if SP are sorted in r
+        if (m_config.forceRadialSorting) {
+          break;
+        }
         continue;
       }
     }
@@ -527,11 +536,12 @@ std::vector<Seed<external_spacepoint_t>>
 Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   State state;
-  Extent extent;
+  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
+  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
   std::vector<Seed<external_spacepoint_t>> ret;
 
   createSeedsForGroup(state, std::back_inserter(ret), bottomSPs, middleSPs,
-                      topSPs, extent);
+                      topSPs, rMiddleMinSPRange, rMiddleMaxSPRange);
 
   return ret;
 }
