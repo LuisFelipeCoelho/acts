@@ -158,8 +158,8 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
    * which is to say the absolute value must be smaller than the max cot(θ).
    */
-  float deltaZ = (zH - zL);
-  float cotTheta = deltaZ / deltaR;
+	float deltaZ = (zH - zL);
+	float cotTheta = deltaZ / deltaR;
   if (std::fabs(cotTheta) > m_config.cotThetaMax) {
     return false;
   }
@@ -173,10 +173,48 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
       zOrigin > m_config.collisionRegionMax) {
     return false;
   }
-  if (std::abs(deltaZ) > m_config.deltaZMax) {
-    return false;
-  }
-
+	if (std::abs(deltaZ) > m_config.deltaZMax) {
+		return false;
+	}
+	
+	// cut on the max curvature calculated from dublets
+	// first transform the space point coordinates into a frame such that the
+	// central space point SPm is in the origin of the frame and the x axis
+	// points away from the interaction point in addition to a translation
+	// transformation we also perform a rotation in order to keep the
+	// curvature of the circle tangent to the x axis
+	if (m_config.interactionPointCut) {
+		float xVal = (high.x() - low.x()) * (low.x() / rL) +
+		(high.y() - low.y()) * (low.y() / rL);
+		float yVal = (high.y() - low.y()) * (low.x() / rL) -
+		(high.x() - low.x()) * (low.y() / rL);
+		if (std::abs(rL * yVal) > m_config.impactMax * xVal) {
+			// conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
+			// circle into straight lines in the u/v plane the line equation can
+			// be described in terms of aCoef and bCoef, where v = aCoef * u +
+			// bCoef
+			float uT = xVal / (xVal * xVal + yVal * yVal);
+			float vT = yVal / (xVal * xVal + yVal * yVal);
+			// in the rotated frame the interaction point is positioned at x = -rM
+			// and y ~= impactParam
+			float uIP = -1. / rL;
+			float vIP = m_config.impactMax / (rL * rL);
+			if (yVal > 0.)
+				vIP = -vIP;
+			// we can obtain aCoef as the slope dv/du of the linear function,
+			// estimated using du and dv between the two SP bCoef is obtained by
+			// inserting aCoef into the linear equation
+			float aCoef = (vT - vIP) / (uT - uIP);
+			float bCoef = vIP - aCoef * uIP;
+			// the distance of the straight line from the origin (radius of the
+			// circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+			// aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+			if ((bCoef * bCoef) >
+					(1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
+				return false;
+			}
+		}
+	}
   return true;
 }
 
@@ -228,7 +266,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
                                           ? seedConfRange.nTopForLargeR
                                           : seedConfRange.nTopForSmallR;
     if (top.size() < seedConfQuantities.nTopSeedConf) {
-      return;
+			 return;
     }
   }
 
@@ -274,6 +312,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     float Ub = lb.U;
     float ErB = lb.Er;
     float iDeltaRB = lb.iDeltaR;
+		
+		std::cout << "|Bot| rB = " << middle.radius() << " zM = " << middle.z()
+		<< std::endl;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
@@ -297,9 +338,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     for (size_t t = 0; t < numTopSP; t++) {
       auto lt = linCircleTop[t];
 
-      if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
-        continue;
-      }
+//      if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
+//        continue;
+//      }
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
@@ -406,6 +447,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
       middle.radius() < m_config.rMinMiddle) {
     return;
   }
+
+  std::cout << "|Middle| rM = " << middle.radius() << " zM = " << middle.z()
+            << std::endl;
 
   /*
    * Calculate the search ranges for bottom and top candidates for this middle
@@ -577,6 +621,18 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
     points.emplace_back(point, sp);
   }
 
+//  			std::sort(
+//  								points.begin(),
+//  points.end(),
+//  								[](auto& a,
+//  									 auto& b)
+//  { 				return a.second->radius() < b.second->radius();
+//  			});
+  //
+  //	for (std::pair point : points) {
+  //		std::cout << point.second->radius() << std::endl;
+  //	}
+
   return tree_t(std::move(points));
 }
 
@@ -615,11 +671,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    */
   tree_t tree = createTree(internalSpacePoints);
 
+//  std::sort(tree.begin(), tree.end(), [](auto &a, auto &b) {
+//    return a.second->radius() < b.second->radius();
+//  });
+
   /*
    * Run the seeding algorithm by iterating over all the points in the tree and
    * seeing what happens if we take them to be our middle spacepoint.
    */
   for (const typename tree_t::pair_t &middle_p : tree) {
+		std::cout << middle_p.second->radius() << std::endl;
     processFromMiddleSP(tree, out_cont, middle_p);
   }
 

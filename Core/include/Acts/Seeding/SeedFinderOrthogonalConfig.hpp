@@ -28,7 +28,7 @@ struct SeedFinderOrthogonalConfig {
   float minPt = 400. * Acts::UnitConstants::MeV;
   // cot of maximum theta angle
   // equivalent to 2.7 eta (pseudorapidity)
-  float cotThetaMax = 7.40627;
+  float cotThetaMax = 27.2899;
   // minimum distance in r between middle and top SP in one seed
   float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between middle and top SP in one seed
@@ -64,10 +64,10 @@ struct SeedFinderOrthogonalConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
-  float rMinMiddle = 60.f * Acts::UnitConstants::mm;
-  float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
+  float rMinMiddle = 0.f * Acts::UnitConstants::mm;
+  float rMaxMiddle = 1200000.f * Acts::UnitConstants::mm;
 
-  float deltaPhiMax = 0.085;
+  float deltaPhiMax = 1000;
 
   float bFieldInZ = 2.08 * Acts::UnitConstants::T;
   // location of beam in x,y plane.
@@ -75,10 +75,13 @@ struct SeedFinderOrthogonalConfig {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
-  // cut to the maximum value of delta z between SPs
-  float deltaZMax =
-      std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
-
+	// cut to the maximum value of delta z between SPs
+	float deltaZMax =
+	std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
+	
+	// enable cut on the compatibility between interaction point and SPs
+	bool interactionPointCut = false;
+	
   // seed confirmation
   bool seedConfirmation = false;
   // parameters for central seed confirmation
