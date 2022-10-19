@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
 #include <memory>
 
@@ -77,6 +78,13 @@ struct SeedFinderOrthogonalConfig {
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
+
+  // seed confirmation
+  bool seedConfirmation = false;
+  // parameters for central seed confirmation
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
+  // parameters for forward seed confirmation
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // average radiation lengths of material on the length of a seed. used for
   // scattering.

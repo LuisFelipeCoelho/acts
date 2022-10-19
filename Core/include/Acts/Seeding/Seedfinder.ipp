@@ -80,21 +80,6 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    size_t nTopSeedConf = 0;
-    if (m_config.seedConfirmation == true) {
-      // check if middle SP is in the central or forward region
-      SeedConfirmationRangeConfig seedConfRange =
-          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-           zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
-              ? m_config.forwardSeedConfirmationRange
-              : m_config.centralSeedConfirmationRange;
-      // set the minimum number of top SP depending on whether the middle SP is
-      // in the central or forward region
-      nTopSeedConf = rM > seedConfRange.rMaxSeedConf
-                         ? seedConfRange.nTopForLargeR
-                         : seedConfRange.nTopForSmallR;
-    }
-
     state.compatTopSP.clear();
 
     for (auto topSP : topSPs) {
@@ -163,12 +148,25 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
       state.compatTopSP.push_back(topSP);
     }
-    if (state.compatTopSP.empty()) {
-      continue;
-    }
     // apply cut on the number of top SP if seedConfirmation is true
-    if (m_config.seedConfirmation == true &&
-        state.compatTopSP.size() < nTopSeedConf) {
+    SeedConfQuantitiesConfig seedConfQuantities;
+    if (m_config.seedConfirmation == true) {
+      // check if middle SP is in the central or forward region
+      SeedConfirmationRangeConfig seedConfRange =
+          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+           zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
+              ? m_config.forwardSeedConfirmationRange
+              : m_config.centralSeedConfirmationRange;
+      // set the minimum number of top SP depending on whether the middle SP is
+      // in the central or forward region
+      seedConfQuantities.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                                            ? seedConfRange.nTopForLargeR
+                                            : seedConfRange.nTopForSmallR;
+      if (state.compatTopSP.size() < seedConfQuantities.nTopSeedConf) {
+        continue;
+      }
+    }
+    if (state.compatTopSP.empty()) {
       continue;
     }
 
@@ -258,9 +256,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     size_t numBotSP = state.compatBottomSP.size();
     size_t numTopSP = state.compatTopSP.size();
-
-    int numQualitySeeds = 0;
-    int numSeeds = 0;
+    //
+    //		seedConfQuantities.numQualitySeeds = 0;
+    //		seedConfQuantities.numSeeds = 0;
 
     size_t t0 = 0;
 
@@ -524,12 +522,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (!state.topSpVec.empty()) {
         m_config.seedFilter->filterSeeds_2SpFixed(
             *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
-            state.impactParameters, Zob, numQualitySeeds, numSeeds,
-            state.seedsPerSpM);
+            state.impactParameters, Zob, seedConfQuantities, state.seedsPerSpM);
       }
     }
-    m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM,
-                                              numQualitySeeds, outIt);
+    m_config.seedFilter->filterSeeds_1SpFixed(
+        state.seedsPerSpM, seedConfQuantities.numQualitySeeds, outIt);
   }
 }
 
