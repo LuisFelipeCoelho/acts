@@ -89,13 +89,26 @@ struct SeedFinderOrthogonalConfig {
   // parameters for forward seed confirmation
   SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
+  // enable cut on the compatibility between interaction point and SPs
+  bool interactionPointCut = false;
+
+  // skip top SPs based on cotTheta sorting when producing triplets
+  bool skipPreviousTopSP = false;
+
+  // seed confirmation
+  bool seedConfirmation = false;
+  // parameters for central seed confirmation
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
+  // parameters for forward seed confirmation
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
+
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
   // default is 5%
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
 
-  // derived values, set on Seedfinder construction
+  // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
   float pTPerHelixRadius = 0;
