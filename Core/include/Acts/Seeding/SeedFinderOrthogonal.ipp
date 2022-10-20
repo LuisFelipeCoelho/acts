@@ -158,8 +158,8 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
    * which is to say the absolute value must be smaller than the max cot(θ).
    */
-  float deltaZ = (zH - zL);
-  float cotTheta = deltaZ / deltaR;
+	float deltaZ = (zH - zL);
+	float cotTheta = deltaZ / deltaR;
   if (std::fabs(cotTheta) > m_config.cotThetaMax) {
     return false;
   }
@@ -214,7 +214,6 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
       }
     }
   }
-
   return true;
 }
 
@@ -244,11 +243,31 @@ template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
-    std::vector<internal_sp_t *> &top, int numQualitySeeds,
+    std::vector<internal_sp_t *> &top,
+    SeedConfQuantitiesConfig seedConfQuantities,
     output_container_t &cont) const {
   float rM = middle.radius();
+  float zM = middle.z();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
+
+  // apply cut on the number of top SP if seedConfirmation is true
+  if (m_config.seedConfirmation == true) {
+    // check if middle SP is in the central or forward region
+    SeedConfirmationRangeConfig seedConfRange =
+        (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_config.forwardSeedConfirmationRange
+            : m_config.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the middle SP is
+    // in the central or forward region
+    seedConfQuantities.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                                          ? seedConfRange.nTopForLargeR
+                                          : seedConfRange.nTopForSmallR;
+    if (top.size() < seedConfQuantities.nTopSeedConf) {
+			 return;
+    }
+  }
 
   std::vector<internal_sp_t *> top_valid;
   std::vector<float> curvatures;
@@ -300,6 +319,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     float Ub = lb.U;
     float ErB = lb.Er;
     float iDeltaRB = lb.iDeltaR;
+		
+		std::cout << "|Bot| rB = " << middle.radius() << " zM = " << middle.z()
+		<< std::endl;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
@@ -324,9 +346,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       auto lt = linCircleTop[t];
       float cotThetaT = lt.cotTheta;
 
-      if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
-        continue;
-      }
+//      if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
+//        continue;
+//      }
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
@@ -413,9 +435,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
     }
     if (!top_valid.empty()) {
-      m_config.seedFilter->filterSeeds_2SpFixed(
-          *bottom[b], middle, top_valid, curvatures, impactParameters, Zob,
-          numQualitySeeds, numSeeds, cont);
+      m_config.seedFilter->filterSeeds_2SpFixed(*bottom[b], middle, top_valid,
+                                                curvatures, impactParameters,
+                                                Zob, seedConfQuantities, cont);
     }
   }
 }
@@ -448,6 +470,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
       middle.radius() < m_config.rMinMiddle) {
     return;
   }
+
+  std::cout << "|Middle| rM = " << middle.radius() << " zM = " << middle.z()
+            << std::endl;
 
   /*
    * Calculate the search ranges for bottom and top candidates for this middle
@@ -573,13 +598,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
       float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
       protoseeds;
 
-  int numQualitySeeds = 0;
+  SeedConfQuantitiesConfig seedConfQuantities;
 
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(middle, bottom_lh_v, top_lh_v, numQualitySeeds,
+    filterCandidates(middle, bottom_lh_v, top_lh_v, seedConfQuantities,
                      protoseeds);
   }
 
@@ -587,14 +612,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(middle, bottom_hl_v, top_hl_v, numQualitySeeds,
+    filterCandidates(middle, bottom_hl_v, top_hl_v, seedConfQuantities,
                      protoseeds);
   }
 
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds, numQualitySeeds,
+  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds,
+                                            seedConfQuantities.numQualitySeeds,
                                             std::back_inserter(out_cont));
 }
 
@@ -617,6 +643,18 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
 
     points.emplace_back(point, sp);
   }
+
+//  			std::sort(
+//  								points.begin(),
+//  points.end(),
+//  								[](auto& a,
+//  									 auto& b)
+//  { 				return a.second->radius() < b.second->radius();
+//  			});
+  //
+  //	for (std::pair point : points) {
+  //		std::cout << point.second->radius() << std::endl;
+  //	}
 
   return tree_t(std::move(points));
 }
@@ -656,11 +694,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    */
   tree_t tree = createTree(internalSpacePoints);
 
+//  std::sort(tree.begin(), tree.end(), [](auto &a, auto &b) {
+//    return a.second->radius() < b.second->radius();
+//  });
+
   /*
    * Run the seeding algorithm by iterating over all the points in the tree and
    * seeing what happens if we take them to be our middle spacepoint.
    */
   for (const typename tree_t::pair_t &middle_p : tree) {
+		std::cout << middle_p.second->radius() << std::endl;
     processFromMiddleSP(tree, out_cont, middle_p);
   }
 
