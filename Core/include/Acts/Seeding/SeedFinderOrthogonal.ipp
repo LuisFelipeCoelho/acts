@@ -218,7 +218,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   //		? m_config.forwardSeedConfirmationRange
   //		: m_config.centralSeedConfirmationRange;
   //		// set the minimum number of top SP depending on whether the
-  //middle SP is
+  // middle SP is
   //		// in the central or forward region
   //		nTopSeedConf = rM > seedConfRange.rMaxSeedConf
   //		? seedConfRange.nTopForLargeR
