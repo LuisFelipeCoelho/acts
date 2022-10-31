@@ -6,7 +6,7 @@ import acts.examples
 from acts.examples import TGeoDetector
 
 from acts.examples.reconstruction import (
-    SeedFinderConfigArg,
+    SeedfinderConfigArg,
     SeedFilterConfigArg,
     SpacePointGridConfigArg,
     SeedingAlgorithmConfigArg,
@@ -462,7 +462,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         useDeltaRorTopRadius = False
 
     # fill namedtuples
-    seedFinderConfigArg = SeedFinderConfigArg(
+    seedfinderConfigArg = SeedfinderConfigArg(
         maxSeedsPerSpM=maxSeedsPerSpM,
         cotThetaMax=cotThetaMax,
         sigmaScattering=sigmaScattering,
@@ -520,7 +520,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     )
 
     return (
-        seedFinderConfigArg,
+        seedfinderConfigArg,
         seedFilterConfigArg,
         spacePointGridConfigArg,
         seedingAlgorithmConfigArg,

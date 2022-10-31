@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
@@ -22,8 +21,6 @@
 #include <atomic>
 #include <functional>
 #include <vector>
-
-#include <tbb/combinable.h>
 
 namespace ActsExamples {
 
@@ -43,9 +40,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   class TrackFinderFunction {
    public:
     virtual ~TrackFinderFunction() = default;
-    virtual TrackFinderResult operator()(
-        const TrackParametersContainer&, const TrackFinderOptions&,
-        std::shared_ptr<Acts::VectorMultiTrajectory>) const = 0;
+    virtual TrackFinderResult operator()(const TrackParametersContainer&,
+                                         const TrackFinderOptions&) const = 0;
   };
 
   /// Create the track finder function implementation.
@@ -103,18 +99,10 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
  private:
   Config m_cfg;
 
-  mutable std::atomic<size_t> m_nTotalSeeds{0};
-  mutable std::atomic<size_t> m_nFailedSeeds{0};
-
-  mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
-      m_memoryStatistics{[]() {
-        auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
-        return mtj->statistics();
-      }};
+  mutable std::atomic<size_t> m_nTotalSeeds;
+  mutable std::atomic<size_t> m_nFailedSeeds;
 };
 
-// TODO this is somewhat duplicated in AmbiguityResolutionAlgorithm.cpp
-// TODO we should make a common implementation in the core at some point
 template <typename source_link_accessor_container_t>
 void TrackFindingAlgorithm::computeSharedHits(
     const source_link_accessor_container_t& sourceLinks,
@@ -138,9 +126,8 @@ void TrackFindingAlgorithm::computeSharedHits(
 
     for (auto measIndex : measIndexes) {
       ckfResult.fittedStates->visitBackwards(measIndex, [&](const auto& state) {
-        if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          return true;
-        }
+        if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag))
+          return;
 
         std::size_t hitIndex =
             static_cast<const IndexSourceLink&>(state.uncalibrated()).index();
@@ -150,7 +137,7 @@ void TrackFindingAlgorithm::computeSharedHits(
             std::numeric_limits<std::size_t>::max()) {
           firstTrackOnTheHit.at(hitIndex) = iresult;
           firstStateOnTheHit.at(hitIndex) = state.index();
-          return true;
+          return;
         }
 
         // if already used, control if first track state has been marked
@@ -161,13 +148,12 @@ void TrackFindingAlgorithm::computeSharedHits(
                     .value()
                     .fittedStates->getTrackState(indexFirstState)
                     .typeFlags()
-                    .test(Acts::TrackStateFlag::SharedHitFlag)) {
+                    .test(Acts::TrackStateFlag::SharedHitFlag))
           results.at(indexFirstTrack)
               .value()
               .fittedStates->getTrackState(indexFirstState)
               .typeFlags()
               .set(Acts::TrackStateFlag::SharedHitFlag);
-        }
 
         // Decorate this track
         results.at(iresult)
@@ -175,8 +161,6 @@ void TrackFindingAlgorithm::computeSharedHits(
             .fittedStates->getTrackState(state.index())
             .typeFlags()
             .set(Acts::TrackStateFlag::SharedHitFlag);
-
-        return true;
       });
     }
   }

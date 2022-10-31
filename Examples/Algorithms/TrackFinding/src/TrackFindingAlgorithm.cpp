@@ -8,7 +8,6 @@
 
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -18,10 +17,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <memory>
 #include <stdexcept>
-
-#include <boost/histogram.hpp>
 
 ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
@@ -108,9 +104,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
-
-  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
-  auto results = (*m_cfg.findTracks)(initialParameters, options, mtj);
+  auto results = (*m_cfg.findTracks)(initialParameters, options);
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {
@@ -150,8 +144,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   ACTS_DEBUG("Finalized track finding with " << trajectories.size()
                                              << " track candidates.");
 
-  m_memoryStatistics.local().hist += mtj->statistics().hist;
-
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   ctx.eventStore.add(m_cfg.outputTrackParameters,
                      std::move(trackParametersContainer));
@@ -167,15 +159,5 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize()
   ACTS_INFO("- failed seeds: " << m_nFailedSeeds);
   ACTS_INFO("- failure ratio: " << static_cast<double>(m_nFailedSeeds) /
                                        m_nTotalSeeds);
-
-  auto memoryStatistics =
-      m_memoryStatistics.combine([](const auto& a, const auto& b) {
-        Acts::VectorMultiTrajectory::Statistics c;
-        c.hist = a.hist + b.hist;
-        return c;
-      });
-  std::stringstream ss;
-  memoryStatistics.toStream(ss);
-  ACTS_DEBUG("Track State memory statistics (averaged):\n" << ss.str());
   return ProcessCode::SUCCESS;
 }

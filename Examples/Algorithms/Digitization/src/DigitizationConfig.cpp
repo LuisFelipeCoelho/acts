@@ -14,9 +14,12 @@
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <numeric>
 #include <string>
+
+#include <boost/program_options.hpp>
 
 namespace {
 
@@ -31,9 +34,11 @@ enum SmearingTypes : int {
 }  // namespace
 
 ActsExamples::DigitizationConfig::DigitizationConfig(
-    bool merge, double sigma, bool commonCorner,
+    const Options::Variables& vars,
     Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
-    : doMerge(merge), mergeNsigma(sigma), mergeCommonCorner(commonCorner) {
+    : doMerge(vars["digi-merge"].as<bool>()),
+      mergeNsigma(vars["digi-merge-nsigma"].as<double>()),
+      mergeCommonCorner(vars["digi-merge-common-corner"].as<bool>()) {
   digitizationConfigs = std::move(digiCfgs);
 }
 

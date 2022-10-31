@@ -8,8 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
 
-#include <filesystem>
-
+#include <boost/filesystem.hpp>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
@@ -47,7 +46,7 @@ namespace Acts {
 ExaTrkXTrackFindingTorch::ExaTrkXTrackFindingTorch(
     const ExaTrkXTrackFindingTorch::Config& config)
     : ExaTrkXTrackFindingBase("ExaTrkXTorch"), m_cfg(config) {
-  using Path = std::filesystem::path;
+  using Path = boost::filesystem::path;
 
   const Path embedModelPath = Path(m_cfg.modelDir) / "embed.pt";
   const Path filterModelPath = Path(m_cfg.modelDir) / "filter.pt";

@@ -2,6 +2,7 @@ name: Release PR
 
 on:
   pull_request:
+  
 
 jobs:
   process_release_pr:

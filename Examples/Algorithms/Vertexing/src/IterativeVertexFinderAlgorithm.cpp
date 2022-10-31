@@ -30,6 +30,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <chrono>
 

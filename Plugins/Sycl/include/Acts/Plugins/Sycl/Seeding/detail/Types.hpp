@@ -39,9 +39,9 @@ struct DeviceLinEqCircle {
   float v;
 };
 
-/// Config parameters of SeedFinder and SeedFilter classes
+/// Config parameters of Seedfinder and SeedFilter classes
 /// needed for the seeding algorithm on the device side.
-struct DeviceSeedFinderConfig {
+struct DeviceSeedfinderConfig {
   float deltaRMin;
   float deltaRMax;
   float cotThetaMax;
@@ -71,7 +71,7 @@ struct DeviceTriplet {
 ///
 /// Stores the indices of the space points and the weight of the seed.
 /// They index arrays on the host side, constructed in
-/// @c Acts::Sycl::SeedFinder::createSeedsForGroup(...).
+/// @c Acts::Sycl::Seedfinder::createSeedsForGroup(...).
 struct SeedData {
   uint32_t bottom;
   uint32_t top;

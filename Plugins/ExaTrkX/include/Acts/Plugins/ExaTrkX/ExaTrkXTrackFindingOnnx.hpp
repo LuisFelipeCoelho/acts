@@ -11,6 +11,8 @@
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
 
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace Ort {
 class Env;
@@ -20,9 +22,9 @@ class Value;
 
 namespace Acts {
 
-/// @brief Implementation of the Exa.TrkX track finding algorithm based on ONNX.
-/// Uses cugraph as graph library.
+/// @class ExaTrkXTrackFindingOnnx
 ///
+/// Class implementing the Exa.TrkX track finding algorithm based on ONNX
 class ExaTrkXTrackFindingOnnx final : public ExaTrkXTrackFindingBase {
  public:
   /// Configuration struct for the track finding.
@@ -48,15 +50,12 @@ class ExaTrkXTrackFindingOnnx final : public ExaTrkXTrackFindingBase {
 
   /// Run the inference
   ///
-  /// @param inputValues Spacepoint data as a flattened NxD array, where D is
-  /// the dimensionality of a spacepoint (usually 3, but additional information
-  /// like cell information can be provided).
-  /// @param spacepointIDs The corresponding spacepoint IDs
-  /// @param trackCandidates This vector is filled with the tracks as vectors
-  /// of spacepoint IDs
+  /// @param inputValues tPacked spacepoints in the form
+  /// [ r1, phi1, z1, r2, phi2, z2, ... ]
+  /// @param spacepointIDs The corresponding spacepoint spacepoint spacepointIDs
+  /// @param trackCandidates This vector is filled with the tracks as vectors of spacepoint spacepoint IDs
   /// @param logger If provided, logging is enabled
-  /// @param recordTiming If enabled, returns a @ref ExaTrkXTime object with
-  /// measured timings
+  /// @param recordTiming If enabled, returns a @class ExaTrkXTime object with measured timings
   /// @note The input values are not const, because the ONNX API
   /// takes only non-const pointers.
   std::optional<ExaTrkXTime> getTracks(

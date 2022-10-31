@@ -2,6 +2,8 @@ add_library(
   ActsExamplesIoCsv SHARED
   src/CsvMeasurementReader.cpp
   src/CsvMeasurementWriter.cpp
+  src/CsvOptionsReader.cpp
+  src/CsvOptionsWriter.cpp
   src/CsvParticleReader.cpp
   src/CsvParticleWriter.cpp
   src/CsvPlanarClusterReader.cpp
@@ -20,7 +22,7 @@ target_link_libraries(
   PRIVATE
     ActsCore ActsPluginIdentification
     ActsExamplesFramework ActsExamplesDigitization
-    Threads::Threads dfelibs)
+    Threads::Threads Boost::program_options dfelibs)
 
 install(
   TARGETS ActsExamplesIoCsv

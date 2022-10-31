@@ -13,6 +13,7 @@
 #pragma once
 
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <limits>
 
@@ -50,6 +51,11 @@ class ParticleSelector final : public BareAlgorithm {
     /// Remove neutral particles.
     bool removeNeutral = false;
   };
+
+  /// Add options for the particle selector.
+  static void addOptions(Options::Description& desc);
+  /// Construct particle selector config from user variables.
+  static Config readConfig(const Options::Variables& vars);
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);
 

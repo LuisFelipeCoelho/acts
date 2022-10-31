@@ -1,9 +1,9 @@
 add_library(
   ActsExamplesFatrasCommon SHARED
-  src/FatrasCommon.cpp src/FatrasOptions.cpp)
+  Fatras.cpp)
 target_include_directories(
   ActsExamplesFatrasCommon
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 target_link_libraries(
   ActsExamplesFatrasCommon
   PUBLIC

@@ -29,9 +29,10 @@ class GainMatrixUpdater {
                      false>::Parameters filtered;
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Covariance filteredCovariance;
-    // This is used to build a covariance matrix view in the .cpp file
-    double* calibrated;
-    double* calibratedCovariance;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Measurement calibrated;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::MeasurementCovariance calibratedCovariance;
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Projector projector;
     unsigned int calibratedSize;
@@ -80,17 +81,8 @@ class GainMatrixUpdater {
             trackState.predictedCovariance(),
             trackState.filtered(),
             trackState.filteredCovariance(),
-            // This abuses an incorrectly sized vector / matrix to access the
-            // data pointer! This works (don't use the matrix as is!), but be
-            // careful!
-            trackState
-                .template calibrated<
-                    MultiTrajectoryTraits::MeasurementSizeMax>()
-                .data(),
-            trackState
-                .template calibratedCovariance<
-                    MultiTrajectoryTraits::MeasurementSizeMax>()
-                .data(),
+            trackState.calibrated(),
+            trackState.calibratedCovariance(),
             trackState.projector(),
             trackState.calibratedSize(),
         },

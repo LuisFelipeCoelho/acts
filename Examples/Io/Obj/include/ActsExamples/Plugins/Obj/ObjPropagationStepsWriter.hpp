@@ -58,9 +58,6 @@ class ObjPropagationStepsWriter
     return ActsExamples::ProcessCode::SUCCESS;
   }
 
-  /// Get readonly access to the config parameters
-  const Config& config() const { return m_cfg; }
-
  private:
   Config m_cfg;  ///!< Internal configuration represenation
 

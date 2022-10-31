@@ -13,6 +13,7 @@
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
 #include <memory>
@@ -71,6 +72,11 @@ class FatrasSimulation final : public BareAlgorithm {
     /// pre-allocate to avoid allocation during event simulation.
     size_t averageHitsPerParticle = 16u;
   };
+
+  /// Add options for the particle selector.
+  static void addOptions(Options::Description& desc);
+  /// Construct particle selector config from user variables.
+  static Config readConfig(const Options::Variables& vars);
 
   /// Construct the algorithm from a config.
   ///

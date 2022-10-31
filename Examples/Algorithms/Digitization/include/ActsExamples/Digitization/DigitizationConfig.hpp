@@ -18,6 +18,7 @@
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <functional>
@@ -99,13 +100,12 @@ struct DigiComponentsConfig {
 
 class DigitizationConfig {
  public:
-  DigitizationConfig(bool merge, double sigma, bool commonCorner)
+  DigitizationConfig(const Options::Variables &vars)
       : DigitizationConfig(
-            merge, sigma, commonCorner,
-            Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+            vars, Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
 
   DigitizationConfig(
-      bool doMerge, double mergeNsigma, bool mergeCommonCorner,
+      const Options::Variables &vars,
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
   DigitizationConfig(

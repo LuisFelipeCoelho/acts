@@ -115,16 +115,7 @@ class MeasurementSelector {
       // const auto predictedCovariance = trackState.predictedCovariance();
 
       double chi2 = calculateChi2(
-          // This abuses an incorrectly sized vector / matrix to access the
-          // data pointer! This works (don't use the matrix as is!), but be
-          // careful!
-          trackState
-              .template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
-              .data(),
-          trackState
-              .template calibratedCovariance<
-                  MultiTrajectoryTraits::MeasurementSizeMax>()
-              .data(),
+          trackState.calibrated(), trackState.calibratedCovariance(),
           trackState.predicted(), trackState.predictedCovariance(),
           trackState.projector(), trackState.calibratedSize());
 
@@ -220,7 +211,10 @@ class MeasurementSelector {
   }
 
   double calculateChi2(
-      double* fullCalibrated, double* fullCalibratedCovariance,
+      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                       false>::Measurement fullCalibrated,
+      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                       false>::MeasurementCovariance fullCalibratedCovariance,
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                        false>::Parameters predicted,
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,

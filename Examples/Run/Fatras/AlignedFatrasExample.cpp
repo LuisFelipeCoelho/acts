@@ -7,7 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
-#include "ActsExamples/Fatras/FatrasCommon.hpp"
+
+#include "Fatras.hpp"
 
 int main(int argc, char* argv[]) {
   return runFatras(
