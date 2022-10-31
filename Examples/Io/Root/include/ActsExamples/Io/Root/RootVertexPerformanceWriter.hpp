@@ -37,14 +37,13 @@ class RootVertexPerformanceWriter final
     std::string inputAllTruthParticles;
     /// Selected input truth particle collection
     std::string inputSelectedTruthParticles;
-    /// Truth particles associated to fitted tracks
+    /// Truth particles associated to tracks
     std::string inputAssociatedTruthParticles;
-    /// All event fitted tracks
-    std::string inputFittedTracks;
-    /// All event fitted tracks indices
-    std::string inputFittedTracksIndices;
-    /// All event fitted tracks tips
-    std::string inputAllFittedTracksTips;
+    /// Input track parameters
+    std::string inputTrackParameters;
+    /// Input track parameters tips (points from `inputTrackParameters` to
+    /// `inputTrajectories`)
+    std::string inputTrackParametersTips;
     /// Trajectories object from track finidng
     std::string inputTrajectories;
     /// Input hit-particles map collection.
@@ -77,6 +76,9 @@ class RootVertexPerformanceWriter final
 
   /// End-of-run hook
   ProcessCode endRun() final override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// @brief Write method called by the base class
