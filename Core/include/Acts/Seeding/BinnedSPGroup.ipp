@@ -73,20 +73,24 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     rBins[rIndex].push_back(std::move(isp));
   }
 
+	// if requested, it is possible to force sorting in R for each (z, phi) grid
+	// bin
+	if (config.forceRadialSorting) {
+		for (auto& rbin : rBins) {
+			std::sort(
+								rbin.begin(), rbin.end(),
+								[](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
+									 std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
+				return a->radius() < b->radius();
+			});
+		}
+	}
+
+	
   // fill rbins into grid such that each grid bin is sorted in r
   // space points with delta r < rbin size can be out of order is sorting is not
   // requested
   for (auto& rbin : rBins) {
-    // if requested, it is possible to force sorting in R for each (z, phi) grid
-    // bin
-    if (config.forceRadialSorting) {
-      std::sort(
-          rbin.begin(), rbin.end(),
-          [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
-             std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
-            return a->radius() < b->radius();
-          });
-    }
     for (auto& isp : rbin) {
       Acts::Vector2 spLocation(isp->phi(), isp->z());
       std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
