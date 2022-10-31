@@ -32,22 +32,21 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
         outCont) const {
-  // seed confirmation
-  //  int nTopSeedConf = 0;
-  //  if (m_cfg.seedConfirmation) {
-  //    // check if bottom SP is in the central or forward region
-  //    SeedConfirmationRangeConfig seedConfRange =
-  //        (bottomSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
-  //         bottomSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
-  //            ? m_cfg.forwardSeedConfirmationRange
-  //            : m_cfg.centralSeedConfirmationRange;
-  //    // set the minimum number of top SP depending on whether the bottom SP
-  //    is
-  //    // in the central or forward region
-  //    nTopSeedConf = bottomSP.radius() > seedConfRange.rMaxSeedConf
-  //                       ? seedConfRange.nTopForLargeR
-  //                       : seedConfRange.nTopForSmallR;
-  //  }
+   seed confirmation
+	int nTopSeedConf2 = 0;
+	if (m_cfg.seedConfirmation) {
+		// check if bottom SP is in the central or forward region
+		SeedConfirmationRangeConfig seedConfRange =
+				(bottomSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+				 bottomSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
+						? m_cfg.forwardSeedConfirmationRange
+						: m_cfg.centralSeedConfirmationRange;
+		// set the minimum number of top SP depending on whether the bottom SP is
+		// in the central or forward region
+		nTopSeedConf2 = bottomSP.radius() > seedConfRange.rMaxSeedConf
+											 ? seedConfRange.nTopForLargeR
+											 : seedConfRange.nTopForSmallR;
+	}
 
   size_t maxWeightSeedIndex = 0;
   bool maxWeightSeed = false;
@@ -152,7 +151,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
-      deltaSeedConf = compatibleSeedR.size() + 1 - nTopSeedConf;
+      deltaSeedConf = compatibleSeedR.size() + 1 - nTopSeedConf2;
       if (deltaSeedConf < 0 || (numQualitySeeds and deltaSeedConf == 0)) {
         continue;
       }
