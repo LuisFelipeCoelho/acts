@@ -1,7 +1,6 @@
 add_library(
   ActsExamplesFramework SHARED
   src/Framework/BareAlgorithm.cpp
-  src/Framework/WhiteBoard.cpp
   src/Framework/BareService.cpp
   src/Framework/RandomNumbers.cpp
   src/Framework/Sequencer.cpp
@@ -21,7 +20,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras Boost::boost ROOT::Core ROOT::Hist
-  PRIVATE dfelibs std::filesystem)
+  PRIVATE Boost::filesystem dfelibs)
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)

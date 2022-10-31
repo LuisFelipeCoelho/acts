@@ -8,22 +8,9 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackStatePropMask.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-
-#include <cstdint>
-#include <type_traits>
-
-#include <boost/histogram.hpp>
-#include <boost/histogram/axis/category.hpp>
-#include <boost/histogram/make_histogram.hpp>
-
 namespace Acts {
 
-detail_vmt::VectorMultiTrajectoryBase::DynamicColumnBase::~DynamicColumnBase() =
-    default;
+VectorMultiTrajectory::DynamicColumnBase::~DynamicColumnBase() = default;
 
 auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
                                                IndexType iprevious)
@@ -32,9 +19,7 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
 
   m_index.emplace_back();
   IndexData& p = m_index.back();
-  IndexType index = m_index.size() - 1;
-
-  p.allocMask = mask;
+  size_t index = m_index.size() - 1;
 
   if (iprevious != kInvalid) {
     p.iprevious = iprevious;
@@ -73,10 +58,11 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   m_sourceLinks.push_back(nullptr);
   p.iuncalibrated = m_sourceLinks.size() - 1;
 
-  m_measOffset.push_back(kInvalid);
-  m_measCovOffset.push_back(kInvalid);
-
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
+    m_meas.emplace_back();
+    m_measCov.emplace_back();
+    p.icalibrated = m_meas.size() - 1;
+
     m_sourceLinks.push_back(nullptr);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;
 
@@ -164,8 +150,7 @@ void VectorMultiTrajectory::unset_impl(TrackStatePropMask target,
       m_index[istate].ijacobian = kInvalid;
       break;
     case PM::Calibrated:
-      m_measOffset[istate] = kInvalid;
-      m_measCovOffset[istate] = kInvalid;
+      m_index[istate].icalibrated = kInvalid;
       break;
     default:
       throw std::domain_error{"Unable to unset this component"};
@@ -184,44 +169,6 @@ void VectorMultiTrajectory::clear_impl() {
   m_referenceSurfaces.clear();
   for (auto& [key, vec] : m_dynamic) {
     vec->clear();
-  }
-}
-
-void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
-    std::ostream& os, size_t n) {
-  using namespace boost::histogram;
-  using cat = axis::category<std::string>;
-
-  auto& h = hist;
-
-  auto column_axis = axis::get<cat>(h.axis(0));
-  auto type_axis = axis::get<axis::category<>>(h.axis(1));
-
-  auto p = [&](const auto& key, const auto v, const std::string suffix = "") {
-    os << std::setw(20) << key << ": ";
-    if constexpr (std::is_same_v<std::decay_t<decltype(v)>, double>) {
-      os << std::fixed << std::setw(8) << std::setprecision(2) << v / n
-         << suffix;
-    } else {
-      os << std::fixed << std::setw(8) << double(v) / n << suffix;
-    }
-    os << std::endl;
-  };
-
-  for (int t = 0; t < type_axis.size(); t++) {
-    os << (type_axis.bin(t) == 1 ? "meas" : "other") << ":" << std::endl;
-    double total = 0;
-    for (int c = 0; c < column_axis.size(); c++) {
-      std::string key = column_axis.bin(c);
-      auto v = h.at(c, t);
-      if (key == "count") {
-        p(key, static_cast<size_t>(v));
-        continue;
-      }
-      p(key, v / 1024 / 1024, "M");
-      total += v;
-    }
-    p("total", total / 1024 / 1024, "M");
   }
 }
 

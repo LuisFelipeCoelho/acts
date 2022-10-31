@@ -1,11 +1,10 @@
 add_library(
   ActsExamplesGeant4Common SHARED
-  src/Geant4Common.cpp
-  src/Geant4Options.cpp)
+  Geant4.cpp)
   
 target_include_directories(
   ActsExamplesGeant4Common
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 target_link_libraries(
   ActsExamplesGeant4Common
   PUBLIC

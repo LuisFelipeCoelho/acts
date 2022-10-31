@@ -138,11 +138,9 @@ inline auto TrackStateProxy<D, M, ReadOnly>::uncalibrated() const
 }
 
 template <typename D, size_t M, bool ReadOnly>
-template <size_t measdim>
-inline auto TrackStateProxy<D, M, ReadOnly>::calibrated() const
-    -> Measurement<measdim> {
+inline auto TrackStateProxy<D, M, ReadOnly>::calibrated() const -> Measurement {
   assert(has<hashString("calibrated")>());
-  return m_traj->self().template measurement<measdim>(
+  return m_traj->self().measurement(
       component<IndexType, hashString("calibrated")>());
 }
 
@@ -158,12 +156,11 @@ inline auto TrackStateProxy<D, M, ReadOnly>::calibratedSourceLink() const
 }
 
 template <typename D, size_t M, bool ReadOnly>
-template <size_t measdim>
 inline auto TrackStateProxy<D, M, ReadOnly>::calibratedCovariance() const
-    -> MeasurementCovariance<measdim> {
-  assert(has<hashString("calibratedCov")>());
-  return m_traj->self().template measurementCovariance<measdim>(
-      component<IndexType, hashString("calibratedCov")>());
+    -> MeasurementCovariance {
+  assert(has<hashString("calibrated")>());
+  return m_traj->self().measurementCovariance(
+      component<IndexType, hashString("calibrated")>());
 }
 
 }  // namespace detail_lt
@@ -196,4 +193,30 @@ void MultiTrajectory<D>::visitBackwards(IndexType iendpoint,
   }
 }
 
+template <typename D>
+template <typename F>
+void MultiTrajectory<D>::applyBackwards(IndexType iendpoint, F&& callable) {
+  static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
+                "Callable needs to satisfy VisitorConcept");
+
+  while (true) {
+    auto ts = getTrackState(iendpoint);
+    if constexpr (std::is_same_v<std::invoke_result_t<F, TrackStateProxy>,
+                                 bool>) {
+      bool proceed = callable(ts);
+      // this point has no parent and ends the trajectory, or a break was
+      // requested
+      if (!proceed || !ts.hasPrevious()) {
+        break;
+      }
+    } else {
+      callable(ts);
+      // this point has no parent and ends the trajectory
+      if (!ts.hasPrevious()) {
+        break;
+      }
+    }
+    iendpoint = ts.previous();
+  }
+}
 }  // namespace Acts

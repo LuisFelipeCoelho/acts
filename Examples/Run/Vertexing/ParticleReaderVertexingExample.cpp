@@ -14,17 +14,16 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Options/CsvOptionsReader.hpp"
-#include "ActsExamples/Options/MagneticFieldOptions.hpp"
-#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
-#include "ActsExamples/Options/VertexingOptions.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/VertexingOptions.hpp"
 
 #include <memory>
 
@@ -36,7 +35,7 @@ int main(int argc, char* argv[]) {
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
-  Options::addParticleSelectorOptions(desc);
+  ParticleSelector::addOptions(desc);
   Options::addVertexingOptions(desc);
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
@@ -65,8 +64,7 @@ int main(int argc, char* argv[]) {
       std::make_shared<CsvParticleReader>(readParticles, logLevel));
 
   // pre-select particles
-  ParticleSelector::Config selectParticles =
-      Options::readParticleSelectorConfig(vars);
+  ParticleSelector::Config selectParticles = ParticleSelector::readConfig(vars);
   selectParticles.inputParticles = readParticles.outputParticles;
   selectParticles.outputParticles = "particles_selected";
   // smearing only works with charge particles for now

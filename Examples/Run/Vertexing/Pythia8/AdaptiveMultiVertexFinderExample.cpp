@@ -8,16 +8,15 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Options/MagneticFieldOptions.hpp"
-#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
-#include "ActsExamples/Options/ParticleSmearingOptions.hpp"
 #include "ActsExamples/Options/Pythia8Options.hpp"
-#include "ActsExamples/Options/VertexingOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
+#include "ActsExamples/TruthTracking/ParticleSmearingOptions.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/VertexingOptions.hpp"
 
 #include <memory>
 
@@ -30,7 +29,7 @@ int main(int argc, char* argv[]) {
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
   Options::addPythia8Options(desc);
-  Options::addParticleSelectorOptions(desc);
+  ParticleSelector::addOptions(desc);
   Options::addVertexingOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
@@ -56,8 +55,7 @@ int main(int argc, char* argv[]) {
   sequencer.addReader(std::make_shared<EventGenerator>(evgen, logLevel));
 
   // pre-select particles
-  ParticleSelector::Config selectParticles =
-      Options::readParticleSelectorConfig(vars);
+  ParticleSelector::Config selectParticles = ParticleSelector::readConfig(vars);
   selectParticles.inputParticles = evgen.outputParticles;
   selectParticles.outputParticles = "particles_selected";
   // smearing only works with charge particles for now

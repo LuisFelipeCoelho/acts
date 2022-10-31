@@ -35,8 +35,7 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
                        component_iterator_t bwdBegin,
                        component_iterator_t bwdEnd,
                        fwd_projector_t fwdProjector = fwd_projector_t{},
-                       bwd_projector_t bwdProjector = bwd_projector_t{},
-                       ActsScalar weightCutoff = 1.e-16) {
+                       bwd_projector_t bwdProjector = bwd_projector_t{}) {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       smoothedState;
 
@@ -61,14 +60,12 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
 
       const auto new_weight = std::exp(-0.5 * exponent) * weight_a * weight_b;
 
-      if (std::isfinite(new_weight) and new_weight > weightCutoff) {
-        smoothedState.push_back({new_weight, new_pars, new_cov});
+      if (new_weight == 0) {
+        return ResType(GsfError::SmoothingFailed);
       }
-    }
-  }
 
-  if (smoothedState.empty()) {
-    return ResType(Experimental::GsfError::SmoothingFailed);
+      smoothedState.push_back({new_weight, new_pars, new_cov});
+    }
   }
 
   normalizeWeights(smoothedState, [](auto &tuple) -> decltype(auto) {
@@ -81,16 +78,6 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
                "smoothed state not normalized");
 
   return ResType(smoothedState);
-}
-
-/// Enumeration type to allow templating on the state we want to project on with
-/// a MultiTrajectory
-enum class StatesType { ePredicted, eFiltered, eSmoothed };
-
-inline std::ostream &operator<<(std::ostream &os, StatesType type) {
-  constexpr static std::array names = {"predicted", "filtered", "smoothed"};
-  os << names[static_cast<int>(type)];
-  return os;
 }
 
 /// @brief Projector type which maps a MultiTrajectory-Index to a tuple of
@@ -228,11 +215,8 @@ auto smoothAndCombineTrajectories(
     // If we have a hole or an outlier, just take the combination of filtered
     // and predicted and no smoothed state
     if (not proxy.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-      const auto [mean, cov] =
-          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
-            return combineGaussianMixture(bwdTips,
-                                          FiltProjector{bwd, bwdWeights}, desc);
-          });
+      const auto [mean, cov] = combineBoundGaussianMixture(
+          bwdTips.begin(), bwdTips.end(), FiltProjector{bwd, bwdWeights});
 
       proxy.predicted() = mean;
       proxy.predictedCovariance() = cov.value();
@@ -245,20 +229,14 @@ auto smoothAndCombineTrajectories(
       result.measurementStates++;
 
       // The predicted state is the forward pass
-      const auto [fwdMeanPred, fwdCovPred] =
-          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
-            return combineGaussianMixture(fwdTips,
-                                          PredProjector{fwd, fwdWeights}, desc);
-          });
+      const auto [fwdMeanPred, fwdCovPred] = combineBoundGaussianMixture(
+          fwdTips.begin(), fwdTips.end(), PredProjector{fwd, fwdWeights});
       proxy.predicted() = fwdMeanPred;
       proxy.predictedCovariance() = fwdCovPred.value();
 
       // The filtered state is the backward pass
-      const auto [bwdMeanFilt, bwdCovFilt] =
-          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
-            return combineGaussianMixture(bwdTips,
-                                          FiltProjector{bwd, bwdWeights}, desc);
-          });
+      const auto [bwdMeanFilt, bwdCovFilt] = combineBoundGaussianMixture(
+          bwdTips.begin(), bwdTips.end(), FiltProjector{bwd, bwdWeights});
       proxy.filtered() = bwdMeanFilt;
       proxy.filteredCovariance() = bwdCovFilt.value();
 
@@ -279,10 +257,8 @@ auto smoothAndCombineTrajectories(
       }
 
       // The smoothed state is a combination
-      const auto [smoothedMean, smoothedCov] =
-          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
-            return combineGaussianMixture(smoothedState, Identity{}, desc);
-          });
+      const auto [smoothedMean, smoothedCov] = combineBoundGaussianMixture(
+          smoothedState.begin(), smoothedState.end());
       proxy.smoothed() = smoothedMean;
       proxy.smoothedCovariance() = smoothedCov.value();
       ACTS_VERBOSE("Added smoothed state to MultiTrajectory");

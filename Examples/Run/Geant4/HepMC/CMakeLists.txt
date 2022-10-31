@@ -10,8 +10,6 @@ target_link_libraries(
     ActsExamplesFramework
     ActsExamplesGeant4
     ActsExamplesIoHepMC3
-    ActsExamplesHepMC3Options
-    ActsExamplesGeant4Common
     Boost::program_options)
     
 install(

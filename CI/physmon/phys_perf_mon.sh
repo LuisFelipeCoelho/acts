@@ -34,6 +34,7 @@ function run() {
     echo "::endgroup::"
 }
 
+
 function full_chain() {
     suffix=$1
 
@@ -50,7 +51,7 @@ function full_chain() {
         --title "CKF ${suffix}" \
         -c $config \
         -o $outdir/ckf_${suffix}.html \
-        -p $outdir/ckf_${suffix}_plots
+        -p $outdir/ckf_${suffix}_plots 
 
     Examples/Scripts/generic_plotter.py \
         $outdir/performance_vertexing_${suffix}.root \
@@ -66,6 +67,7 @@ function full_chain() {
         --title "IVF ${suffix}" \
         -o $outdir/ivf_${suffix}.html \
         -p $outdir/ivf_${suffix}_plots
+
 }
 
 full_chain truth_smeared
@@ -81,23 +83,11 @@ run \
     -p $outdir/truth_tracking_plots
 
 run \
-    $outdir/performance_ambi_seeded.root \
-    $refdir/performance_ambi_seeded.root \
-    --title "Ambisolver seeded" \
-    -o $outdir/ambi_seeded.html \
-    -p $outdir/ambi_seeded_plots
-
-run \
     $outdir/acts_analysis_residuals_and_pulls.root \
     $refdir/acts_analysis_residuals_and_pulls.root \
     --title "analysis_residuals_and_pulls" \
 #    -o $outdir/analysis_residuals_and_pulls.html \
-#    -p $outdir/analysis_residuals_and_pulls
+#    -p $outdir/analysis_residuals_and_pulls \
 
-Examples/Scripts/vertex_mu_scan.py \
-    $outdir/performance_vertexing_*mu*.root \
-    $outdir/vertexing_mu_scan.pdf
-
-rm $outdir/performance_vertexing_*mu*
 
 exit $ec

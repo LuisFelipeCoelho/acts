@@ -45,7 +45,7 @@ class TripletSearch {
       vecmem::data::vector_view<const detail::DeviceSpacePoint> middleSPsView,
       vecmem::data::vector_view<uint32_t> indTopDupletview,
       vecmem::data::vector_view<uint32_t> countTripletsView,
-      const DeviceSeedFinderConfig& config,
+      const DeviceSeedfinderConfig& config,
       vecmem::data::vector_view<detail::DeviceTriplet> curvImpactView)
       : m_sumBotTopCombView(sumBotTopCombView),
         m_numTripletSearchThreads(numTripletSearchThreads),
@@ -259,7 +259,7 @@ class TripletSearch {
   vecmem::data::vector_view<const detail::DeviceSpacePoint> m_middleSPsView;
   vecmem::data::vector_view<uint32_t> m_indTopDupletView;
   vecmem::data::vector_view<uint32_t> m_countTripletsView;
-  DeviceSeedFinderConfig m_config;
+  DeviceSeedfinderConfig m_config;
   vecmem::data::vector_view<detail::DeviceTriplet> m_curvImpactView;
 };  // struct TripletSearch
 

@@ -158,8 +158,7 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
    * which is to say the absolute value must be smaller than the max cot(θ).
    */
-  float deltaZ = (zH - zL);
-  float cotTheta = deltaZ / deltaR;
+  float cotTheta = (zH - zL) / deltaR;
   if (std::fabs(cotTheta) > m_config.cotThetaMax) {
     return false;
   }
@@ -172,47 +171,6 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   if (zOrigin < m_config.collisionRegionMin ||
       zOrigin > m_config.collisionRegionMax) {
     return false;
-  }
-  if (std::abs(deltaZ) > m_config.deltaZMax) {
-    return false;
-  }
-
-  // cut on the max curvature calculated from dublets
-  // first transform the space point coordinates into a frame such that the
-  // central space point SPm is in the origin of the frame and the x axis
-  // points away from the interaction point in addition to a translation
-  // transformation we also perform a rotation in order to keep the
-  // curvature of the circle tangent to the x axis
-  if (m_config.interactionPointCut) {
-    float xVal = (high.x() - low.x()) * (low.x() / rL) +
-                 (high.y() - low.y()) * (low.y() / rL);
-    float yVal = (high.y() - low.y()) * (low.x() / rL) -
-                 (high.x() - low.x()) * (low.y() / rL);
-    if (std::abs(rL * yVal) > m_config.impactMax * xVal) {
-      // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
-      // circle into straight lines in the u/v plane the line equation can
-      // be described in terms of aCoef and bCoef, where v = aCoef * u +
-      // bCoef
-      float uT = xVal / (xVal * xVal + yVal * yVal);
-      float vT = yVal / (xVal * xVal + yVal * yVal);
-      // in the rotated frame the interaction point is positioned at x = -rM
-      // and y ~= impactParam
-      float uIP = -1. / rL;
-      float vIP = m_config.impactMax / (rL * rL);
-      if (yVal > 0.)
-        vIP = -vIP;
-      // we can obtain aCoef as the slope dv/du of the linear function,
-      // estimated using du and dv between the two SP bCoef is obtained by
-      // inserting aCoef into the linear equation
-      float aCoef = (vT - vIP) / (uT - uIP);
-      float bCoef = vIP - aCoef * uIP;
-      // the distance of the straight line from the origin (radius of the
-      // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
-      // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-      if ((bCoef * bCoef) > (1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
-        return false;
-      }
-    }
   }
 
   return true;
@@ -244,7 +202,7 @@ template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
-    std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
+    std::vector<internal_sp_t *> &top, int numQualitySeeds,
     output_container_t &cont) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
@@ -304,16 +262,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
                                top[t]->z() - middle.z()));
   }
 
-  size_t t0 = 0;
+  int numSeeds = 0;
 
   for (size_t b = 0; b < numBotSP; b++) {
-    // break if we reached the last top SP
-    if (t0 == numTopSP) {
-      break;
-    }
-
     auto lb = linCircleBottom[b];
-    seedFilterState.zOrigin = lb.Zo;
+    float Zob = lb.Zo;
     float cotThetaB = lb.cotTheta;
     float Vb = lb.V;
     float Ub = lb.U;
@@ -339,9 +292,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     top_valid.clear();
     curvatures.clear();
     impactParameters.clear();
-    for (size_t t = t0; t < numTopSP; t++) {
+    for (size_t t = 0; t < numTopSP; t++) {
       auto lt = linCircleTop[t];
-      float cotThetaT = lt.cotTheta;
 
       if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
         continue;
@@ -367,15 +319,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
-        // skip top SPs based on cotTheta sorting when producing triplets
-        if (m_config.skipPreviousTopSP) {
-          // break if cotTheta from bottom SP < cotTheta from top SP because
-          // the SP are sorted by cotTheta
-          if (cotThetaB - cotThetaT < 0) {
-            break;
-          }
-          t0 = t + 1;
-        }
         continue;
       }
 
@@ -409,12 +352,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (deltaCotTheta2 >
           (error2 + (pT2scatter * iSinTheta2 * m_config.sigmaScattering *
                      m_config.sigmaScattering))) {
-        if (m_config.skipPreviousTopSP) {
-          if (cotThetaB - cotThetaT < 0) {
-            break;
-          }
-          t0 = t;
-        }
         continue;
       }
 
@@ -432,9 +369,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
     }
     if (!top_valid.empty()) {
-      m_config.seedFilter->filterSeeds_2SpFixed(*bottom[b], middle, top_valid,
-                                                curvatures, impactParameters,
-                                                seedFilterState, cont);
+      m_config.seedFilter->filterSeeds_2SpFixed(
+          *bottom[b], middle, top_valid, curvatures, impactParameters, Zob,
+          nTopSeedConf, numQualitySeeds, numSeeds, cont);
     }
   }
 }
@@ -589,17 +526,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Create a vector to contain protoseeds.
    */
   std::vector<std::pair<
-      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+      float, std::unique_ptr<const InternalSeed<ActsExamples::SimSpacePoint>>>>
       protoseeds;
 
-  // TODO: add seed confirmation
-  SeedFilterState seedFilterState;
+  int numQualitySeeds = 0;
 
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(middle, bottom_lh_v, top_lh_v, seedFilterState,
+    filterCandidates(middle, bottom_lh_v, top_lh_v, numQualitySeeds,
                      protoseeds);
   }
 
@@ -607,15 +543,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(middle, bottom_hl_v, top_hl_v, seedFilterState,
+    filterCandidates(middle, bottom_hl_v, top_hl_v, numQualitySeeds,
                      protoseeds);
   }
 
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds,
-                                            seedFilterState.numQualitySeeds,
+  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds, numQualitySeeds,
                                             std::back_inserter(out_cont));
 }
 

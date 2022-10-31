@@ -9,7 +9,8 @@ target_link_libraries(
   ActsExamplesAlignment
   PUBLIC
   ActsCore ActsAlignment
-    ActsExamplesFramework ActsExamplesMagneticField)
+    ActsExamplesFramework ActsExamplesMagneticField
+    Boost::program_options)
 
 install(
   TARGETS ActsExamplesAlignment
