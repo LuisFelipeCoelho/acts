@@ -228,6 +228,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
           m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 
+  /// variable middle SP radial region of interest
+  const Acts::Vector2 rMiddleSPRange = {
+      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+          m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
+      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
+          m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange};
+
   // run the seeding
   static thread_local SimSeedContainer seeds;
   seeds.clear();
