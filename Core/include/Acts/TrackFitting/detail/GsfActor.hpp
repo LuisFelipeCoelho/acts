@@ -35,7 +35,7 @@ namespace detail {
 template <typename traj_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
-  traj_t fittedStates;
+  std::shared_ptr<traj_t> fittedStates;
 
   /// This provides the weights for the states in the MultiTrajectory. Each
   /// entry maps to one track state. TODO This is a workaround until the
@@ -64,9 +64,6 @@ struct GsfResult {
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
-
-  // Used for workaround to initialize MT correctly
-  bool haveInitializedResult = false;
 };
 
 /// The actor carrying out the GSF algorithm
@@ -97,10 +94,6 @@ struct GsfActor {
     /// When to discard components
     double weightCutoff = 1.0e-4;
 
-    /// A not so nice workaround to get the first backward state in the
-    /// MultiTrajectory for the DirectNavigator
-    std::function<void(result_type&, const LoggerWrapper&)> resultInitializer;
-
     /// When this option is enabled, material information on all surfaces is
     /// ignored. This disables the component convolution as well as the handling
     /// of energy. This may be useful for debugging.
@@ -109,8 +102,12 @@ struct GsfActor {
     /// Whether to abort immediately when an error occurs
     bool abortOnError = false;
 
+    /// We can stop the propagation if we reach this number of measuerement
+    /// states
+    std::optional<std::size_t> numberMeasurements;
+
     /// The extensions
-    GsfExtensions<traj_t> extensions;
+    Experimental::GsfExtensions<traj_t> extensions;
   } m_cfg;
 
   /// Stores meta information about the components
@@ -150,11 +147,8 @@ struct GsfActor {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
+    assert(result.fittedStates && "No MultiTrajectory set");
     const auto& logger = state.options.logger;
-
-    // Prints some VERBOSE things and performs some asserts. Can be removed
-    // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper);
 
     // Set error or abort utility
     auto set_error_or_abort = [&](auto error) {
@@ -185,24 +179,18 @@ struct GsfActor {
       return std::make_tuple(missed, reachable);
     }();
 
-    // Workaround to initialize e.g. MultiTrajectory in backward mode
-    if (!result.haveInitializedResult && m_cfg.resultInitializer) {
-      m_cfg.resultInitializer(result, logger);
-      result.haveInitializedResult = true;
-    }
-
-    // Initialize the tips if they are empty (should only happen at first pass)
-    if (result.parentTips.empty()) {
-      result.parentTips.resize(stepper.numberComponents(state.stepping),
-                               MultiTrajectoryTraits::kInvalid);
-    }
+    // Prints some VERBOSE things and performs some asserts. Can be removed
+    // without change of behaviour
+    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
+                                                         missed_count);
 
     if (result.parentTips.size() != stepper.numberComponents(state.stepping)) {
       ACTS_ERROR("component number mismatch:"
                  << result.parentTips.size() << " vs "
                  << stepper.numberComponents(state.stepping));
 
-      return set_error_or_abort(GsfError::ComponentNumberMismatch);
+      return set_error_or_abort(
+          Experimental::GsfError::ComponentNumberMismatch);
     }
 
     // There seem to be cases where this is not always after initializing the
@@ -308,6 +296,12 @@ struct GsfActor {
                                 MaterialUpdateStage::PostUpdate);
       }
     }
+
+    // Break the navigation if we found all measurements
+    if (m_cfg.numberMeasurements &&
+        result.measurementStates == m_cfg.numberMeasurements) {
+      state.navigation.targetReached = true;
+    }
   }
 
   template <typename propagator_state_t, typename stepper_t>
@@ -316,7 +310,7 @@ struct GsfActor {
                            std::vector<ComponentCache>& componentCache) const {
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto [idx, cmp] : zip(result.currentTips, cmps)) {
-      auto proxy = result.fittedStates.getTrackState(idx);
+      auto proxy = result.fittedStates->getTrackState(idx);
 
       MetaCache mcache;
       mcache.parentIndex = idx;
@@ -429,21 +423,9 @@ struct GsfActor {
 
     // We must differ between surface types, since there can be different
     // local coordinates
-    // TODO add other surface types
-    switch (surface.type()) {
-      case Surface::Cylinder: {
-        // The cylinder coordinate is phi*R, so we need to pass R
-        detail::AngleDescription::Cylinder angle_desc;
-        std::get<0>(angle_desc).constant =
-            static_cast<const CylinderSurface&>(surface).bounds().get(
-                CylinderBounds::eR);
-
-        detail::reduceWithKLDistance(cmps, final_cmp_number, proj, angle_desc);
-      } break;
-      default: {
-        detail::reduceWithKLDistance(cmps, final_cmp_number, proj);
-      }
-    }
+    detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
+      detail::reduceWithKLDistance(cmps, final_cmp_number, proj, desc);
+    });
   }
 
   /// Removes the components which are missed and update the list of parent tips
@@ -514,7 +496,7 @@ struct GsfActor {
         continue;
       }
 
-      auto proxy = result.fittedStates.getTrackState(idx);
+      auto proxy = result.fittedStates->getTrackState(idx);
 
       cmp.pars() =
           MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, proxy);
@@ -600,7 +582,7 @@ struct GsfActor {
 
       auto trackStateProxyRes = detail::kalmanHandleMeasurement(
           singleState, singleStepper, m_cfg.extensions, surface, source_link,
-          result.fittedStates, idx, false);
+          *result.fittedStates, idx, false);
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
@@ -619,7 +601,7 @@ struct GsfActor {
       result.weightsOfStates[result.currentTips.back()] = cmp.weight();
     }
 
-    computePosteriorWeights(result.fittedStates, result.currentTips,
+    computePosteriorWeights(*result.fittedStates, result.currentTips,
                             result.weightsOfStates);
 
     detail::normalizeWeights(result.currentTips, [&](auto idx) -> double& {
@@ -664,7 +646,7 @@ struct GsfActor {
       // There is some redundant checking inside this function, but do this for
       // now until we measure this is significant
       auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
-          singleState, singleStepper, surface, result.fittedStates, idx,
+          singleState, singleStepper, surface, *result.fittedStates, idx,
           doCovTransport);
 
       if (!trackStateProxyRes.ok()) {

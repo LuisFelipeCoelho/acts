@@ -3,9 +3,12 @@ from pathlib import Path
 from typing import Optional
 
 import acts
-from acts.examples import Sequencer, ParticleSelector, ParticleSmearing
+from acts.examples import Sequencer, ParticleSelector, ParticleSmearing, TrackSelector
 from acts.examples.simulation import addPythia8
-from acts.examples.reconstruction import addVertexFitting, VertexFinder
+from acts.examples.reconstruction import (
+    addVertexFitting,
+    VertexFinder,
+)
 
 u = acts.UnitConstants
 
@@ -53,7 +56,8 @@ def runVertexFitting(
     )
     s.addAlgorithm(ptclSelector)
 
-    trackParameters = "trackparameters"
+    trackParameters = "fittedTrackParameters"
+
     if inputTrackSummary is None or inputParticlePath is None:
         logger.info("Using smeared particles")
 
@@ -71,36 +75,38 @@ def runVertexFitting(
         associatedParticles = "associatedTruthParticles"
         trackSummaryReader = acts.examples.RootTrajectorySummaryReader(
             level=acts.logging.VERBOSE,
-            outputTracks="fittedTrackParameters",
+            outputTracks=trackParameters,
             outputParticles=associatedParticles,
             filePath=str(inputTrackSummary.resolve()),
             orderedEvents=False,
         )
         s.addReader(trackSummaryReader)
 
-        s.addAlgorithm(
-            acts.examples.TrackSelector(
-                level=acts.logging.INFO,
-                inputTrackParameters=trackSummaryReader.config.outputTracks,
-                outputTrackParameters=trackParameters,
-                outputTrackIndices="outputTrackIndices",
-                removeNeutral=True,
-                absEtaMax=2.5,
-                loc0Max=4.0 * u.mm,  # rho max
-                ptMin=500 * u.MeV,
-            )
+        trackSelector = TrackSelector(
+            level=acts.logging.INFO,
+            inputTrackParameters=trackSummaryReader.config.outputTracks,
+            outputTrackParameters="selectedTrackParameters",
+            removeNeutral=True,
+            absEtaMax=2.5,
+            loc0Max=4.0 * u.mm,  # rho max
+            ptMin=500 * u.MeV,
         )
+        s.addAlgorithm(trackSelector)
+        trackParameters = trackSelector.config.outputTrackParameters
 
     logger.info("Using vertex finder: %s", vertexFinder.name)
 
-    return addVertexFitting(
+    addVertexFitting(
         s,
         field,
         outputDirRoot=outputDir if outputRoot else None,
         associatedParticles=associatedParticles,
+        trajectories=None,
         trackParameters=trackParameters,
         vertexFinder=vertexFinder,
     )
+
+    return s
 
 
 if "__main__" == __name__:

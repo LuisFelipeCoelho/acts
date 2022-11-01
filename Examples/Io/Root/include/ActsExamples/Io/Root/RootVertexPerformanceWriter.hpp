@@ -37,10 +37,17 @@ class RootVertexPerformanceWriter final
     std::string inputAllTruthParticles;
     /// Selected input truth particle collection
     std::string inputSelectedTruthParticles;
-    /// Truth particles associated to fitted tracks
+    /// Truth particles associated to tracks
     std::string inputAssociatedTruthParticles;
-    /// All event fitted tracks
-    std::string inputFittedTracks;
+    /// Input track parameters
+    std::string inputTrackParameters;
+    /// Input track parameters tips (points from `inputTrackParameters` to
+    /// `inputTrajectories`)
+    std::string inputTrackParametersTips;
+    /// Trajectories object from track finidng
+    std::string inputTrajectories;
+    /// Input hit-particles map collection.
+    std::string inputMeasurementParticlesMap;
     /// Input vertex collection.
     std::string inputVertices;
     /// Input reconstruction time.
@@ -54,6 +61,9 @@ class RootVertexPerformanceWriter final
     /// Minimum fraction of tracks matched between truth
     /// and reco vertices to be matched for resolution plots
     double minTrackVtxMatchFraction = 0.5;
+    /// Minimum fraction of hits associated to particle to consider
+    /// as truth matched
+    double truthMatchProbMin = 0.5;
   };
 
   /// Constructor
@@ -66,6 +76,9 @@ class RootVertexPerformanceWriter final
 
   /// End-of-run hook
   ProcessCode endRun() final override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// @brief Write method called by the base class
@@ -87,6 +100,20 @@ class RootVertexPerformanceWriter final
       m_diffy;  ///< Difference in y positon between reco and true vtx
   std::vector<float>
       m_diffz;  ///< Difference in z positon between reco and true vtx
+
+  std::vector<float> m_truthX;
+  std::vector<float> m_truthY;
+  std::vector<float> m_truthZ;
+
+  std::vector<float> m_recoX;
+  std::vector<float> m_recoY;
+  std::vector<float> m_recoZ;
+
+  std::vector<float> m_covXX;
+  std::vector<float> m_covYY;
+  std::vector<float> m_covXY;
+  std::vector<float> m_covYX;
+  std::vector<float> m_trackVtxMatchFraction;
 
   int m_nrecoVtx = -1;           ///< Number of reconstructed vertices
   int m_ntrueVtx = -1;           ///< Number of true vertices

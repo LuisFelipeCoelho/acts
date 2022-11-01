@@ -66,7 +66,7 @@ def runSeeding(
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
-    s = addParticleGun(
+    addParticleGun(
         s,
         EtaConfig(-2.0, 2.0),
         ParticleConfig(4, acts.PdgParticle.eMuon, True),
@@ -77,7 +77,7 @@ def runSeeding(
         rnd=rnd,
     )
 
-    s = addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
@@ -88,7 +88,7 @@ def runSeeding(
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
-    s = addDigitization(
+    addDigitization(
         s,
         trackingGeometry,
         field,
@@ -100,16 +100,16 @@ def runSeeding(
         addSeeding,
         TruthSeedRanges,
         ParticleSmearingSigmas,
-        SeedfinderConfigArg,
+        SeedFinderConfigArg,
     )
 
-    s = addSeeding(
+    addSeeding(
         s,
         trackingGeometry,
         field,
         TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.5, 2.5), nHits=(9, None)),
         ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
-        SeedfinderConfigArg(
+        SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
             deltaR=(1 * u.mm, 60 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),

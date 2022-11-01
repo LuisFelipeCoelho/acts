@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -81,6 +82,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
                                Acts::LoggerWrapper{logger()},
                                Acts::PropagatorPlainOptions()};
 
+  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
+
   // Perform the fit for each input track
   std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
@@ -109,6 +112,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     // Clear & reserve the right size
     trackSourceLinks.clear();
     trackSourceLinks.reserve(protoTrack.size());
+    surfSequence.clear();
+    surfSequence.reserve(protoTrack.size());
 
     // Fill the source links via their indices from the container
     for (auto hitIndex : protoTrack) {
@@ -124,9 +129,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       }
     }
 
-    ACTS_DEBUG("Invoke fitter");
+    ACTS_DEBUG("Invoke direct fitter for track " << itrack);
     auto result =
-        fitTrack(trackSourceLinks, initialParams, options, surfSequence);
+        m_cfg.directNavigation
+            ? (*m_cfg.fit)(trackSourceLinks, initialParams, options,
+                           surfSequence, mtj)
+            : (*m_cfg.fit)(trackSourceLinks, initialParams, options, mtj);
 
     if (result.ok()) {
       // Get the fit output object
@@ -139,12 +147,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       Trajectories::IndexedParameters indexedParams;
       if (fitOutput.fittedParameters) {
         const auto& params = fitOutput.fittedParameters.value();
-        ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
+        ACTS_VERBOSE("Fitted parameters for track " << itrack);
         ACTS_VERBOSE("  " << params.parameters().transpose());
         // Push the fitted parameters to the container
         indexedParams.emplace(fitOutput.lastMeasurementIndex, params);
       } else {
-        ACTS_DEBUG("No fitted paramemeters for track " << itrack);
+        ACTS_DEBUG("No fitted parameters for track " << itrack);
       }
       // store the result
       trajectories.emplace_back(fitOutput.fittedStates, std::move(trackTips),
@@ -158,6 +166,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       trajectories.push_back(Trajectories());
     }
   }
+
+  std::stringstream ss;
+  mtj->statistics().toStream(ss);
+  ACTS_DEBUG(ss.str());
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   return ActsExamples::ProcessCode::SUCCESS;

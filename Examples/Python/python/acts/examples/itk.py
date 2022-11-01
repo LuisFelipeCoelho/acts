@@ -1,11 +1,12 @@
-#!/usr/bin/env python3
-import acts
-from acts.examples import TGeoDetector
 from pathlib import Path
 import math
 
+import acts
+import acts.examples
+from acts.examples import TGeoDetector
+
 from acts.examples.reconstruction import (
-    SeedfinderConfigArg,
+    SeedFinderConfigArg,
     SeedFilterConfigArg,
     SpacePointGridConfigArg,
     SeedingAlgorithmConfigArg,
@@ -21,6 +22,7 @@ def buildITkGeometry(
     logLevel=acts.logging.WARNING,
 ):
 
+    customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
     logger = acts.logging.getLogger("buildITkGeometry")
 
     matDeco = None
@@ -29,7 +31,7 @@ def buildITkGeometry(
         logger.info("Adding material from %s", file.absolute())
         matDeco = acts.IMaterialDecorator.fromFile(
             file,
-            level=acts.logging.Level(min(acts.logging.INFO.value, logLevel.value)),
+            level=customLogLevel(maxLevel=acts.logging.INFO),
         )
 
     tgeo_fileName = geo_dir / "itk-hgtd/ATLAS-ITk-HGTD.tgeo.root"
@@ -40,9 +42,9 @@ def buildITkGeometry(
         return TGeoDetector.create(
             jsonFile=str(jsonFile),
             fileName=str(tgeo_fileName),
-            surfaceLogLevel=logLevel,
-            layerLogLevel=logLevel,
-            volumeLogLevel=logLevel,
+            surfaceLogLevel=customLogLevel(),
+            layerLogLevel=customLogLevel(),
+            volumeLogLevel=customLogLevel(),
             mdecorator=matDeco,
         )
 
@@ -59,9 +61,9 @@ def buildITkGeometry(
         beamPipeRadius=23.934 * u.mm,
         beamPipeHalflengthZ=3000.0 * u.mm,
         beamPipeLayerThickness=0.8 * u.mm,
-        surfaceLogLevel=logLevel,
-        layerLogLevel=logLevel,
-        volumeLogLevel=logLevel,
+        surfaceLogLevel=customLogLevel(),
+        layerLogLevel=customLogLevel(),
+        volumeLogLevel=customLogLevel(),
         volumes=[
             Volume(
                 name="InnerPixels",
@@ -312,6 +314,9 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         rMaxSeedConf=140 * u.mm,
         nTopForLargeR=1,
         nTopForSmallR=2,
+        seedConfMinBottomRadius=60.0 * u.mm,
+        seedConfMaxZOrigin=150.0 * u.mm,
+        minImpactSeedConf=1.0 * u.mm,
     )  # contains parameters for seed confirmation
     forwardSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
         zMinSeedConf=-3000 * u.mm,
@@ -319,6 +324,9 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         rMaxSeedConf=140 * u.mm,
         nTopForLargeR=1,
         nTopForSmallR=2,
+        seedConfMinBottomRadius=60.0 * u.mm,
+        seedConfMaxZOrigin=150.0 * u.mm,
+        minImpactSeedConf=1.0 * u.mm,
     )
     compatSeedWeight = 100
     curvatureSortingInFilter = True
@@ -460,7 +468,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         useDeltaRorTopRadius = False
 
     # fill namedtuples
-    seedfinderConfigArg = SeedfinderConfigArg(
+    seedFinderConfigArg = SeedFinderConfigArg(
         maxSeedsPerSpM=maxSeedsPerSpM,
         cotThetaMax=cotThetaMax,
         sigmaScattering=sigmaScattering,
@@ -518,7 +526,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     )
 
     return (
-        seedfinderConfigArg,
+        seedFinderConfigArg,
         seedFilterConfigArg,
         spacePointGridConfigArg,
         seedingAlgorithmConfigArg,
