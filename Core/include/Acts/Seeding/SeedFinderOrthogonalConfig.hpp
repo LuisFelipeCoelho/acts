@@ -37,7 +37,9 @@ struct SeedFinderOrthogonalConfig {
   float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between middle and bottom SP in one seed
   float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
-
+	// force sorting in R in space point grid bins
+	bool forceRadialSorting = false;
+	
   // impact parameter
   float impactMax = 20. * Acts::UnitConstants::mm;
 
@@ -78,22 +80,21 @@ struct SeedFinderOrthogonalConfig {
 	// cut to the maximum value of delta z between SPs
 	float deltaZMax =
 	std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
-	
-	// enable cut on the compatibility between interaction point and SPs
-	bool interactionPointCut = false;
-	
-  // seed confirmation
-  bool seedConfirmation = false;
-  // parameters for central seed confirmation
-  SeedConfirmationRangeConfig centralSeedConfirmationRange;
-  // parameters for forward seed confirmation
-  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
   // skip top SPs based on cotTheta sorting when producing triplets
   bool skipPreviousTopSP = false;
+	
+	// radial range for middle SP
+	std::vector<std::vector<float>> rRangeMiddleSP;
+	bool useVariableMiddleSPRange = false;
+	float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+	float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+	
+	// this is only used in useVariableMiddleSPRange
+	std::vector<float> zBinEdges;
 
   // seed confirmation
   bool seedConfirmation = false;

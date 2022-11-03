@@ -266,7 +266,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     # variables that do not change for pixel and strip SPs:
     zMax = 3000 * u.mm
     zMin = -3000 * u.mm
-    beamPos = (0 * u.mm, 0 * u.mm)
+    beamPos = (1 * u.mm, 1 * u.mm)
     collisionRegionMin = -200 * u.mm
     collisionRegionMax = 200 * u.mm
     maxSeedsPerSpM = 4
@@ -326,20 +326,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     curvatureSortingInFilter = True
     phiMin = 0
     phiMax = 2 * math.pi
-    zBinEdges = [
-        -3000.0,
-        -2500.0,
-        -1400.0,
-        -925.0,
-        -450.0,
-        -250.0,
-        250.0,
-        450.0,
-        925.0,
-        1400.0,
-        2500.0,
-        3000.0,
-    ]  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
     phiBinDeflectionCoverage = 3
     numPhiNeighbors = 1
 
@@ -475,19 +461,19 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         deltaZMax=deltaZMax,
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,
-#        skipPreviousTopSP=skipPreviousTopSP,
-        zBinsCustomLooping=zBinsCustomLooping,
-#        rRangeMiddleSP=rRangeMiddleSP,
-#        useVariableMiddleSPRange=useVariableMiddleSPRange,
+        skipPreviousTopSP=skipPreviousTopSP,
+#        zBinsCustomLooping=zBinsCustomLooping,
+        rRangeMiddleSP=rRangeMiddleSP,
+        useVariableMiddleSPRange=useVariableMiddleSPRange,
         binSizeR=binSizeR,
-#        forceRadialSorting=forceRadialSorting,
+        forceRadialSorting=forceRadialSorting,
         seedConfirmation=seedConfirmation,
         centralSeedConfirmationRange=centralSeedConfirmationRange,
         forwardSeedConfirmationRange=forwardSeedConfirmationRange,
         deltaR=(deltaRMin, deltaRMax),
         deltaRBottomSP=(deltaRMinSP, deltaRMaxBottomSP),
         deltaRTopSP=(deltaRMinSP, deltaRMaxTopSP),
-#        deltaRMiddleSPRange=(deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange),
+        deltaRMiddleSPRange=(deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange),
         collisionRegion=(collisionRegionMin, collisionRegionMax),
         r=(None, rMaxSeedFinderConfig),
         z=(zMin, zMax),

@@ -394,10 +394,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         // use geometric average
         float cotThetaAvg2 = cotThetaB * cotThetaT;
-        if (m_config.arithmeticAverageCotTheta) {
-          // use arithmetic average
-          cotThetaAvg2 = std::pow((cotThetaB + cotThetaT) / 2, 2);
-        }
+				
+//        if (m_config.arithmeticAverageCotTheta) {
+//          // use arithmetic average
+//          cotThetaAvg2 = std::pow((cotThetaB + cotThetaT) / 2, 2);
+//        }
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term
         // for errors on spM
@@ -511,10 +512,21 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           state.curvatures.push_back(B / std::sqrt(S2));
           state.impactParameters.push_back(Im);
 
+					assert(cotThetaAvg2 > 0);
+					
           // evaluate eta and pT of the seed
           float cotThetaAvg = std::sqrt(cotThetaAvg2);
-          float theta = std::atan(1. / cotThetaAvg);
+          float theta = std::atan(1. / cotThetaAvg); // [0, pi/2)
+					if (lt.z < 0) {theta = -theta;} // (-pi/2, pi/2)
+					if (theta < 0.) {theta = theta + M_PI;} // [0, pi)
           float eta = -std::log(std::tan(0.5 * theta));
+					
+//					if (cotThetaAvg2 < 0) {
+//						std::cout << "*********" << std::endl;
+//						std::cout << "zT " << lt.z << std::endl;
+//						std::cout << "cotThetaAvg2 " << cotThetaAvg2 << " cotThetaAvg " << cotThetaAvg << " eta " << eta << std::endl;
+//					}
+					
           state.etaVec.push_back(eta);
           state.ptVec.push_back(pT);
         }
