@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iostream>
 
 namespace Acts {
 /// @brief A general k-d tree with fast range search.
@@ -252,6 +253,12 @@ class KDTree {
     m_root->rangeSearchMapDiscard(r, f);
   }
 
+  void sort() {
+    std::sort(m_elems.begin(), m_elems.end(), [](auto &a, auto &b) {
+      return a.second->radius() < b.second->radius();
+    });
+  }
+
   /// @brief Return the number of elements in the k-d tree.
   ///
   /// We simply defer this method to the root node of the k-d tree.
@@ -268,6 +275,10 @@ class KDTree {
   const_iterator_t begin(void) const { return m_elems.begin(); }
 
   const_iterator_t end(void) const { return m_elems.end(); }
+
+  //	iterator_t begin(void) { return m_elems.begin(); }
+  //
+  //	iterator_t end(void) { return m_elems.end(); }
 
  private:
   static Scalar nextRepresentable(Scalar v) {
@@ -501,6 +512,16 @@ class KDTree {
       auto pivot = std::partition(
           this->m_begin_it, this->m_end_it,
           [=](const pair_t &i) { return i.first[m_dim] < m_mid; });
+
+      //			std::sort(this->m_begin_it, this->m_end_it,
+      //[](auto &a, auto &b) { 				return
+      // a.second->radius() < b.second->radius();
+      //			});
+
+      //			for (iterator_t i = this->m_begin_it; i !=
+      // this->m_end_it; ++i) { 				std::cout <<
+      // i[0].second->radius() << std::endl;
+      //			}
 
       // This should never really happen, but in very select cases where there
       // are a lot of equal values in the range, the pivot can end up all the

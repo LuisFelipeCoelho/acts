@@ -144,7 +144,7 @@ def addSeeding(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
-    seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
+    seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Orthogonal,
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
@@ -316,6 +316,7 @@ def addSeeding(
                         if seedFinderConfigArg.deltaRBottomSP[1] is None
                         else seedFinderConfigArg.deltaRBottomSP[1]
                     ),
+                    useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
                     deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
                     deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
                     collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
@@ -337,7 +338,6 @@ def addSeeding(
                     skipPreviousTopSP=seedFinderConfigArg.skipPreviousTopSP,
                     zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
                     rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
-                    useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
                     binSizeR=seedFinderConfigArg.binSizeR,
                     forceRadialSorting=seedFinderConfigArg.forceRadialSorting,
                     seedConfirmation=seedFinderConfigArg.seedConfirmation,
@@ -448,6 +448,9 @@ def addSeeding(
                         if seedFinderConfigArg.deltaRBottomSP[1] is None
                         else seedFinderConfigArg.deltaRBottomSP[1]
                     ),
+                    useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
+                    deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
+                    deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
                     collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
                     collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
                     zMin=seedFinderConfigArg.z[0],
@@ -462,6 +465,7 @@ def addSeeding(
                     interactionPointCut=seedFinderConfigArg.interactionPointCut,
                     deltaZMax=seedFinderConfigArg.deltaZMax,
                     maxPtScattering=seedFinderConfigArg.maxPtScattering,
+                    forceRadialSorting=seedFinderConfigArg.forceRadialSorting,
                     seedConfirmation=seedFinderConfigArg.seedConfirmation,
                     centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
                     forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,

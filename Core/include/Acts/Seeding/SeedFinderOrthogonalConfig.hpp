@@ -28,7 +28,7 @@ struct SeedFinderOrthogonalConfig {
   float minPt = 400. * Acts::UnitConstants::MeV;
   // cot of maximum theta angle
   // equivalent to 2.7 eta (pseudorapidity)
-  float cotThetaMax = 7.40627;
+  float cotThetaMax = 27.2899;
   // minimum distance in r between middle and top SP in one seed
   float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between middle and top SP in one seed
@@ -37,6 +37,8 @@ struct SeedFinderOrthogonalConfig {
   float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between middle and bottom SP in one seed
   float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
+  // force sorting in R in space point grid bins
+  bool forceRadialSorting = false;
 
   // impact parameter
   float impactMax = 20. * Acts::UnitConstants::mm;
@@ -64,10 +66,10 @@ struct SeedFinderOrthogonalConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
-  float rMinMiddle = 60.f * Acts::UnitConstants::mm;
-  float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
+  float rMinMiddle = 0.f * Acts::UnitConstants::mm;
+  float rMaxMiddle = 1200000.f * Acts::UnitConstants::mm;
 
-  float deltaPhiMax = 0.085;
+  float deltaPhiMax = 1000;
 
   float bFieldInZ = 2.08 * Acts::UnitConstants::T;
   // location of beam in x,y plane.
@@ -82,15 +84,24 @@ struct SeedFinderOrthogonalConfig {
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
+  // skip top SPs based on cotTheta sorting when producing triplets
+  bool skipPreviousTopSP = false;
+
+  // radial range for middle SP
+  std::vector<std::vector<float>> rRangeMiddleSP;
+  bool useVariableMiddleSPRange = false;
+  float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+
+  // this is only used in useVariableMiddleSPRange
+  std::vector<float> zBinEdges;
+
   // seed confirmation
   bool seedConfirmation = false;
   // parameters for central seed confirmation
   SeedConfirmationRangeConfig centralSeedConfirmationRange;
   // parameters for forward seed confirmation
   SeedConfirmationRangeConfig forwardSeedConfirmationRange;
-
-  // skip top SPs based on cotTheta sorting when producing triplets
-  bool skipPreviousTopSP = false;
 
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
