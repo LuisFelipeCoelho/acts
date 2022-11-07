@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iostream>
 
 namespace Acts {
 /// @brief A general k-d tree with fast range search.
@@ -83,7 +84,7 @@ class KDTree {
     // make in-place changes to this array, and they hold no memory of their
     // own.
     if (m_elems.size() > LeafSize) {
-      m_root = std::make_unique<KDTreeNode>(m_elems.begin(), m_elems.end());
+			m_root = std::make_unique<KDTreeNode>(m_elems.begin(), m_elems.end());
     } else {
       m_root = std::make_unique<KDTreeLeaf>(m_elems.begin(), m_elems.end());
     }
@@ -251,6 +252,12 @@ class KDTree {
       std::function<void(const coordinate_t &, const Type &)> f) const {
     m_root->rangeSearchMapDiscard(r, f);
   }
+	
+	void sort() {
+		std::sort(m_elems.begin(), m_elems.end(), [](auto &a, auto &b) {
+			return a.second->radius() < b.second->radius();
+		});
+	}
 
   /// @brief Return the number of elements in the k-d tree.
   ///
@@ -269,6 +276,10 @@ class KDTree {
 
   const_iterator_t end(void) const { return m_elems.end(); }
 
+//	iterator_t begin(void) { return m_elems.begin(); }
+//
+//	iterator_t end(void) { return m_elems.end(); }
+	
  private:
   static Scalar nextRepresentable(Scalar v) {
     // I'm not super happy with this bit of code, but since 1D ranges are
@@ -417,7 +428,7 @@ class KDTree {
       std::array<Scalar, Dims> sum_v;
 
       sum_v.fill(0.0);
-
+			
       for (iterator_t i = this->m_begin_it; i != this->m_end_it; ++i) {
         for (std::size_t j = 0; j < Dims; ++j) {
           // We normalize the values to be in the [0, 1] range, because
@@ -466,7 +477,7 @@ class KDTree {
           m_dim = j;
         }
       }
-
+			
       // Next, we need to determine the pivot point of this node, that is to
       // say the point in the selected pivot dimension along which point we
       // will split the range. To do this, we check how large the set of
@@ -502,6 +513,17 @@ class KDTree {
           this->m_begin_it, this->m_end_it,
           [=](const pair_t &i) { return i.first[m_dim] < m_mid; });
 
+//			if (m_sort) {
+//				std::sort(this->m_begin_it, this->m_end_it, [](auto &a, auto &b) {
+//					return a.second->radius() < b.second->radius();
+//				});
+//				//				m_sort = false;
+//			}
+			
+//			for (iterator_t i = this->m_begin_it; i != this->m_end_it; ++i) {
+//				std::cout << i[0].second->radius() << std::endl;
+//			}
+			
       // This should never really happen, but in very select cases where there
       // are a lot of equal values in the range, the pivot can end up all the
       // way at the end of the array and we end up in an infinite loop. We
@@ -510,7 +532,7 @@ class KDTree {
       if (pivot == this->m_begin_it || pivot == std::prev(this->m_end_it)) {
         pivot = std::next(this->m_begin_it, LeafSize);
       }
-
+			
       // Calculate the number of elements on the left-hand side, as well as the
       // right-hand side. We do this by calculating the difference from the
       // begin and end of the array to the pivot point.
@@ -613,6 +635,9 @@ class KDTree {
 
     /// @brief The value of the pivot in the pivot dimension.
     Scalar m_mid;
+		
+		/// @brief
+		bool m_sort = true;
   };
 
   class KDTreeLeaf final : public KDTreeAbstractNode {

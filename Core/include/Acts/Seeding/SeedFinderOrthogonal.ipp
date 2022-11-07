@@ -158,8 +158,8 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
    * which is to say the absolute value must be smaller than the max cot(θ).
    */
-  float deltaZ = (zH - zL);
-  float cotTheta = deltaZ / deltaR;
+	float deltaZ = (zH - zL);
+	float cotTheta = deltaZ / deltaR;
   if (std::fabs(cotTheta) > m_config.cotThetaMax) {
     return false;
   }
@@ -214,7 +214,6 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
       }
     }
   }
-
   return true;
 }
 
@@ -247,6 +246,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
     output_container_t &cont) const {
   float rM = middle.radius();
+  float zM = middle.z();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
 
@@ -317,6 +317,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     float Ub = lb.U;
     float ErB = lb.Er;
     float iDeltaRB = lb.iDeltaR;
+		
+//		std::cout << "|Bot| rB = " << middle.radius() << " zM = " << middle.z()
+//		<< std::endl;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
@@ -341,9 +344,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       auto lt = linCircleTop[t];
       float cotThetaT = lt.cotTheta;
 
-      if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
-        continue;
-      }
+//      if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
+//        continue;
+//      }
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
@@ -461,10 +464,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Cut: Ensure that the middle spacepoint lies within a valid r-region for
    * middle points.
    */
-  if (middle.radius() > m_config.rMaxMiddle ||
-      middle.radius() < m_config.rMinMiddle) {
-    return;
-  }
+//  if (middle.radius() > m_config.rMaxMiddle ||
+//      middle.radius() < m_config.rMinMiddle) {
+//    return;
+//  }
+
+//  std::cout << "|Middle| rM = " << middle.radius() << " zM = " << middle.z()
+//            << std::endl;
 
   /*
    * Calculate the search ranges for bottom and top candidates for this middle
@@ -636,7 +642,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
 
     points.emplace_back(point, sp);
   }
-
+	
   return tree_t(std::move(points));
 }
 
@@ -662,24 +668,85 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * take each external spacepoint, allocate a corresponding internal space
    * point, and save it in a vector.
    */
+	Acts::Extent rRangeSPExtent;
   std::vector<internal_sp_t *> internalSpacePoints;
   for (const external_spacepoint_t *p : spacePoints) {
     internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
         *p, {p->x(), p->y(), p->z()}, {0.0, 0.0},
         {p->varianceR(), p->varianceZ()}));
+		// store x,y,z values in extent
+		rRangeSPExtent.extend({p->x(), p->y(), p->z()});
   }
+	
+	// variable middle SP radial region of interest
+	const float rMiddleMinSPRange =	std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 + 	m_config.deltaRMiddleMinSPRange;
+	const float rMiddleMaxSPRange =	std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 - 	m_config.deltaRMiddleMaxSPRange;
 
+	
   /*
    * Construct the k-d tree from these points. Note that this not consume or
    * take ownership of the points.
    */
   tree_t tree = createTree(internalSpacePoints);
-
+	
+//	tree.sort();
+	
+//	std::sort(tree.begin(), tree.end(), [](auto &a, auto &b) {
+//		return a.second->radius() < b.second->radius();
+//	});
+	
+	//			for (iterator_t i = this->m_begin_it; i != this->m_end_it; ++i) {
+	//				std::cout << i[0].second->radius() << std::endl;
+	//			}
+	
   /*
    * Run the seeding algorithm by iterating over all the points in the tree and
    * seeing what happens if we take them to be our middle spacepoint.
    */
   for (const typename tree_t::pair_t &middle_p : tree) {
+		
+		internal_sp_t &middle = *middle_p.second;
+		auto rM = middle.radius();
+		auto zM = middle.z();
+		
+		/// check if spM is outside our radial region of interest
+		if (m_config.useVariableMiddleSPRange) {
+			if (rM < rMiddleMinSPRange) {
+				continue;
+			}
+			if (rM > rMiddleMaxSPRange) {
+				// break if SP are sorted in r
+//				if (m_config.forceRadialSorting) {
+//					break;
+//				}
+				continue;
+			}
+		} else if (not m_config.rRangeMiddleSP.empty()) {
+			/// get zBin position of the middle SP
+			auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
+																	 m_config.zBinEdges.end(), zM);
+			int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
+			/// protects against zM at the limit of zBinEdges
+			zBin == 0 ? zBin : --zBin;
+			if (rM < m_config.rRangeMiddleSP[zBin][0]) {
+				continue;
+			}
+			if (rM > m_config.rRangeMiddleSP[zBin][1]) {
+				// break if SP are sorted in r
+//				if (m_config.forceRadialSorting) {
+//					break;
+//				}
+				continue;
+			}
+		}
+		
+//		if (middle.radius() > m_config.rMaxMiddle) {
+//			continue;
+//		}
+//		if (	middle.radius() < m_config.rMinMiddle) {
+//			break;
+//		}
+		
     processFromMiddleSP(tree, out_cont, middle_p);
   }
 

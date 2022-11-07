@@ -18,6 +18,8 @@
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+# include <chrono>
+
 #include <stdexcept>
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
@@ -175,6 +177,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
+	
+	auto start = std::chrono::high_resolution_clock::now();
+	
   // construct the combined input container of space point pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
@@ -256,6 +261,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       }
     }
   }
+	
+	auto end = std::chrono::high_resolution_clock::now();
+	auto elapsed_seconds = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+	std::cout << "|TIMER| elapsed time: " << elapsed_seconds.count() << " ns" << std::endl;
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
