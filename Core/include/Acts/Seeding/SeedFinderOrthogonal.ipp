@@ -716,9 +716,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
 			}
 			if (rM > rMiddleMaxSPRange) {
 				// break if SP are sorted in r
-				if (m_config.forceRadialSorting) {
-					break;
-				}
+//				if (m_config.forceRadialSorting) {
+//					break;
+//				}
 				continue;
 			}
 		} else if (not m_config.rRangeMiddleSP.empty()) {
@@ -733,9 +733,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
 			}
 			if (rM > m_config.rRangeMiddleSP[zBin][1]) {
 				// break if SP are sorted in r
-				if (m_config.forceRadialSorting) {
-					break;
-				}
+//				if (m_config.forceRadialSorting) {
+//					break;
+//				}
 				continue;
 			}
 		}
