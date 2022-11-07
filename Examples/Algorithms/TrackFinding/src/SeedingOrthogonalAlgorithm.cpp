@@ -15,6 +15,8 @@
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+# include <chrono>
+
 ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     ActsExamples::SeedingOrthogonalAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
@@ -53,6 +55,7 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
       m_cfg.seedFinderConfig.highland / m_cfg.seedFinderConfig.minPt;
   m_cfg.seedFinderConfig.maxScatteringAngle2 =
       maxScatteringAngle * maxScatteringAngle;
+				
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
   // millimeter
   // TODO: change using ACTS units
@@ -70,6 +73,9 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     const AlgorithmContext &ctx) const {
+	
+	auto start = std::chrono::high_resolution_clock::now();
+	
   std::vector<const SimSpacePoint *> spacePoints;
 
   for (const auto &isp : m_cfg.inputSpacePoints) {
@@ -101,6 +107,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     }
     protoTracks.push_back(std::move(protoTrack));
   }
+	
+	auto end = std::chrono::high_resolution_clock::now();
+	auto elapsed_seconds = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+	std::cout << "|TIMER| elapsed time: " << elapsed_seconds.count() << " ns" << std::endl;
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");

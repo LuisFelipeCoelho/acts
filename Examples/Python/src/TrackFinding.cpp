@@ -125,7 +125,7 @@ void addTrackFinding(Context& ctx) {
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
-    ACTS_PYTHON_MEMBER(cotThetaMax);
+		ACTS_PYTHON_MEMBER(cotThetaMax);
     ACTS_PYTHON_MEMBER(deltaRMinBottomSP);
     ACTS_PYTHON_MEMBER(deltaRMaxBottomSP);
     ACTS_PYTHON_MEMBER(deltaRMinTopSP);
@@ -157,6 +157,11 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(pTPerHelixRadius);
     ACTS_PYTHON_MEMBER(minHelixDiameter2);
     ACTS_PYTHON_MEMBER(pT2perRadius);
+		ACTS_PYTHON_MEMBER(rRangeMiddleSP);
+		ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
+		ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
+		ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
+		ACTS_PYTHON_MEMBER(forceRadialSorting);
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
