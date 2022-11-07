@@ -195,8 +195,7 @@ int main(int argc, char** argv) {
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
-  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
+  const Acts::Range1D<float> rMiddleSPRange;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
@@ -266,14 +265,13 @@ int main(int argc, char** argv) {
   groupIt = spGroup.begin();
 
   if (do_cpu) {
-    decltype(seedFinder_cpu)::State state;
+    decltype(seedFinder_cpu)::SeedingState state;
     for (int i_s = 0; i_s < skip; i_s++)
       ++groupIt;
     for (; !(groupIt == spGroup.end()); ++groupIt) {
       seedFinder_cpu.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleMinSPRange,
-          rMiddleMaxSPRange);
+          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)

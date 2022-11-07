@@ -27,14 +27,31 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     InternalSpacePoint<external_spacepoint_t>& middleSP,
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
-    std::vector<float>& impactParametersVec, float zOrigin,
-    SeedConfQuantitiesConfig& seedConfQuantities,
+    std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
         outCont) const {
+  // seed confirmation
+  SeedConfirmationRangeConfig seedConfRange;
+  if (m_cfg.seedConfirmation) {
+    // check if bottom SP is in the central or forward region
+    seedConfRange =
+        (bottomSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+         bottomSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_cfg.forwardSeedConfirmationRange
+            : m_cfg.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the bottom SP is
+    // in the central or forward region
+    seedFilterState.nTopSeedConf =
+        bottomSP.radius() > seedConfRange.rMaxSeedConf
+            ? seedConfRange.nTopForLargeR
+            : seedConfRange.nTopForSmallR;
+  }
+
   size_t maxWeightSeedIndex = 0;
   bool maxWeightSeed = false;
   float weightMax = -std::numeric_limits<float>::max();
+  float zOrigin = seedFilterState.zOrigin;
 
   // initialize original index locations
   std::vector<size_t> idx(topSpVec.size());
@@ -128,16 +145,16 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
-      deltaSeedConf =
-          compatibleSeedR.size() + 1 - seedConfQuantities.nTopSeedConf;
+      deltaSeedConf = compatibleSeedR.size() + 1 - seedFilterState.nTopSeedConf;
       if (deltaSeedConf < 0 ||
-          (seedConfQuantities.numQualitySeeds and deltaSeedConf == 0)) {
+          (seedFilterState.numQualitySeeds and deltaSeedConf == 0)) {
         continue;
       }
-      bool seedRangeCuts = bottomSP.radius() < m_cfg.seedConfMinBottomRadius ||
-                           std::abs(zOrigin) > m_cfg.seedConfMaxZOrigin;
+      bool seedRangeCuts =
+          bottomSP.radius() < seedConfRange.seedConfMinBottomRadius ||
+          std::abs(zOrigin) > seedConfRange.seedConfMaxZOrigin;
       if (seedRangeCuts and deltaSeedConf == 0 and
-          impact > m_cfg.minImpactSeedConf) {
+          impact > seedConfRange.minImpactSeedConf) {
         continue;
       }
 
@@ -154,11 +171,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       if (deltaSeedConf > 0) {
         // if we have not yet reached our max number of quality seeds we add the
         // new seed to outCont
-        if (seedConfQuantities.numQualitySeeds <
-            m_cfg.maxQualitySeedsPerSpMConf) {
+        if (seedFilterState.numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {
           // fill high quality seed
-          seedConfQuantities.numQualitySeeds =
-              seedConfQuantities.numQualitySeeds + 1;
+          seedFilterState.numQualitySeeds++;
           outCont.push_back(std::make_pair(
               weight,
               std::make_unique<const InternalSeed<external_spacepoint_t>>(
@@ -179,9 +194,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // keep the normal behavior without seed quality confirmation
       // if we have not yet reached our max number of seeds we add the new seed
       // to outCont
-      if (seedConfQuantities.numSeeds < m_cfg.maxSeedsPerSpMConf) {
+      if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
         // fill seed
-        seedConfQuantities.numSeeds = seedConfQuantities.numSeeds + 1;
+        seedFilterState.numSeeds++;
         outCont.push_back(std::make_pair(
             weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                         bottomSP, middleSP, *topSpVec[i], zOrigin, false)));
@@ -195,12 +210,12 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
   if (m_cfg.seedConfirmation and maxWeightSeed and
-      !seedConfQuantities.numQualitySeeds) {
+      !seedFilterState.numQualitySeeds) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
-    if (seedConfQuantities.numSeeds < m_cfg.maxSeedsPerSpMConf) {
+    if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
       // fill seed
-      seedConfQuantities.numSeeds = seedConfQuantities.numSeeds + 1;
+      seedFilterState.numSeeds++;
       outCont.push_back(std::make_pair(
           weightMax,
           std::make_unique<const InternalSeed<external_spacepoint_t>>(

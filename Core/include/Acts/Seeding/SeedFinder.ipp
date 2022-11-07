@@ -39,10 +39,10 @@ SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
 template <typename external_spacepoint_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
-    State& state,
+    SeedingState& state,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
-    const float rMiddleMinSPRange, const float rMiddleMaxSPRange) const {
+    const Acts::Range1D<float> rMiddleSPRange) const {
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -51,10 +51,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     /// check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
-      if (rM < rMiddleMinSPRange) {
+      if (rM < rMiddleSPRange.min()) {
         continue;
       }
-      if (rM > rMiddleMaxSPRange) {
+      if (rM > rMiddleSPRange.max()) {
         // break if SP are sorted in r
         if (m_config.forceRadialSorting) {
           break;
@@ -149,7 +149,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       state.compatTopSP.push_back(topSP);
     }
     // apply cut on the number of top SP if seedConfirmation is true
-    SeedConfQuantitiesConfig seedConfQuantities;
+    SeedFilterState seedFilterState;
     if (m_config.seedConfirmation == true) {
       // check if middle SP is in the central or forward region
       SeedConfirmationRangeConfig seedConfRange =
@@ -159,10 +159,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
               : m_config.centralSeedConfirmationRange;
       // set the minimum number of top SP depending on whether the middle SP is
       // in the central or forward region
-      seedConfQuantities.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
-                                            ? seedConfRange.nTopForLargeR
-                                            : seedConfRange.nTopForSmallR;
-      if (state.compatTopSP.size() < seedConfQuantities.nTopSeedConf) {
+      seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                                         ? seedConfRange.nTopForLargeR
+                                         : seedConfRange.nTopForSmallR;
+      if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
         continue;
       }
     }
@@ -256,9 +256,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     size_t numBotSP = state.compatBottomSP.size();
     size_t numTopSP = state.compatTopSP.size();
-    //
-    //		seedConfQuantities.numQualitySeeds = 0;
-    //		seedConfQuantities.numSeeds = 0;
 
     size_t t0 = 0;
 
@@ -269,7 +266,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
 
       auto lb = state.linCircleBottom[b];
-      float Zob = lb.Zo;
+      seedFilterState.zOrigin = lb.Zo;
       float cotThetaB = lb.cotTheta;
       float Vb = lb.V;
       float Ub = lb.U;
@@ -534,11 +531,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (!state.topSpVec.empty()) {
         m_config.seedFilter->filterSeeds_2SpFixed(
             *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
-            state.impactParameters, Zob, seedConfQuantities, state.seedsPerSpM);
+            state.impactParameters, seedFilterState, state.seedsPerSpM);
       }
     }
     m_config.seedFilter->filterSeeds_1SpFixed(
-        state.seedsPerSpM, seedConfQuantities.numQualitySeeds, outIt);
+        state.seedsPerSpM, seedFilterState.numQualitySeeds, outIt);
   }
 }
 
@@ -547,13 +544,12 @@ template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
-  State state;
-  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
-  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
+  SeedingState state;
+  const Acts::Range1D<float> rMiddleSPRange;
   std::vector<Seed<external_spacepoint_t>> ret;
 
   createSeedsForGroup(state, std::back_inserter(ret), bottomSPs, middleSPs,
-                      topSPs, rMiddleMinSPRange, rMiddleMaxSPRange);
+                      topSPs, rMiddleSPRange);
 
   return ret;
 }
