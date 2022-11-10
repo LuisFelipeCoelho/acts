@@ -32,7 +32,7 @@ struct SpacePointGridConfig {
   // negative direction in z
   float zMin;
   // maximum distance in r from middle space point to bottom or top spacepoint
-  float deltaRMax;
+  float deltaRMaxGrid;
   // maximum forward direction expressed as cot(theta)
   float cotThetaMax;
   // maximum impact parameter in mm
@@ -60,7 +60,7 @@ struct SpacePointGridConfig {
     config.rMax /= 1_mm;
     config.zMax /= 1_mm;
     config.zMin /= 1_mm;
-    config.deltaRMax /= 1_mm;
+    config.deltaRMaxGrid /= 1_mm;
 
     return config;
   }

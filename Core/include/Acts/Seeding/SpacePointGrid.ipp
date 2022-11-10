@@ -43,10 +43,10 @@ Acts::SpacePointGridCreator::createGrid(
     // from middle SP to top SP
     float innerAngle = 0;
     float rMin = config.rMax;
-    if (config.rMax > config.deltaRMax) {
-      rMin = config.rMax - config.deltaRMax;
-      float innerCircleR2 =
-          (config.rMax - config.deltaRMax) * (config.rMax - config.deltaRMax);
+    if (config.rMax > config.deltaRMaxGrid) {
+      rMin = config.rMax - config.deltaRMaxGrid;
+      float innerCircleR2 = (config.rMax - config.deltaRMaxGrid) *
+                            (config.rMax - config.deltaRMaxGrid);
       float xInner = innerCircleR2 / (2 * minHelixRadius);
       float yInner = std::sqrt(innerCircleR2 - xInner * xInner);
       innerAngle = std::atan(xInner / yInner);
@@ -97,7 +97,7 @@ Acts::SpacePointGridCreator::createGrid(
     // and returning (multiple) neighbors only in one z-direction for forward
     // seeds
     // FIXME: zBinSize must include scattering
-    float zBinSize = config.cotThetaMax * config.deltaRMax;
+    float zBinSize = config.cotThetaMax * config.deltaRMaxGrid;
     int zBins =
         std::max(1, (int)std::floor((config.zMax - config.zMin) / zBinSize));
 

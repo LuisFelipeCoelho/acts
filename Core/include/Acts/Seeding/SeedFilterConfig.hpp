@@ -28,7 +28,7 @@ struct SeedFilterConfig {
   // seed weight increased by this value if a compatible seed has been found.
   float compatSeedWeight = 200.;
   // minimum distance between compatible seeds to be considered for weight boost
-  float deltaRMin = 5. * Acts::UnitConstants::mm;
+  float deltaRMinFilter = 5. * Acts::UnitConstants::mm;
   // in dense environments many seeds may be found per middle space point.
   // only seeds with the highest weight will be kept if this limit is reached.
   unsigned int maxSeedsPerSpM = 10;
@@ -71,7 +71,7 @@ struct SeedFilterConfig {
   SeedFilterConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
     SeedFilterConfig config = *this;
-    config.deltaRMin /= 1_mm;
+    config.deltaRMinFilter /= 1_mm;
     config.deltaInvHelixDiameter /= 1. / 1_mm;
 
     return config;

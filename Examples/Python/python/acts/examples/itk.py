@@ -287,7 +287,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     radLengthPerSeed = 0.1
     minPt = 900 * u.MeV
     bFieldInZ = 2 * u.T
-    deltaRMin = 20 * u.mm
+    deltaRMinFilter = 20 * u.mm
     maxPtScattering = float("inf") * u.GeV
     zBinEdges = [
         -3000.0,
@@ -355,7 +355,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         rMaxGridConfig = 320 * u.mm
         rMaxSeedFinderConfig = rMaxGridConfig
         deltaRMinSP = 6 * u.mm
-        deltaRMax = 280 * u.mm
+        deltaRMaxGrid = 280 * u.mm
         deltaRMaxTopSP = 280 * u.mm
         deltaRMaxBottomSP = 120 * u.mm
         interactionPointCut = True
@@ -419,7 +419,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         rMaxGridConfig = 1000.0 * u.mm
         rMaxSeedFinderConfig = 1200.0 * u.mm
         deltaRMinSP = 20 * u.mm
-        deltaRMax = 600 * u.mm
+        deltaRMaxGrid = 600 * u.mm
         deltaRMaxTopSP = 300 * u.mm
         deltaRMaxBottomSP = deltaRMaxTopSP
         interactionPointCut = False
@@ -489,7 +489,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         seedConfirmation=seedConfirmation,
         centralSeedConfirmationRange=centralSeedConfirmationRange,
         forwardSeedConfirmationRange=forwardSeedConfirmationRange,
-        deltaR=(deltaRMin, deltaRMax),
         deltaRBottomSP=(deltaRMinSP, deltaRMaxBottomSP),
         deltaRTopSP=(deltaRMinSP, deltaRMaxTopSP),
         deltaRMiddleSPRange=(deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange),
@@ -510,6 +509,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         maxSeedsPerSpMConf=maxSeedsPerSpMConf,
         maxQualitySeedsPerSpMConf=maxQualitySeedsPerSpMConf,
         useDeltaRorTopRadius=useDeltaRorTopRadius,
+        deltaRMinFilter=deltaRMinFilter,
     )
     spacePointGridConfigArg = SpacePointGridConfigArg(
         rMax=rMaxGridConfig,
@@ -517,6 +517,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         phiBinDeflectionCoverage=phiBinDeflectionCoverage,
         phi=(phiMin, phiMax),
         impactMax=impactMax,
+        deltaRMaxGrid=deltaRMaxGrid,
     )
     seedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(
         allowSeparateRMax=allowSeparateRMax,

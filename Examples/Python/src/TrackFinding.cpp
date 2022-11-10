@@ -45,7 +45,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(impactWeightFactor);
     ACTS_PYTHON_MEMBER(zOriginWeightFactor);
     ACTS_PYTHON_MEMBER(compatSeedWeight);
-    ACTS_PYTHON_MEMBER(deltaRMin);
+    ACTS_PYTHON_MEMBER(deltaRMinFilter);
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_MEMBER(compatSeedLimit);
     ACTS_PYTHON_MEMBER(curvatureSortingInFilter);
@@ -67,8 +67,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
     ACTS_PYTHON_MEMBER(cotThetaMax);
-    ACTS_PYTHON_MEMBER(deltaRMin);
-    ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(deltaRMinBottomSP);
     ACTS_PYTHON_MEMBER(deltaRMaxBottomSP);
     ACTS_PYTHON_MEMBER(deltaRMinTopSP);
@@ -194,7 +192,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(phiMin);
     ACTS_PYTHON_MEMBER(phiMax);
-    ACTS_PYTHON_MEMBER(deltaRMax);
+    ACTS_PYTHON_MEMBER(deltaRMaxGrid);
     ACTS_PYTHON_MEMBER(cotThetaMax);
     ACTS_PYTHON_MEMBER(phiBinDeflectionCoverage);
     ACTS_PYTHON_MEMBER(impactMax);

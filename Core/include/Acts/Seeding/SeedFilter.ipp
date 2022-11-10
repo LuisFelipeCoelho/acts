@@ -100,7 +100,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       }
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTop_r - otherTop_r;
-      if (std::abs(deltaR) < m_cfg.deltaRMin) {
+      if (std::abs(deltaR) < m_cfg.deltaRMinFilter) {
         continue;
       }
       bool newCompSeed = true;
@@ -109,7 +109,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // seed (20mm instead of 5mm)
         // add new compatible seed only if distance larger than rmin to all
         // other compatible seeds
-        if (std::abs(previousDiameter - otherTop_r) < m_cfg.deltaRMin) {
+        if (std::abs(previousDiameter - otherTop_r) < m_cfg.deltaRMinFilter) {
           newCompSeed = false;
           break;
         }

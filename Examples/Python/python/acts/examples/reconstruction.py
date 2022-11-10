@@ -49,7 +49,6 @@ SeedFinderConfigArg = namedtuple(
         "seedConfirmation",
         "centralSeedConfirmationRange",
         "forwardSeedConfirmationRange",
-        "deltaR",  # (min,max)
         "deltaRBottomSP",  # (min,max)
         "deltaRTopSP",  # (min,max)
         "deltaRMiddleSPRange",  # (min,max)
@@ -58,7 +57,7 @@ SeedFinderConfigArg = namedtuple(
         "z",  # (min,max)
         "beamPos",  # (x,y)
     ],
-    defaults=[None] * 21 + [(None, None)] * 8,
+    defaults=[None] * 20 + [(None, None)] * 8,
 )
 
 SeedFilterConfigArg = namedtuple(
@@ -75,7 +74,7 @@ SeedFilterConfigArg = namedtuple(
         "maxSeedsPerSpMConf",
         "maxQualitySeedsPerSpMConf",
         "useDeltaRorTopRadius",
-        "deltaRMin",
+        "deltaRMinFilter",
     ],
     defaults=[None] * 12,
 )
@@ -87,7 +86,7 @@ SpacePointGridConfigArg = namedtuple(
         "zBinEdges",
         "phiBinDeflectionCoverage",
         "impactMax",
-        "deltaRMax",
+        "deltaRMaxGrid",
         "phi",  # (min,max)
     ],
     defaults=[None] * 5 + [(None, None)] * 1,
@@ -295,28 +294,10 @@ def addSeeding(
                 **acts.examples.defaultKWArgs(
                     rMin=seedFinderConfigArg.r[0],
                     rMax=seedFinderConfigArg.r[1],
-                    deltaRMin=seedFinderConfigArg.deltaR[0],
-                    deltaRMax=seedFinderConfigArg.deltaR[1],
-                    deltaRMinTopSP=(
-                        seedFinderConfigArg.deltaR[0]
-                        if seedFinderConfigArg.deltaRTopSP[0] is None
-                        else seedFinderConfigArg.deltaRTopSP[0]
-                    ),
-                    deltaRMaxTopSP=(
-                        seedFinderConfigArg.deltaR[1]
-                        if seedFinderConfigArg.deltaRTopSP[1] is None
-                        else seedFinderConfigArg.deltaRTopSP[1]
-                    ),
-                    deltaRMinBottomSP=(
-                        seedFinderConfigArg.deltaR[0]
-                        if seedFinderConfigArg.deltaRBottomSP[0] is None
-                        else seedFinderConfigArg.deltaRBottomSP[0]
-                    ),
-                    deltaRMaxBottomSP=(
-                        seedFinderConfigArg.deltaR[1]
-                        if seedFinderConfigArg.deltaRBottomSP[1] is None
-                        else seedFinderConfigArg.deltaRBottomSP[1]
-                    ),
+                    deltaRMinTopSP=seedFinderConfigArg.deltaRTopSP[0],
+                    deltaRMaxTopSP=seedFinderConfigArg.deltaRTopSP[1],
+                    deltaRMinBottomSP=seedFinderConfigArg.deltaRBottomSP[0],
+                    deltaRMaxBottomSP=seedFinderConfigArg.deltaRBottomSP[1],
                     deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
                     deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
                     collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
@@ -359,11 +340,7 @@ def addSeeding(
             seedFilterConfig = acts.SeedFilterConfig(
                 **acts.examples.defaultKWArgs(
                     maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-                    deltaRMin=(
-                        seedFinderConfig.deltaRMin
-                        if seedFilterConfigArg.deltaRMin is None
-                        else seedFilterConfigArg.deltaRMin
-                    ),
+                    deltaRMinFilter=seedFilterConfigArg.deltaRMinFilter,
                     impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
                     zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
                     compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
@@ -391,11 +368,7 @@ def addSeeding(
                     ),
                     zMax=seedFinderConfig.zMax,
                     zMin=seedFinderConfig.zMin,
-                    deltaRMax=(
-                        seedFinderConfig.deltaRMax
-                        if spacePointGridConfigArg.deltaRMax is None
-                        else spacePointGridConfigArg.deltaRMax
-                    ),
+                    deltaRMaxGrid=spacePointGridConfigArg.deltaRMaxGrid,
                     cotThetaMax=seedFinderConfig.cotThetaMax,
                     phiMin=spacePointGridConfigArg.phi[0],
                     phiMax=spacePointGridConfigArg.phi[1],
@@ -430,26 +403,10 @@ def addSeeding(
                 **acts.examples.defaultKWArgs(
                     rMin=seedFinderConfigArg.r[0],
                     rMax=seedFinderConfigArg.r[1],
-                    deltaRMinTopSP=(
-                        seedFinderConfigArg.deltaR[0]
-                        if seedFinderConfigArg.deltaRTopSP[0] is None
-                        else seedFinderConfigArg.deltaRTopSP[0]
-                    ),
-                    deltaRMaxTopSP=(
-                        seedFinderConfigArg.deltaR[1]
-                        if seedFinderConfigArg.deltaRTopSP[1] is None
-                        else seedFinderConfigArg.deltaRTopSP[1]
-                    ),
-                    deltaRMinBottomSP=(
-                        seedFinderConfigArg.deltaR[0]
-                        if seedFinderConfigArg.deltaRBottomSP[0] is None
-                        else seedFinderConfigArg.deltaRBottomSP[0]
-                    ),
-                    deltaRMaxBottomSP=(
-                        seedFinderConfigArg.deltaR[1]
-                        if seedFinderConfigArg.deltaRBottomSP[1] is None
-                        else seedFinderConfigArg.deltaRBottomSP[1]
-                    ),
+                    deltaRMinTopSP=seedFinderConfigArg.deltaRTopSP[0],
+                    deltaRMaxTopSP=seedFinderConfigArg.deltaRTopSP[1],
+                    deltaRMinBottomSP=seedFinderConfigArg.deltaRBottomSP[0],
+                    deltaRMaxBottomSP=seedFinderConfigArg.deltaRBottomSP[1],
                     collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
                     collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
                     zMin=seedFinderConfigArg.z[0],
@@ -482,11 +439,7 @@ def addSeeding(
             seedFilterConfig = acts.SeedFilterConfig(
                 **acts.examples.defaultKWArgs(
                     maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-                    deltaRMin=(
-                        seedFinderConfigArg.deltaR[0]
-                        if seedFilterConfigArg.deltaRMin is None
-                        else seedFilterConfigArg.deltaRMin
-                    ),
+                    deltaRMinFilter=seedFilterConfigArg.deltaRMinFilter,
                     impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
                     zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
                     compatSeedWeight=seedFilterConfigArg.compatSeedWeight,

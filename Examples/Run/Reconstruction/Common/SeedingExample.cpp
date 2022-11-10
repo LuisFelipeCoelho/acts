@@ -123,18 +123,17 @@ int runSeedingExample(int argc, char* argv[],
   seedingCfg.gridConfig.rMax = 200._mm;
   seedingCfg.seedFinderConfig.rMax = seedingCfg.gridConfig.rMax;
 
-  seedingCfg.seedFilterConfig.deltaRMin = 1_mm;
-  seedingCfg.seedFinderConfig.deltaRMin = seedingCfg.seedFilterConfig.deltaRMin;
+  seedingCfg.seedFilterConfig.deltaRMinFilter = 1_mm;
   seedingCfg.seedFinderConfig.deltaRMinTopSP =
-      seedingCfg.seedFilterConfig.deltaRMin;
+      seedingCfg.seedFilterConfig.deltaRMinFilter;
   seedingCfg.seedFinderConfig.deltaRMinBottomSP =
-      seedingCfg.seedFilterConfig.deltaRMin;
+      seedingCfg.seedFilterConfig.deltaRMinFilter;
 
-  seedingCfg.gridConfig.deltaRMax = 60._mm;
-  seedingCfg.seedFinderConfig.deltaRMax = seedingCfg.gridConfig.deltaRMax;
-  seedingCfg.seedFinderConfig.deltaRMaxTopSP = seedingCfg.gridConfig.deltaRMax;
+  seedingCfg.gridConfig.deltaRMaxGrid = 60._mm;
+  seedingCfg.seedFinderConfig.deltaRMaxTopSP =
+      seedingCfg.gridConfig.deltaRMaxGrid;
   seedingCfg.seedFinderConfig.deltaRMaxBottomSP =
-      seedingCfg.gridConfig.deltaRMax;
+      seedingCfg.gridConfig.deltaRMaxGrid;
 
   seedingCfg.seedFinderConfig.collisionRegionMin = -250_mm;
   seedingCfg.seedFinderConfig.collisionRegionMax = 250._mm;

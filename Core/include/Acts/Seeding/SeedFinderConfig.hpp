@@ -31,18 +31,15 @@ struct SeedFinderConfig {
   // cot of maximum theta angle
   // equivalent to 2.7 eta (pseudorapidity)
   float cotThetaMax = 7.40627;
-  // minimum distance in r between two measurements within one seed
-  float deltaRMin = 5 * Acts::UnitConstants::mm;
-  // maximum distance in r between two measurements within one seed
-  float deltaRMax = 270 * Acts::UnitConstants::mm;
-  // minimum distance in r between middle and top SP
-  float deltaRMinTopSP = std::numeric_limits<float>::quiet_NaN();
-  // maximum distance in r between middle and top SP
-  float deltaRMaxTopSP = std::numeric_limits<float>::quiet_NaN();
-  // minimum distance in r between middle and bottom SP
-  float deltaRMinBottomSP = std::numeric_limits<float>::quiet_NaN();
-  // maximum distance in r between middle and bottom SP
-  float deltaRMaxBottomSP = std::numeric_limits<float>::quiet_NaN();
+  // minimum distance in r between middle and top SP in one seed
+  float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
+  // maximum distance in r between middle and top SP in one seed
+  float deltaRMaxTopSP = 270 * Acts::UnitConstants::mm;
+  // minimum distance in r between middle and bottom SP in one seed
+  float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
+  // maximum distance in r between middle and bottom SP in one seed
+  float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
+
   // radial bin size for filling space point grid
   float binSizeR = 1. * Acts::UnitConstants::mm;
   // force sorting in R in space point grid bins
@@ -177,8 +174,6 @@ struct SeedFinderConfig {
     using namespace Acts::UnitLiterals;
     SeedFinderConfig config = *this;
     config.minPt /= 1_MeV;
-    config.deltaRMin /= 1_mm;
-    config.deltaRMax /= 1_mm;
     config.binSizeR /= 1_mm;
     config.deltaRMinTopSP /= 1_mm;
     config.deltaRMaxTopSP /= 1_mm;

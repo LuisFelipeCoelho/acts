@@ -47,46 +47,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         "true");
   }
 
-  if (m_cfg.seedFilterConfig.deltaRMin != m_cfg.seedFinderConfig.deltaRMin) {
-    throw std::invalid_argument("Inconsistent config deltaRMin");
-  }
-
-  if (m_cfg.gridConfig.deltaRMax != m_cfg.seedFinderConfig.deltaRMax) {
-    throw std::invalid_argument("Inconsistent config deltaRMax");
-  }
-
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
-                "Value of deltaRMaxTopSP must support NaN values");
-
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMinTopSP)>::has_quiet_NaN,
-                "Value of deltaRMinTopSP must support NaN values");
-
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMaxBottomSP)>::has_quiet_NaN,
-                "Value of deltaRMaxBottomSP must support NaN values");
-
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
-                "Value of deltaRMinBottomSP must support NaN values");
-
-  if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxTopSP)) {
-    m_cfg.seedFinderConfig.deltaRMaxTopSP = m_cfg.seedFinderConfig.deltaRMax;
-  }
-
-  if (std::isnan(m_cfg.seedFinderConfig.deltaRMinTopSP)) {
-    m_cfg.seedFinderConfig.deltaRMinTopSP = m_cfg.seedFinderConfig.deltaRMin;
-  }
-
-  if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxBottomSP)) {
-    m_cfg.seedFinderConfig.deltaRMaxBottomSP = m_cfg.seedFinderConfig.deltaRMax;
-  }
-
-  if (std::isnan(m_cfg.seedFinderConfig.deltaRMinBottomSP)) {
-    m_cfg.seedFinderConfig.deltaRMinBottomSP = m_cfg.seedFinderConfig.deltaRMin;
-  }
-
   if (m_cfg.gridConfig.zMin != m_cfg.seedFinderConfig.zMin) {
     throw std::invalid_argument("Inconsistent config zMin");
   }

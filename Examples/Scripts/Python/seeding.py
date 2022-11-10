@@ -111,7 +111,8 @@ def runSeeding(
         ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
         SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
-            deltaR=(1 * u.mm, 60 * u.mm),
+            deltaRBottomSP=(1 * u.mm, 60 * u.mm),  # (min,max)
+            deltaRTopSP=(1 * u.mm, 60 * u.mm),  # (min,max)
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
             maxSeedsPerSpM=1,
@@ -120,6 +121,12 @@ def runSeeding(
             minPt=500 * u.MeV,
             bFieldInZ=1.99724 * u.T,
             impactMax=3 * u.mm,
+        ),
+        SeedFilterConfigArg(
+            deltarRMinFilter=1 * u.mm,
+        ),
+        SpacePointGridConfigArg(
+            deltaRMaxGrid=60 * u.mm,
         ),
         acts.logging.VERBOSE,
         seedingAlgorithm=seedingAlgorithm,
