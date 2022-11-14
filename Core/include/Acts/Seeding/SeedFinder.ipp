@@ -394,12 +394,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         if (m_config.arithmeticAverageCotTheta) {
           // use arithmetic average
           cotThetaAvg2 = std::pow((cotThetaB + cotThetaT) / 2, 2);
-				} else {
-					cotThetaAvg2 = cotThetaB * cotThetaT;
-					if (cotThetaAvg2 <= 0) {
-						continue;
-					}
-				}
+        } else {
+          cotThetaAvg2 = cotThetaB * cotThetaT;
+          if (cotThetaAvg2 <= 0) {
+            continue;
+          }
+        }
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term
         // for errors on spM
