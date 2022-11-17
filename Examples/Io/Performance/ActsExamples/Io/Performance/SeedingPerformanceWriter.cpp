@@ -18,6 +18,7 @@
 #include <unordered_map>
 
 #include <TFile.h>
+#include <TTree.h>
 
 namespace {
 using SimParticleContainer = ActsExamples::SimParticleContainer;
@@ -50,6 +51,12 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + path + "'");
   }
+				
+	// construct trees
+	seedTree = new TTree(m_cfg.treeNameSeeding.c_str(), m_cfg.treeNameSeeding.c_str());
+	seedTree->SetDirectory(m_outputFile);
+	seedTree->Branch("event_id", 0);
+				
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
   m_duplicationPlotTool.book(m_duplicationPlotCache);

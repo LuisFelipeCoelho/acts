@@ -34,6 +34,8 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
     std::string filePath = "performance_track_seeding.root";
     /// Output file mode
     std::string fileMode = "RECREATE";
+		/// Output tree name for the tracks
+		std::string treeNameSeeding = "performance_track_seeding";
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;
@@ -60,6 +62,8 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};
+	// per-seed tree
+	TTree* seedTree = nullptr;
   /// Plot tool for efficiency
   EffPlotTool m_effPlotTool;
   EffPlotTool::EffPlotCache m_effPlotCache;
