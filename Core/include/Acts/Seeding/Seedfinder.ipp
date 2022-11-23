@@ -45,6 +45,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
     const Acts::Vector2 rMiddleSPRange) const {
+	
+	return;
+	
   for (auto spM : middleSPs) {
     //    auto t_start_duplets = std::chrono::high_resolution_clock::now();
 
