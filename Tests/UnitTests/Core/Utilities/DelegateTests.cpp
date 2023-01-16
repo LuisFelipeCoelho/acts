@@ -334,6 +334,7 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
 }
 
 struct DelegateInterface {
+  DelegateInterface() = default;
   virtual ~DelegateInterface() = 0;
 
   virtual std::string func() const { return "base"; }
@@ -383,10 +384,44 @@ BOOST_AUTO_TEST_CASE(NonVoidDelegateTest) {
     BOOST_CHECK_NE(dynamic_cast<const DelegateInterface*>(instance), nullptr);
     BOOST_CHECK_NE(dynamic_cast<const ConcreteDelegate*>(instance), nullptr);
   }
+
   {
     Delegate<std::string(), ConcreteDelegate> d;
     ConcreteDelegate c;
     d.connect<&ConcreteDelegate::func>(&c);
+    BOOST_CHECK_EQUAL(d(), "derived");
+
+    const auto* instance = d.instance();
+    static_assert(
+        std::is_same_v<
+            std::remove_const_t<std::remove_pointer_t<decltype(instance)>>,
+            ConcreteDelegate>,
+        "Did not get correct instance pointer");
+    BOOST_CHECK_NE(dynamic_cast<const DelegateInterface*>(instance), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<const ConcreteDelegate*>(instance), nullptr);
+  }
+
+  {
+    OwningDelegate<std::string(), DelegateInterface> d;
+    d.connect<&ConcreteDelegate::func>(
+        std::make_unique<const ConcreteDelegate>());
+    BOOST_CHECK_EQUAL(d(), "derived");
+
+    const auto* instance = d.instance();
+    static_assert(
+        std::is_same_v<
+            std::remove_const_t<std::remove_pointer_t<decltype(instance)>>,
+            DelegateInterface>,
+        "Did not get correct instance pointer");
+    BOOST_CHECK_NE(dynamic_cast<const DelegateInterface*>(instance), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<const ConcreteDelegate*>(instance), nullptr);
+  }
+
+  {
+    OwningDelegate<std::string(), ConcreteDelegate> d;
+    ConcreteDelegate c;
+    d.connect<&ConcreteDelegate::func>(
+        std::make_unique<const ConcreteDelegate>());
     BOOST_CHECK_EQUAL(d(), "derived");
 
     const auto* instance = d.instance();
@@ -407,6 +442,8 @@ BOOST_AUTO_TEST_CASE(NonVoidDelegateTest) {
     (void)d;
     (void)c;
   }
+
+  { OwningDelegate<std::string(), DelegateInterface> d; }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
