@@ -33,9 +33,9 @@ class PurityPlotTool {
 
   /// @brief Nested Cache struct
   struct PurityPlotCache {
-		TEfficiency* trackPurity_vs_pT{nullptr};   ///< Tracking purity vs pT
-		TEfficiency* trackPurity_vs_eta{nullptr};  ///< Tracking purity vs eta
-		TEfficiency* trackPurity_vs_phi{nullptr};  ///< Tracking purity vs phi
+    TEfficiency* trackPurity_vs_pT{nullptr};   ///< Tracking purity vs pT
+    TEfficiency* trackPurity_vs_eta{nullptr};  ///< Tracking purity vs eta
+    TEfficiency* trackPurity_vs_phi{nullptr};  ///< Tracking purity vs phi
   };
 
   /// Constructor

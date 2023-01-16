@@ -31,11 +31,12 @@ void ActsExamples::PurityPlotTool::book(
   purityPlotCache.trackPurity_vs_eta = PlotHelpers::bookEff(
       "trackPurity_vs_eta", "Tracking purity;Truth #eta;Purity", bEta);
   // purity vs phi
-	purityPlotCache.trackPurity_vs_phi = PlotHelpers::bookEff(
+  purityPlotCache.trackPurity_vs_phi = PlotHelpers::bookEff(
       "trackPurity_vs_phi", "Tracking purity;Truth #phi;Purity", bPhi);
 }
 
-void ActsExamples::PurityPlotTool::clear(PurityPlotCache& purityPlotCache) const {
+void ActsExamples::PurityPlotTool::clear(
+    PurityPlotCache& purityPlotCache) const {
   delete purityPlotCache.trackPurity_vs_pT;
   delete purityPlotCache.trackPurity_vs_eta;
   delete purityPlotCache.trackPurity_vs_phi;
@@ -49,9 +50,9 @@ void ActsExamples::PurityPlotTool::write(
   purityPlotCache.trackPurity_vs_phi->Write();
 }
 
-void ActsExamples::PurityPlotTool::fill(PurityPlotTool::PurityPlotCache& purityPlotCache,
-                                     const ActsFatras::Particle& truthParticle,
-                                     bool status) const {
+void ActsExamples::PurityPlotTool::fill(
+    PurityPlotTool::PurityPlotCache& purityPlotCache,
+    const ActsFatras::Particle& truthParticle, bool status) const {
   const auto t_phi = phi(truthParticle.unitDirection());
   const auto t_eta = eta(truthParticle.unitDirection());
   const auto t_pT = truthParticle.transverseMomentum();
