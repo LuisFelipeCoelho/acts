@@ -32,7 +32,8 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     : WriterT(config.inputProtoTracks, "SeedingPerformanceWriter", level),
       m_cfg(std::move(config)),
       m_effPlotTool(m_cfg.effPlotToolConfig, level),
-      m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, level) {
+      m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, level),
+			m_purityPlotTool(m_cfg.purityPlotToolConfig, level) {
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
@@ -52,19 +53,23 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     throw std::invalid_argument("Could not open '" + path + "'");
   }
 				
-	// construct trees
-	seedTree = new TTree(m_cfg.treeNameSeeding.c_str(), m_cfg.treeNameSeeding.c_str());
-	seedTree->SetDirectory(m_outputFile);
-	seedTree->Branch("event_id", 0);
+//	// construct trees
+//	seedTree = new TTree(m_cfg.treeNameSeeding.c_str(), m_cfg.treeNameSeeding.c_str());
+//	seedTree->SetDirectory(m_outputFile);
+//	seedTree->Branch("seed_eta", &m_cfg.seedEta);
+//				
+//	std::cout << "Test " << m_cfg.filePath.c_str() << std::endl;
 				
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
   m_duplicationPlotTool.book(m_duplicationPlotCache);
+	m_purityPlotTool.book(m_purityPlotCache);
 }
 
 ActsExamples::SeedingPerformanceWriter::~SeedingPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
   m_duplicationPlotTool.clear(m_duplicationPlotCache);
+	m_purityPlotTool.clear(m_purityPlotCache);
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
@@ -98,6 +103,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
+		m_purityPlotTool.write(m_purityPlotCache);
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }
   return ProcessCode::SUCCESS;
@@ -147,6 +153,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
                                nMatchedSeedsForParticle - 1);
+		m_purityPlotTool.fill(m_purityPlotCache, particle, isMatched);
   }
   ACTS_DEBUG("Number of seeds: " << nSeeds);
   m_nTotalSeeds += nSeeds;
