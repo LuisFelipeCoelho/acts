@@ -312,6 +312,7 @@ def addSeeding(
             addSeedPerformanceWriters(
                 s,
                 outputDirRoot,
+                [spacePoints],
                 inputProtoTracks,
                 selectedParticles,
                 inputParticles,
@@ -675,6 +676,7 @@ def addOrthogonalSeeding(
 def addSeedPerformanceWriters(
     sequence: acts.examples.Sequencer,
     outputDirRoot: Union[Path, str],
+    inputSpacePoints: [str],
     inputProtoTracks: str,
     selectedParticles: str,
     inputParticles: str,
@@ -700,6 +702,7 @@ def addSeedPerformanceWriters(
     sequence.addWriter(
         acts.examples.SeedingPerformanceWriter(
             level=customLogLevel(minLevel=acts.logging.DEBUG),
+            inputSpacePoints=inputSpacePoints,
             inputProtoTracks=inputProtoTracks,
             inputParticles=selectedParticles,
             inputMeasurementParticlesMap="measurement_particles_map",

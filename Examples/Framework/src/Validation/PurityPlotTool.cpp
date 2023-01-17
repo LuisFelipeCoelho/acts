@@ -52,10 +52,10 @@ void ActsExamples::PurityPlotTool::write(
 
 void ActsExamples::PurityPlotTool::fill(
     PurityPlotTool::PurityPlotCache& purityPlotCache,
-    const ActsFatras::Particle& truthParticle, bool status) const {
-  const auto t_phi = phi(truthParticle.unitDirection());
-  const auto t_eta = eta(truthParticle.unitDirection());
-  const auto t_pT = truthParticle.transverseMomentum();
+    const std::vector<double>& seedParams, bool status) const {
+  const auto t_phi = seedParams[0];
+  const auto t_eta = seedParams[1];
+  const auto t_pT = seedParams[2];
 
   PlotHelpers::fillEff(purityPlotCache.trackPurity_vs_pT, t_pT, status);
   PlotHelpers::fillEff(purityPlotCache.trackPurity_vs_eta, t_eta, status);

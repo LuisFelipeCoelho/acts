@@ -52,10 +52,10 @@ class PurityPlotTool {
   /// @brief fill purity plots
   ///
   /// @param purityPlotCache cache object for purity plots
-  /// @param truthParticle the truth Particle
+  /// @param seedParam vector containing phi, eta and pT of the seed
   /// @param status the reconstruction status
   void fill(PurityPlotCache& purityPlotCache,
-            const ActsFatras::Particle& truthParticle, bool status) const;
+            const std::vector<double>& seedParam, bool status) const;
 
   /// @brief write the purity plots to file
   ///

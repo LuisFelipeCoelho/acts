@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
@@ -25,6 +26,8 @@ namespace ActsExamples {
 class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
  public:
   struct Config {
+    /// Input spacepoints collection.
+    std::vector<std::string> inputSpacePoints;
     /// Input reconstructed proto tracks collection.
     std::string inputProtoTracks;
     /// Input hit to particles map.
@@ -62,8 +65,6 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};
-  // per-seed tree
-  TTree* seedTree = nullptr;
   /// Plot tool for efficiency
   EffPlotTool m_effPlotTool;
   EffPlotTool::EffPlotCache m_effPlotCache;

@@ -8,6 +8,7 @@
 
 #include "SeedingPerformanceWriter.hpp"
 
+#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -76,6 +77,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
   float aveNDuplicatedSeeds =
       float(m_nTotalMatchedSeeds - m_nTotalMatchedParticles) /
       m_nTotalMatchedParticles;
+  float totalSeedPurity = float(m_nTotalMatchedSeeds) / m_nTotalSeeds;
   ACTS_DEBUG("nTotalSeeds               = " << m_nTotalSeeds);
   ACTS_DEBUG("nTotalMatchedSeeds        = " << m_nTotalMatchedSeeds);
   ACTS_DEBUG("nTotalParticles           = " << m_nTotalParticles);
@@ -91,6 +93,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
       "Average number of duplicated seeds ((nMatchedSeeds - nMatchedParticles) "
       "/ nMatchedParticles) = "
       << aveNDuplicatedSeeds);
+  ACTS_INFO("Total seed purity (nTotalMatchedSeeds / m_nTotalSeeds)	= "
+            << totalSeedPurity);
 
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
@@ -110,6 +114,25 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
   const auto& hitParticlesMap =
       ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
+  SimSpacePointContainer spacePoints;
+  for (const auto& isp : m_cfg.inputSpacePoints) {
+    const auto& sps = ctx.eventStore.get<SimSpacePointContainer>(isp);
+    std::copy(sps.begin(), sps.end(), std::back_inserter(spacePoints));
+  }
+
+  std::unordered_map<Index, const SimSpacePoint*> spMap;
+
+  for (const SimSpacePoint& sp : spacePoints) {
+    //		if (sp.sourceLinks().empty()) {
+    //			ACTS_WARNING("Missing source link in space point");
+    //			continue;
+    //		}
+    for (const auto& slink : sp.sourceLinks()) {
+      const IndexSourceLink& islink = slink.get<IndexSourceLink>();
+      spMap.emplace(islink.index(), &sp);
+    }
+  }
+
   size_t nSeeds = tracks.size();
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
@@ -118,6 +141,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
   for (size_t itrack = 0; itrack < tracks.size(); ++itrack) {
     const auto& track = tracks[itrack];
     std::vector<ParticleHitCount> particleHitCounts;
+    // Identify all particles that contribute to the proto track
     identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
     // All hits matched to the same particle
     if (particleHitCounts.size() == 1) {
@@ -126,7 +150,37 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
       it->second += 1;
       nMatchedSeeds++;
     }
+
+    // Space points on the proto track
+    std::vector<const SimSpacePoint*> spacePointsOnTrack;
+    spacePointsOnTrack.reserve(track.size());
+    // Loop over the hit index on the proto track to find the space points
+    for (const auto& hitIndex : track) {
+      auto it = spMap.find(hitIndex);
+      if (it != spMap.end()) {
+        spacePointsOnTrack.push_back(it->second);
+      }
+    }
+
+    // Estimate the track parameters from seed
+    auto optParams = Acts::estimateTrackParamsFromSeed(
+        spacePointsOnTrack.begin(), spacePointsOnTrack.end());
+    const std::vector<double> seedParam = {optParams.value()[Acts::eBoundPhi],
+                                           optParams.value()[Acts::eBoundPhi],
+                                           optParams.value()[Acts::eBoundPhi]};
+    //		if (particleHitCounts.size() != 1) {  										purity: rate
+    //of proto tracks that do not contain contributions from other particles
+    //			std::cout << "TEST particleHitCounts.size() = " <<
+    //particleHitCounts.size() << std::endl;
+    //		}
+    // Fill purity
+    m_purityPlotTool.fill(m_purityPlotCache, seedParam,
+                          1 / particleHitCounts.size());
   }
+
+  float purity = static_cast<float>(nMatchedSeeds) / nSeeds;
+  std::cout << "TEST Purity = " << purity << " " << nMatchedSeeds << " "
+            << nSeeds << std::endl;
 
   int nMatchedParticles = 0;
   int nDuplicatedParticles = 0;
@@ -146,7 +200,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
                                nMatchedSeedsForParticle - 1);
-    m_purityPlotTool.fill(m_purityPlotCache, particle, isMatched);
   }
   ACTS_DEBUG("Number of seeds: " << nSeeds);
   m_nTotalSeeds += nSeeds;
