@@ -13,6 +13,7 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 
 #include <array>
+#include <iostream>
 #include <set>
 #include <tuple>
 #include <utility>
@@ -139,6 +140,7 @@ class GlobalNeighborHoodIndices {
     boost::container::small_vector<size_t, ipow(3, DIM)> result;
     result.reserve(this->size());
     for (size_t idx : *this) {
+      //			std::cout << idx << std::endl;
       result.push_back(idx);
     }
     return result;

@@ -88,7 +88,7 @@ class NeighborhoodIterator {
     }
     // increase bin index m_curInd until you find non-empty bin
     // or until m_curInd >= m_indices.size()-1
-    while (m_curIt == m_binEnd && m_indices.size() - 1 > m_curInd) {
+    while (m_curIt == m_binEnd and m_indices.size() - 1 > m_curInd) {
       m_curInd++;
       m_curIt = std::begin(m_grid->at(m_indices[m_curInd]));
       m_binEnd = std::end(m_grid->at(m_indices[m_curInd]));
@@ -152,14 +152,21 @@ class BinnedSPGroupIterator {
       zIndex = 1;
       phiIndex++;
     }
+    std::cout << "DEFAULT " << phiIndex << " " << zIndex << std::endl;
 
+    // If zBinsCustomLooping is not empty we follow the z bin order defined in
+    // it
     size_t this_zIndex = zIndex;
     if (not customZorder.empty()) {
       this_zIndex = customZorder.at(this_zIndex - 1);
     }
 
-    // set current & neighbor bins only if bin indices valid
-    if (phiIndex <= phiZbins[0] && zIndex <= phiZbins[1]) {
+    if (grid->atLocalBins({phiIndex, zIndex}).size() == 0) {
+      std::cout << "DEFAULT gridBinSize(phiBin, zBinIndex)==0" << std::endl;
+    }
+    // set current & neighbor bins only if bin indices are valid and grid bin is
+    // not empty
+    if (phiIndex <= phiZbins[0] and zIndex <= phiZbins[1]) {
       currentBin = NeighborhoodVector{
           grid->globalBinFromLocalBins({phiIndex, this_zIndex})};
       bottomBinIndices =
@@ -168,13 +175,14 @@ class BinnedSPGroupIterator {
       outputIndex++;
       return *this;
     }
+    // Loop through all phi and z bins
     phiIndex = phiZbins[0];
     zIndex = phiZbins[1] + 1;
     return *this;
   }
 
   bool operator==(const BinnedSPGroupIterator& otherState) {
-    return (zIndex == otherState.zIndex && phiIndex == otherState.phiIndex);
+    return (zIndex == otherState.zIndex and phiIndex == otherState.phiIndex);
   }
 
   bool operator!=(const BinnedSPGroupIterator& otherState) {
@@ -235,7 +243,7 @@ class BinnedSPGroupIterator {
     outputIndex = grid->globalBinFromLocalBins({phiIndex, this_zIndex});
     currentBin =
         NeighborhoodVector(grid->globalBinFromLocalBins({phiInd, this_zIndex}));
-    if (phiIndex <= phiZbins[0] && zIndex <= phiZbins[1]) {
+    if (phiIndex <= phiZbins[0] and zIndex <= phiZbins[1]) {
       bottomBinIndices =
           m_bottomBinFinder->findBins(phiIndex, this_zIndex, grid);
       topBinIndices = m_topBinFinder->findBins(phiIndex, this_zIndex, grid);
@@ -282,6 +290,21 @@ class BinnedSPGroup {
       const SeedFinderOptions& _options);
 
   size_t size() { return m_binnedSP->size(); }
+
+  size_t gridBinEmpty(size_t phiIndex, size_t zIndex) {
+    return m_binnedSP->atLocalBins({phiIndex, zIndex}).empty();
+  }  // delete this
+
+  std::unique_ptr<SpacePointGrid<external_spacepoint_t>> getGrid() {
+    return std::move(m_binnedSP);
+  }  // delete this
+
+  void fastIterator(size_t phiIndex, size_t zIndex) {
+    auto fastBottomBinIndices =
+        m_bottomBinFinder->findBins(phiIndex, zIndex, m_binnedSP.get());
+    auto fastTopBinIndices =
+        m_topBinFinder->findBins(phiIndex, zIndex, m_binnedSP.get());
+  }
 
   BinnedSPGroupIterator<external_spacepoint_t> begin() {
     return BinnedSPGroupIterator<external_spacepoint_t>(

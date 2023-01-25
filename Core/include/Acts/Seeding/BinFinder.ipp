@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <iostream>
+
 template <typename external_spacepoint_t>
 Acts::BinFinder<external_spacepoint_t>::BinFinder() = default;
 
@@ -33,6 +35,11 @@ Acts::BinFinder<external_spacepoint_t>::findBins(
     sizePerAxis.at(1) = m_zBinNeighbors[zBin - 1];
     indices =
         binnedSP->neighborHoodIndices({phiBin, zBin}, sizePerAxis).collect();
+
+    //		for (auto i : indices) {
+    //			std::cout << "Indice " << binnedSP->localBinsFromGlobalBin(i)[0] <<
+    //" " << binnedSP->localBinsFromGlobalBin(i)[1] << std::endl;
+    //		}
   }
 
   return {indices.begin(), indices.end()};
