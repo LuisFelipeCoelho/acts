@@ -55,7 +55,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   state.candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                             max_num_quality_seeds_per_spm);
 
-  //  for (auto spM : middleSPs) {
+//    for (auto spM : middleSPs) {
   for (auto cellM : middleSPs) {
     for (auto& spM : *cellM) {
       float rM = spM->radius();
@@ -167,7 +167,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float ratio_xM_rM = xM / rM;
   const float ratio_yM_rM = yM / rM;
 
-  //  for (auto otherSP : otherSPs) {
+//    for (auto otherSP : otherSPs) {
   for (auto cellOtherSP : otherSPs) {
     for (auto& otherSP : *cellOtherSP) {
       const float rO = otherSP->radius();
@@ -210,6 +210,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       if (not m_config.interactionPointCut) {
         outVec.push_back(otherSP.get());
+//				outVec.push_back(otherSP);
         continue;
       }
 
@@ -220,6 +221,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
         outVec.push_back(otherSP.get());
+//				outVec.push_back(otherSP);
         continue;
       }
 
@@ -248,6 +250,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
       outVec.push_back(otherSP.get());
+//			outVec.push_back(otherSP);
     }
   }
 }

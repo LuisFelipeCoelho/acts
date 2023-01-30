@@ -152,7 +152,7 @@ class BinnedSPGroupIterator {
       zIndex = 1;
       phiIndex++;
     }
-    std::cout << "DEFAULT " << phiIndex << " " << zIndex << std::endl;
+//    std::cout << "DEFAULT " << phiIndex << " " << zIndex << std::endl;
 
     // If zBinsCustomLooping is not empty we follow the z bin order defined in
     // it
@@ -161,9 +161,9 @@ class BinnedSPGroupIterator {
       this_zIndex = customZorder.at(this_zIndex - 1);
     }
 
-    if (grid->atLocalBins({phiIndex, zIndex}).size() == 0) {
-      std::cout << "DEFAULT gridBinSize(phiBin, zBinIndex)==0" << std::endl;
-    }
+//    if (grid->atLocalBins({phiIndex, zIndex}).size() == 0) {
+//      std::cout << "DEFAULT gridBinSize(phiBin, zBinIndex)==0" << std::endl;
+//    }
     // set current & neighbor bins only if bin indices are valid and grid bin is
     // not empty
     if (phiIndex <= phiZbins[0] and zIndex <= phiZbins[1]) {
@@ -298,13 +298,6 @@ class BinnedSPGroup {
   std::unique_ptr<SpacePointGrid<external_spacepoint_t>> getGrid() {
     return std::move(m_binnedSP);
   }  // delete this
-
-  void fastIterator(size_t phiIndex, size_t zIndex) {
-    auto fastBottomBinIndices =
-        m_bottomBinFinder->findBins(phiIndex, zIndex, m_binnedSP.get());
-    auto fastTopBinIndices =
-        m_topBinFinder->findBins(phiIndex, zIndex, m_binnedSP.get());
-  }
 
   BinnedSPGroupIterator<external_spacepoint_t> begin() {
     return BinnedSPGroupIterator<external_spacepoint_t>(

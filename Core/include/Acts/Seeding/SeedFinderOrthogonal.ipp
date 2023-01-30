@@ -452,6 +452,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
   internal_sp_t &middle = *middle_p.second;
+	
+	std::cout << "rM = " << middle.radius() << std::endl;
 
   /*
    * Prepare four output vectors for seed candidates:
@@ -597,11 +599,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
 
   // TODO: add seed confirmation
   SeedFilterState seedFilterState;
-
+	
+	if ((!bottom_lh_v.empty() && !top_lh_v.empty()) or (!bottom_hl_v.empty() && !top_hl_v.empty())) {return;}
+	
+	std::cout << "bottom_hl_v.size() = " << bottom_hl_v.size() << " bottom_lh_v.size() = " << bottom_lh_v.size() << " top_hl_v.size() = " << top_hl_v.size() << " top_lh_v.size() = " << top_lh_v.size() << std::endl;
+	
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
+		
     filterCandidates(middle, bottom_lh_v, top_lh_v, seedFilterState,
                      candidates_collector);
   }
@@ -610,6 +617,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
+		
     filterCandidates(middle, bottom_hl_v, top_hl_v, seedFilterState,
                      candidates_collector);
   }

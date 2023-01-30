@@ -16,6 +16,8 @@
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <chrono>
+
 ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     ActsExamples::SeedingOrthogonalAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
@@ -72,6 +74,9 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     const AlgorithmContext &ctx) const {
+	
+	auto start = std::chrono::high_resolution_clock::now();
+	
   std::vector<const SimSpacePoint *> spacePoints;
 
   for (const auto &isp : m_cfg.inputSpacePoints) {
@@ -93,6 +98,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
       };
 
   SimSeedContainer seeds = finder.createSeeds(spacePoints, create_coordinates);
+	
+	auto diff = std::chrono::high_resolution_clock::now() - start; // get difference
+	auto nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(diff);
+	std::cout << "|TIMER| orthogonal seeding = " << nsec.count() << " ns, number of seeds = " << seeds.size() << std::endl;
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
   size_t nSeeds = seeds.size();

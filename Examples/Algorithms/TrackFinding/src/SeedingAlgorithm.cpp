@@ -22,6 +22,7 @@
 #include <csignal>
 #include <limits>
 #include <stdexcept>
+#include <chrono>
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
@@ -187,6 +188,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
+	
+	auto start = std::chrono::high_resolution_clock::now();
+	
   // construct the combined input container of space point pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
@@ -251,18 +255,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
 
+	
   auto gridTest = spacePointsGrouping.getGrid();
-
-  std::vector<
-      std::vector<std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*>
-      middleIterators;
-  std::vector<
-      std::vector<std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*>
-      topIterators;
-  std::vector<
-      std::vector<std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*>
-      bottomIterators;
-
+	
   //	std::cout << "TEST " << std::endl;
   // Loop through all phi bins
   for (size_t phiBin = 0; phiBin <= (size_t)nPhiBins; ++phiBin) {
@@ -277,8 +272,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       } else {
         zBinIndex = zBin;
       }
-      //			std::cout << "TEST " << phiBin << " " <<
-      //zBinIndex << std::endl;
+//      std::cout << "TEST " << phiBin << " " << zBinIndex << std::endl;
 
       // Skip if this particular 2D bin is empty -> is this worth it for high
       // pile-up?
@@ -288,6 +282,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
         continue;
       }
 
+			std::vector<std::vector<std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*> middleIterators;
+			std::vector<std::vector<std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*>	topIterators;
+			std::vector<std::vector<std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*> bottomIterators;
+			
       // Fill middle iterator
       auto middleBinIndices =
           gridTest->globalBinFromLocalBins({phiBin, zBinIndex});
@@ -343,6 +341,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   //        m_cfg.seedFinderOptions, state, std::back_inserter(seeds),
   //        group.bottom(), group.middle(), group.top(), rMiddleSPRange);
   //  }
+	
+	auto diff = std::chrono::high_resolution_clock::now() - start; // get difference
+	auto nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(diff);
+	std::cout << "|TIMER| default seeding = " << nsec.count() << " ns, number of seeds = " << seeds.size() << std::endl;
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
   size_t nSeeds = seeds.size();
