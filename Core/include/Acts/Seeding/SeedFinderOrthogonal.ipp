@@ -148,7 +148,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
 template <typename external_spacepoint_t>
 bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
     const SeedFinderOptions &options, const internal_sp_t &low,
-    const internal_sp_t &high) const {
+		const internal_sp_t &high,
+		bool isBottom) const {
   float rL = low.radius();
   float rH = high.radius();
 
@@ -186,12 +187,14 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   // points away from the interaction point in addition to a translation
   // transformation we also perform a rotation in order to keep the
   // curvature of the circle tangent to the x axis
+	const int sign = isBottom ? -1 : 1;
+	
   if (m_config.interactionPointCut) {
     float xVal = (high.x() - low.x()) * (low.x() / rL) +
                  (high.y() - low.y()) * (low.y() / rL);
     float yVal = (high.y() - low.y()) * (low.x() / rL) -
                  (high.x() - low.x()) * (low.y() / rL);
-    if (std::abs(rL * yVal) > m_config.impactMax * xVal) {
+    if (std::abs(rL * yVal) > sign * m_config.impactMax * xVal) {
       // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
       // circle into straight lines in the u/v plane the line equation can
       // be described in terms of aCoef and bCoef, where v = aCoef * u +
@@ -202,7 +205,7 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
       // and y ~= impactParam
       float uIP = -1. / rL;
       float vIP = m_config.impactMax / (rL * rL);
-      if (yVal > 0.) {
+      if (sign * yVal > 0.) {
         vIP = -vIP;
       }
       // we can obtain aCoef as the slope dv/du of the linear function,
@@ -444,8 +447,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
   internal_sp_t &middle = *middle_p.second;
-	
-	std::cout << "rM = " << middle.radius() << std::endl;
 
   /*
    * Prepare four output vectors for seed candidates:
@@ -540,7 +541,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                [this, &options, &middle, &bottom_lh_v](
                                    const typename tree_t::coordinate_t &,
                                    const typename tree_t::value_t &bottom) {
-                                 if (validTuple(options, *bottom, middle)) {
+                                 if (validTuple(options, *bottom, middle, false)) {
                                    bottom_lh_v.push_back(bottom);
                                  }
                                });
@@ -555,7 +556,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                [this, &options, &middle, &bottom_hl_v](
                                    const typename tree_t::coordinate_t &,
                                    const typename tree_t::value_t &bottom) {
-                                 if (validTuple(options, middle, *bottom)) {
+                                 if (validTuple(options, middle, *bottom, true)) {
                                    bottom_hl_v.push_back(bottom);
                                  }
                                });
@@ -570,7 +571,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                [this, &options, &middle, &top_lh_v](
                                    const typename tree_t::coordinate_t &,
                                    const typename tree_t::value_t &top) {
-                                 if (validTuple(options, *top, middle)) {
+                                 if (validTuple(options, *top, middle, true)) {
                                    top_lh_v.push_back(top);
                                  }
                                });
@@ -584,7 +585,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                [this, &options, &middle, &top_hl_v](
                                    const typename tree_t::coordinate_t &,
                                    const typename tree_t::value_t &top) {
-                                 if (validTuple(options, middle, *top)) {
+                                 if (validTuple(options, middle, *top, false)) {
                                    top_hl_v.push_back(top);
                                  }
                                });
@@ -592,10 +593,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
 
   // TODO: add seed confirmation
   SeedFilterState seedFilterState;
-	
-	if ((!bottom_lh_v.empty() && !top_lh_v.empty()) or (!bottom_hl_v.empty() && !top_hl_v.empty())) {return;}
-	
-	std::cout << "bottom_hl_v.size() = " << bottom_hl_v.size() << " bottom_lh_v.size() = " << bottom_lh_v.size() << " top_hl_v.size() = " << top_hl_v.size() << " top_lh_v.size() = " << top_lh_v.size() << std::endl;
 	
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
@@ -608,16 +605,18 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-
     filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
                      candidates_collector);
   }
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
-                                            seedFilterState.numQualitySeeds,
-                                            std::back_inserter(out_cont));
+	
+	m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
+					 seedFilterState.numQualitySeeds,
+					 std::back_inserter(out_cont));
+	
+
 }
 
 template <typename external_spacepoint_t>

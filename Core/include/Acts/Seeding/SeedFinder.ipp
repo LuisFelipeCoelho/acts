@@ -157,7 +157,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
     bool isBottom) const {
   const int sign = isBottom ? -1 : 1;
-
+	
   outVec.clear();
 
   const float& rM = mediumSP.radius();
@@ -495,7 +495,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-
       if (S2 < B2 * options.minHelixDiameter2) {
         continue;
       }
