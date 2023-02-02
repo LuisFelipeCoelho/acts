@@ -258,9 +258,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       state.linCircleBottom.clear();
       state.linCircleTop.clear();
 
+      // initialize original index locations
+      std::vector<size_t> idxB(state.compatBottomSP.size());
+      std::iota(idxB.begin(), idxB.end(), 0);
+      std::vector<size_t> idxT(state.compatTopSP.size());
+      std::iota(idxT.begin(), idxT.end(), 0);
+
       transformCoordinates(state.compatBottomSP, *spM, true,
-                           state.linCircleBottom);
-      transformCoordinates(state.compatTopSP, *spM, false, state.linCircleTop);
+                           state.linCircleBottom, idxB);
+      transformCoordinates(state.compatTopSP, *spM, false, state.linCircleTop,
+                           idxT);
 
       state.topSpVec.clear();
       state.curvatures.clear();
@@ -278,7 +285,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           break;
         }
 
-        auto lb = state.linCircleBottom[b];
+        auto lb = state.linCircleBottom[idxB[b]];
+        //				auto lb = state.linCircleBottom[b];
         seedFilterState.zOrigin = lb.Zo;
         float cotThetaB = lb.cotTheta;
         float Vb = lb.V;
@@ -310,7 +318,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         state.curvatures.clear();
         state.impactParameters.clear();
         for (size_t t = t0; t < numTopSP; t++) {
-          auto lt = state.linCircleTop[t];
+          //					std::cout << "Test " << t << " " << idxT[t] <<
+          //std::endl;
+
+          auto lt = state.linCircleTop[idxT[t]];
+          //					auto lt = state.linCircleTop[t];
 
           float cotThetaT = lt.cotTheta;
           float rMxy = 0.;
@@ -356,7 +368,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
                 rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
                 cosTheta * std::sqrt(1 + A0 * A0)};
 
-            auto spB = state.compatBottomSP[b];
+            auto spB = state.compatBottomSP[idxB[b]];
+            //						auto spB =
+            //state.compatBottomSP[b];
             double rBTransf[3];
             if (!xyzCoordinateCheck(m_config, spB, positionBottom,
                                     m_config.toleranceParam, rBTransf)) {
@@ -371,7 +385,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
                 rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
                 cosTheta * std::sqrt(1 + A0 * A0)};
 
-            auto spT = state.compatTopSP[t];
+            auto spT = state.compatTopSP[idxT[t]];
+            //						auto spT =
+            //state.compatTopSP[t];
             double rTTransf[3];
             if (!xyzCoordinateCheck(m_config, spT, positionTop,
                                     m_config.toleranceParam, rTTransf)) {
@@ -517,7 +533,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           }
 
           if (Im <= m_config.impactMax) {
-            state.topSpVec.push_back(state.compatTopSP[t]);
+            state.topSpVec.push_back(state.compatTopSP[idxT[t]]);
+            //						state.topSpVec.push_back(state.compatTopSP[t]);
             // inverse diameter is signed depending if the curvature is
             // positive/negative in phi
             state.curvatures.push_back(B / std::sqrt(S2));
@@ -533,8 +550,13 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         }
         if (!state.topSpVec.empty()) {
           m_config.seedFilter->filterSeeds_2SpFixed(
-              *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
-              state.impactParameters, seedFilterState, state.seedsPerSpM);
+              *state.compatBottomSP[idxB[b]], *spM, state.topSpVec,
+              state.curvatures, state.impactParameters, seedFilterState,
+              state.seedsPerSpM);
+          //					m_config.seedFilter->filterSeeds_2SpFixed(
+          //							*state.compatBottomSP[b], *spM,
+          //state.topSpVec, state.curvatures, 							state.impactParameters,
+          //seedFilterState, state.seedsPerSpM);
         }
       }
       m_config.seedFilter->filterSeeds_1SpFixed(

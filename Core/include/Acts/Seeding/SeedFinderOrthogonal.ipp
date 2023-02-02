@@ -280,8 +280,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   std::vector<LinCircle> linCircleTop;
   linCircleTop.reserve(top.size());
 
-  transformCoordinates(bottom, middle, true, linCircleBottom);
-  transformCoordinates(top, middle, false, linCircleTop);
+  // initialize original index locations
+  std::vector<size_t> idxB(bottom.size());
+  std::iota(idxB.begin(), idxB.end(), 0);
+  std::vector<size_t> idxT(top.size());
+  std::iota(idxT.begin(), idxT.end(), 0);
+
+  transformCoordinates(bottom, middle, true, linCircleBottom, idxB);
+  transformCoordinates(top, middle, false, linCircleTop, idxT);
 
   std::vector<float> tanLM;
   std::vector<float> tanMT;

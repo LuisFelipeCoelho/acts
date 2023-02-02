@@ -62,7 +62,7 @@ template <typename external_spacepoint_t>
 void transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec) {
+    std::vector<LinCircle>& linCircleVec, std::vector<size_t>& idx) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
@@ -72,14 +72,15 @@ void transformCoordinates(
   };
 
   return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      vec, spM, bottom, linCircleVec, extractFunction);
+      vec, spM, bottom, linCircleVec, extractFunction, idx);
 }
 
 template <typename external_spacepoint_t, typename callable_t>
 void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
                           external_spacepoint_t& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec,
-                          callable_t&& extractFunction) {
+                          callable_t&& extractFunction,
+                          std::vector<size_t>& idx) {
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
   float cosPhiM = xM / rM;
@@ -132,15 +133,21 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
 
     sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
   }
+
+  // sort indexes based on comparing values in invHelixDiameterVec
+  std::sort(idx.begin(), idx.end(), [&linCircleVec](size_t i1, size_t i2) {
+    return linCircleVec[i1].cotTheta < linCircleVec[i2].cotTheta;
+  });
+
   // sort the SP in order of cotTheta
-  std::sort(vec.begin(), vec.end(),
-            [](external_spacepoint_t* a, external_spacepoint_t* b) -> bool {
-              return (a->cotTheta() < b->cotTheta());
-            });
-  std::sort(linCircleVec.begin(), linCircleVec.end(),
-            [](const LinCircle& a, const LinCircle& b) -> bool {
-              return (a.cotTheta < b.cotTheta);
-            });
+  //  std::sort(vec.begin(), vec.end(),
+  //            [](external_spacepoint_t* a, external_spacepoint_t* b) -> bool {
+  //              return (a->cotTheta() < b->cotTheta());
+  //            });
+  //  std::sort(linCircleVec.begin(), linCircleVec.end(),
+  //            [](const LinCircle& a, const LinCircle& b) -> bool {
+  //              return (a.cotTheta < b.cotTheta);
+  //            });
 }
 
 template <typename external_spacepoint_t, typename sp_range_t>
