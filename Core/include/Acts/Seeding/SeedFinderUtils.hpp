@@ -68,6 +68,10 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
                           callable_t&& extractFunction,
                           std::vector<size_t>& idx);
 
+template <typename external_spacepoint_t>
+void cotThetaSort(std::vector<external_spacepoint_t*>& vec,
+									std::vector<LinCircle>& linCircleVec);
+
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.

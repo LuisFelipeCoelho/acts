@@ -41,6 +41,11 @@ class SeedFinder {
     std::vector<LinCircle> linCircleBottom;
     // ...for middle-top
     std::vector<LinCircle> linCircleTop;
+		
+		
+//		std::vector<std::pair<InternalSpacePoint<external_spacepoint_t>*,LinCircle>> compatBottomSP;
+//		std::vector<std::pair<InternalSpacePoint<external_spacepoint_t>*,LinCircle>> compatTopSP;
+		
 
     // create vectors here to avoid reallocation in each loop
     std::vector<InternalSpacePoint<external_spacepoint_t>*> topSpVec;

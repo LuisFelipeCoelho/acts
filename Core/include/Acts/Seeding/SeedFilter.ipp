@@ -79,6 +79,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
                                                     : topSpVec[i]->radius();
     float impact = impactParametersVec[i];
 
+//		std::cout << "Top " << invHelixDiameter << impact << std::endl;
+		
     float weight = -(impact * m_cfg.impactWeightFactor);
     for (auto& j : idx) {
       if (i == j) {
@@ -88,6 +90,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       float otherTop_r = m_cfg.useDeltaRorTopRadius ? topSpVec[j]->deltaR()
                                                     : topSpVec[j]->radius();
 
+//			std::cout << "otherTop " << invHelixDiameterVec[j] << impactParametersVec[i] << std::endl;
+			
       // curvature difference within limits?
       if (invHelixDiameterVec[j] < lowerLimitCurv) {
         continue;
