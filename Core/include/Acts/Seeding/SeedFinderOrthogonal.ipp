@@ -277,9 +277,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   std::vector<LinCircle> linCircleTop;
   linCircleTop.reserve(top.size());
 
-  auto sorted_bottoms =
-      transformCoordinates(bottom, middle, true, linCircleBottom);
-  auto sorted_tops = transformCoordinates(top, middle, false, linCircleTop);
+  transformCoordinates(bottom, middle, true, linCircleBottom);
+  transformCoordinates(top, middle, false, linCircleTop);
+
+  auto sorted_bottoms = cotThetaSortIndex(bottom, linCircleBottom);
+  auto sorted_tops = cotThetaSortIndex(top, linCircleTop);
 
   std::vector<float> tanLM;
   std::vector<float> tanMT;
@@ -454,7 +456,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * bottom_lh_v denotes the candidates bottom seed points, assuming that the
    * track has monotonically _increasing_ z position. bottom_hl_v denotes the
    * candidate bottom points assuming that the track has monotonically
-   * _decreaing_ z position. top_lh_v are the candidate top points for an
+   * _decreasing_ z position. top_lh_v are the candidate top points for an
    * increasing z track, and top_hl_v are the candidate top points for a
    * decreasing z track.
    */

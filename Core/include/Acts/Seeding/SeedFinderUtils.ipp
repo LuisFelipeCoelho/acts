@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <iostream>
+
 namespace Acts {
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
-                               InternalSpacePoint<external_spacepoint_t>& spM,
-                               bool bottom) {
+LinCircle transformCoordinates(
+    InternalSpacePoint<external_spacepoint_t>& sp,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
@@ -25,7 +27,7 @@ LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
 
 template <typename external_spacepoint_t, typename callable_t>
 LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               external_spacepoint_t& spM, bool bottom,
+                               const external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
@@ -40,8 +42,8 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
   float deltaX = xSP - xM;
   float deltaY = ySP - yM;
   float deltaZ = zSP - zM;
-  float x = deltaX * cosPhiM + deltaY * sinPhiM;
-  float y = deltaY * cosPhiM - deltaX * sinPhiM;
+  float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+  float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
   float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
   float iDeltaR = std::sqrt(iDeltaR2);
   int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
@@ -50,16 +52,60 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
   l.cotTheta = cot_theta;
   l.Zo = zM - rM * cot_theta;
   l.iDeltaR = iDeltaR;
-  l.U = x * iDeltaR2;
-  l.V = y * iDeltaR2;
+  l.U = xNewFrame * iDeltaR2;
+  l.V = yNewFrame * iDeltaR2;
   l.Er = ((varianceZM + varianceZSP) +
           (cot_theta * cot_theta) * (varianceRM + varianceRSP)) *
          iDeltaR2;
+  l.x = xNewFrame;
+  l.y = yNewFrame;
+  l.z = sp.z();
+  l.r = sp.radius();
+
+  sp.setCotTheta(cot_theta);
+  sp.setDeltaR(std::sqrt((xNewFrame * xNewFrame) + (yNewFrame * yNewFrame) +
+                         (deltaZ * deltaZ)));
   return l;
 }
 
 template <typename external_spacepoint_t>
-std::vector<std::size_t> transformCoordinates(
+LinCircle transformCoordinates(external_spacepoint_t& sp,
+                               const external_spacepoint_t& spM,
+                               const int bottomSign,
+                               const std::array<float, 6>& transformVariables) {
+  // The computation inside this function is exactly identical to that in the
+  // vectorized version of this function, except that it operates on a single
+  // spacepoint. Please see the other version of this function for more
+  // detailed comments.
+
+  auto [deltaX, deltaY, deltaZ, xNewFrame, yNewFrame, zOrigin] =
+      transformVariables;
+
+  float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
+  float iDeltaR = std::sqrt(iDeltaR2);
+  float cot_theta = deltaZ * iDeltaR * bottomSign;
+  LinCircle l{};
+  l.cotTheta = cot_theta;
+  l.Zo = zOrigin;
+  l.iDeltaR = iDeltaR;
+  l.U = xNewFrame * iDeltaR2;
+  l.V = yNewFrame * iDeltaR2;
+  l.Er = ((spM.varianceZ() + sp.varianceZ()) +
+          (cot_theta * cot_theta) * (spM.varianceR() + sp.varianceR())) *
+         iDeltaR2;
+  l.x = xNewFrame;
+  l.y = yNewFrame;
+  l.z = sp.z();
+  l.r = sp.radius();
+
+  sp.setCotTheta(cot_theta);
+  sp.setDeltaR(std::sqrt((xNewFrame * xNewFrame) + (yNewFrame * yNewFrame) +
+                         (deltaZ * deltaZ)));
+  return l;
+}
+
+template <typename external_spacepoint_t>
+void transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
@@ -76,15 +122,10 @@ std::vector<std::size_t> transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-std::vector<std::size_t> transformCoordinates(
-    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
-    bool bottom, std::vector<LinCircle>& linCircleVec,
-    callable_t&& extractFunction) {
-  std::vector<std::size_t> indexes(vec.size());
-  for (unsigned int i(0); i < indexes.size(); i++) {
-    indexes[i] = i;
-  }
-
+void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+                          const external_spacepoint_t& spM, bool bottom,
+                          std::vector<LinCircle>& linCircleVec,
+                          callable_t&& extractFunction) {
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
   float cosPhiM = xM / rM;
@@ -99,8 +140,8 @@ std::vector<std::size_t> transformCoordinates(
     // direction as
     // vector origin->spM (x) and projection fraction of spM->sp vector pointing
     // orthogonal to origin->spM (y)
-    float x = deltaX * cosPhiM + deltaY * sinPhiM;
-    float y = deltaY * cosPhiM - deltaX * sinPhiM;
+    float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+    float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
     // 1/(length of M -> SP)
     float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
     float iDeltaR = std::sqrt(iDeltaR2);
@@ -120,24 +161,34 @@ std::vector<std::size_t> transformCoordinates(
     // 1 - 2x_0*u - 2y_0*v = 0
     // using the following m_U and m_V
     // (u = A + B*v); A and B are created later on
-    l.U = x * iDeltaR2;
-    l.V = y * iDeltaR2;
+    l.U = xNewFrame * iDeltaR2;
+    l.V = yNewFrame * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
     l.Er = ((varianceZM + sp->varianceZ()) +
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
-
-    l.x = x;
-    l.y = y;
+    l.x = xNewFrame;
+    l.y = yNewFrame;
     l.z = sp->z();
     l.r = sp->radius();
 
     linCircleVec.push_back(l);
     sp->setCotTheta(cot_theta);
 
-    sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
+    sp->setDeltaR(std::sqrt((xNewFrame * xNewFrame) + (yNewFrame * yNewFrame) +
+                            (deltaZ * deltaZ)));
   }
-  // sort the SP in order of cotTheta
+}
+
+template <typename external_spacepoint_t>
+std::vector<std::size_t> cotThetaSortIndex(
+    std::vector<external_spacepoint_t*>& vec,
+    std::vector<LinCircle>& linCircleVec) {
+  std::vector<std::size_t> indexes(vec.size());
+  for (unsigned int i(0); i < indexes.size(); i++) {
+    indexes[i] = i;
+  }
+  //   sort the SP in order of cotTheta
   std::sort(
       indexes.begin(), indexes.end(),
       [&linCircleVec](const std::size_t& a, const std::size_t& b) -> bool {
