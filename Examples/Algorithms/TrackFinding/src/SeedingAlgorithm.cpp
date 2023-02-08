@@ -227,10 +227,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
                                      m_cfg.numPhiNeighbors));
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
       m_cfg.gridConfig, m_cfg.gridOptions);
-	
-	auto nPhiBins = grid->numLocalBins()[0];
-	auto nZBins = grid->numLocalBins()[1];
-	
+
+  auto nPhiBins = grid->numLocalBins()[0];
+  auto nZBins = grid->numLocalBins()[1];
+
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,
@@ -251,67 +251,67 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
 
-	auto gridTest = spacePointsGrouping.getGrid();
-	
-	//	std::cout << "TEST " << std::endl;
-	// Loop through all phi bins
-	for (size_t phiBin = 0; phiBin <= (size_t)nPhiBins; ++phiBin) {
-		// For each phi bin loop through all z bins
-		/// ***** todo: abortar loop
-		for (size_t zBin = 0; zBin < (size_t)nZBins; ++zBin) {
-			size_t zBinIndex;
-			// If zBinsCustomLooping is not empty we follow the z bin order defined in
-			// it
-			if (not m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
-				zBinIndex = m_cfg.seedFinderConfig.zBinsCustomLooping[zBin];
-			} else {
-				zBinIndex = zBin;
-			}
-			//      std::cout << "TEST " << phiBin << " " << zBinIndex << std::endl;
-			
-			// Skip if this particular 2D bin is empty -> is this worth it for high
-			// pile-up?
-			if (gridTest->atLocalBins({phiBin, zBinIndex}).empty()) {
-				//				std::cout << "TEST gridBinSize(phiBin,
-				// zBinIndex)==0" << std::endl;
-				continue;
-			}
-			
-			std::vector<std::vector<
-			std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*>
-			middleIterators;
-			std::vector<std::vector<
-			std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*>
-			topIterators;
-			std::vector<std::vector<
-			std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*>
-			bottomIterators;
-			
-			// Fill middle iterator
-			auto middleBinIndices =
-			gridTest->globalBinFromLocalBins({phiBin, zBinIndex});
-			middleIterators.push_back(&gridTest->at(middleBinIndices));
-			
-			// Fill bottom iterator
-			auto bottomBinIndices = bottomBinFinder->findBins(
-																												phiBin, zBinIndex,
-																												gridTest.get());  // only do something if this cell is populated?
-			// worth it for high pile-up?
-			for (auto indice : bottomBinIndices) {
-				bottomIterators.push_back(&gridTest->at(indice));
-			}
-			// Fill top iterator
-			auto topBinIndices =
-			topBinFinder->findBins(phiBin, zBinIndex, gridTest.get());
-			for (auto indice : topBinIndices) {
-				topIterators.push_back(&gridTest->at(indice));
-			}
-			
-			m_seedFinder.createSeedsForGroup(m_cfg.seedFinderOptions, state, std::back_inserter(seeds),
-																 bottomIterators, middleIterators, topIterators,
-																 rMiddleSPRange);
-		}
-	}
+  auto gridTest = spacePointsGrouping.getGrid();
+
+  //	std::cout << "TEST " << std::endl;
+  // Loop through all phi bins
+  for (size_t phiBin = 0; phiBin <= (size_t)nPhiBins; ++phiBin) {
+    // For each phi bin loop through all z bins
+    /// ***** todo: abortar loop
+    for (size_t zBin = 0; zBin < (size_t)nZBins; ++zBin) {
+      size_t zBinIndex;
+      // If zBinsCustomLooping is not empty we follow the z bin order defined in
+      // it
+      if (not m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
+        zBinIndex = m_cfg.seedFinderConfig.zBinsCustomLooping[zBin];
+      } else {
+        zBinIndex = zBin;
+      }
+      //      std::cout << "TEST " << phiBin << " " << zBinIndex << std::endl;
+
+      // Skip if this particular 2D bin is empty -> is this worth it for high
+      // pile-up?
+      if (gridTest->atLocalBins({phiBin, zBinIndex}).empty()) {
+        //				std::cout << "TEST gridBinSize(phiBin,
+        // zBinIndex)==0" << std::endl;
+        continue;
+      }
+
+      std::vector<std::vector<
+          std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*>
+          middleIterators;
+      std::vector<std::vector<
+          std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*>
+          topIterators;
+      std::vector<std::vector<
+          std::unique_ptr<Acts::InternalSpacePoint<SimSpacePoint>>>*>
+          bottomIterators;
+
+      // Fill middle iterator
+      auto middleBinIndices =
+          gridTest->globalBinFromLocalBins({phiBin, zBinIndex});
+      middleIterators.push_back(&gridTest->at(middleBinIndices));
+
+      // Fill bottom iterator
+      auto bottomBinIndices = bottomBinFinder->findBins(
+          phiBin, zBinIndex,
+          gridTest.get());  // only do something if this cell is populated?
+      // worth it for high pile-up?
+      for (auto indice : bottomBinIndices) {
+        bottomIterators.push_back(&gridTest->at(indice));
+      }
+      // Fill top iterator
+      auto topBinIndices =
+          topBinFinder->findBins(phiBin, zBinIndex, gridTest.get());
+      for (auto indice : topBinIndices) {
+        topIterators.push_back(&gridTest->at(indice));
+      }
+
+      m_seedFinder.createSeedsForGroup(
+          m_cfg.seedFinderOptions, state, std::back_inserter(seeds),
+          bottomIterators, middleIterators, topIterators, rMiddleSPRange);
+    }
+  }
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
   size_t nSeeds = seeds.size();
