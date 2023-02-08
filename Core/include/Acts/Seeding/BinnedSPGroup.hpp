@@ -283,6 +283,14 @@ class BinnedSPGroup {
 
   size_t size() { return m_binnedSP->size(); }
 
+	size_t gridBinEmpty(size_t phiIndex, size_t zIndex) {
+		return m_binnedSP->atLocalBins({phiIndex, zIndex}).empty();
+	}  // for tests
+	
+	std::unique_ptr<SpacePointGrid<external_spacepoint_t>> getGrid() {
+		return std::move(m_binnedSP);
+	}  // for tests
+	
   BinnedSPGroupIterator<external_spacepoint_t> begin() {
     return BinnedSPGroupIterator<external_spacepoint_t>(
         m_binnedSP.get(), m_bottomBinFinder.get(), m_topBinFinder.get(),

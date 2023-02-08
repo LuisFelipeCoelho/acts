@@ -55,7 +55,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   state.candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                             max_num_quality_seeds_per_spm);
 
-  for (auto spM : middleSPs) {
+	for (auto cellM : middleSPs) {
+		for (auto& spM : *cellM) {
+		
     float rM = spM->radius();
     float zM = spM->z();
 
@@ -150,6 +152,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
   }  // loop on mediums
 }
+}
 
 template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t, typename out_range_t>
@@ -169,7 +172,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float cosPhiM = xM / rM;
   const float sinPhiM = yM / rM;
 
-  for (auto otherSP : otherSPs) {
+	for (auto cellT : otherSPs) {
+		for (auto& otherSP : *cellT) {
     const float rO = otherSP->radius();
     float deltaR = sign * (rO - rM);
 
@@ -206,8 +210,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     if (not m_config.interactionPointCut) {
       linCircleVec.push_back(
           transformCoordinates(*otherSP, mediumSP, isBottom));
-      outVec.push_back(otherSP);
-      std::cout << otherSP->cotTheta() << std::endl;
+      outVec.push_back(otherSP.get());
       continue;
     }
 
@@ -221,7 +224,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       linCircleVec.push_back(transformCoordinates(
           *otherSP, mediumSP, sign,
           {deltaX, deltaY, deltaZAbs, xVal, yVal, zOrigin}));
-      outVec.push_back(otherSP);
+      outVec.push_back(otherSP.get());
       continue;
     }
 
@@ -254,8 +257,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         transformCoordinates(*otherSP, mediumSP, sign,
                              {deltaX, deltaY, deltaZAbs, xVal, yVal, zOrigin}));
 
-    outVec.push_back(otherSP);
+    outVec.push_back(otherSP.get());
   }
+	}
 }
 
 template <typename external_spacepoint_t, typename platform_t>
