@@ -276,7 +276,7 @@ class BinnedSPGroup {
       GlobalPositionFunctor toGlobal,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
-      std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
+      std::unique_ptr<SpacePointGrid<external_spacepoint_t>>& grid,
       Acts::Extent rRangeSPExtent,
       const SeedFinderConfig<external_spacepoint_t>& _config,
       const SeedFinderOptions& _options);
