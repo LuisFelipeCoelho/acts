@@ -216,8 +216,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     return std::make_pair(position, covariance);
   };
 
-  // extent used to store r range for middle spacepoint
-  Acts::Extent rRangeSPExtent;
+  // range used to store r range for middle spacepoint
+	Acts::Range1D<float> rMiddleSPRange;
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsBottom,
@@ -229,19 +229,23 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       m_cfg.gridConfig, m_cfg.gridOptions);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
-      bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,
+      bottomBinFinder, topBinFinder, std::move(grid), rMiddleSPRange,
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
 
-  // safely clamp double to float
-  float up = Acts::clampValue<float>(
-      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
+//  // safely clamp double to float
+//  float up = Acts::clampValue<float>(
+//      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
+//
+//  /// variable middle SP radial region of interest
+//  const Acts::Range1D<float> rMiddleSPRange(
+//      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+//          m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
+//      up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 
-  /// variable middle SP radial region of interest
-  const Acts::Range1D<float> rMiddleSPRange(
-      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
-          m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
-      up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
-
+	std::cout << "rMiddleSPRange " << rMiddleSPRange.min() << " " << rMiddleSPRange.max() << std::endl;
+	
+//	m_cfg.seedFinderConfig.binSizeR
+	
   // run the seeding
   static thread_local SimSeedContainer seeds;
   seeds.clear();

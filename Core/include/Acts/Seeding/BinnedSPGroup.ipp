@@ -13,7 +13,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-    Acts::Extent rRangeSPExtent,
+		Acts::Range1D<float>& rMiddleSPRange,
     const SeedFinderConfig<external_spacepoint_t>& config,
     const SeedFinderOptions& options) {
   if (not config.isInInternalUnits) {
@@ -47,7 +47,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
       rBins(numRBins);
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
-    if (*it == nullptr) {
+		if (*it == nullptr) {
       continue;
     }
     const external_spacepoint_t& sp = **it;
@@ -59,7 +59,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     float spZ = spPosition[2];
 
     // store x,y,z values in extent
-    rRangeSPExtent.extend({spX, spY, spZ});
+//    rRangeSPExtent.extend({spX, spY, spZ});
 
     if (spZ > zMax || spZ < zMin) {
       continue;
@@ -94,17 +94,40 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     }
   }
 
+	// first and last non-empty bins
+	int firstRBin = 0;
+	int lastRBin = 0;
+	int binNumber = 0;
+	
   // fill rbins into grid such that each grid bin is sorted in r
   // space points with delta r < rbin size can be out of order is sorting is not
   // requested
   for (auto& rbin : rBins) {
+		// skip empty R bins
+		if (rbin.empty()) {
+			++binNumber;
+			continue;
+		}
+		// remember the first and last non-empty bins
+		if (firstRBin == 0) {
+			firstRBin = binNumber;
+		}
+		lastRBin = binNumber;
+		// fill rbins into grid
     for (auto& isp : rbin) {
       Acts::Vector2 spLocation(isp->phi(), isp->z());
       std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
           bin = grid->atPosition(spLocation);
       bin.push_back(std::move(isp));
     }
+		++binNumber;
   }
+	
+	// variable middle SP radial region of interest
+	rMiddleSPRange.set(config.binSizeR * firstRBin + config.deltaRMiddleMinSPRange, config.binSizeR * lastRBin - config.deltaRMiddleMaxSPRange);
+	
+	std::cout << "rMiddleSPRange " << firstRBin << " " << lastRBin << std::endl;
+	
   m_binnedSP = std::move(grid);
   m_bottomBinFinder = botBinFinder;
   m_topBinFinder = tBinFinder;

@@ -63,14 +63,18 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     float rM = spM->radius();
     float zM = spM->z();
 
+		std::cout << "|Middle| " << rM << std::endl;
+		
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
       if (rM < rMiddleSPRange.min()) {
+				std::cout << "continue " << rMiddleSPRange.min() << std::endl;
         continue;
       }
       if (rM > rMiddleSPRange.max()) {
         // break if SP are sorted in r
         if (m_config.forceRadialSorting) {
+					std::cout << "break " << rMiddleSPRange.max() << std::endl;
           break;
         }
         continue;
