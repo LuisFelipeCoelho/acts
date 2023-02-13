@@ -10,6 +10,8 @@
 #include <numeric>
 #include <type_traits>
 
+#include <iostream>
+
 namespace Acts {
 
 template <typename external_spacepoint_t, typename platform_t>
@@ -55,6 +57,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   state.candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                             max_num_quality_seeds_per_spm);
 
+	std::cout << "====== New event ========" << std::endl;
+	
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -99,6 +103,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
     }
+		
+		std::cout << "|Middle| " << rM << std::endl;
 
     getCompatibleDoublets(options, topSPs, *spM, state.compatTopSP,
                           m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP,
@@ -154,7 +160,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
     bool isBottom) const {
   const int sign = isBottom ? -1 : 1;
-
+	
   outVec.clear();
 
   const float& rM = mediumSP.radius();
@@ -167,6 +173,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   for (auto otherSP : otherSPs) {
     const float rO = otherSP->radius();
     float deltaR = sign * (rO - rM);
+		
+		if (isBottom) {
+			std::cout << "|Bottom| " << rO << std::endl;
+		} else {
+			std::cout << "|Top| " << rO << std::endl;
+		}
 
     // if r-distance is too small, try next SP in bin
     if (deltaR < deltaRMinSP) {
