@@ -12,7 +12,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     GlobalPositionFunctor toGlobal,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
-    std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
+    std::unique_ptr<SpacePointGrid<external_spacepoint_t>>& grid,
 		Acts::Range1D<float>& rMiddleSPRange,
     const SeedFinderConfig<external_spacepoint_t>& config,
     const SeedFinderOptions& options) {
@@ -126,9 +126,9 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 	// variable middle SP radial region of interest
 	rMiddleSPRange.set(config.binSizeR * firstRBin + config.deltaRMiddleMinSPRange, config.binSizeR * lastRBin - config.deltaRMiddleMaxSPRange);
 	
-	std::cout << "rMiddleSPRange " << firstRBin << " " << lastRBin << std::endl;
-	
-  m_binnedSP = std::move(grid);
+//	std::cout << "rMiddleSPRange " << firstRBin << " " << lastRBin << std::endl;
+
+  //  m_binnedSP = std::move(grid); FOR TESTING!!
   m_bottomBinFinder = botBinFinder;
   m_topBinFinder = tBinFinder;
 
