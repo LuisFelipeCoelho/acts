@@ -206,7 +206,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       float deltaZAbs = zO - zM;
       float deltaZ = sign * deltaZAbs;
       if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-//        continue;
+        //        continue;
       }
 
       // ratio Z/R (forward angle) of space point duplet
@@ -236,10 +236,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       const float yVal = deltaY * cosPhiM - deltaX * sinPhiM;
 
       if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
-        linCircleVec.push_back(transformCoordinates(
-            *otherSP, sign,
-					{deltaX, deltaY, deltaZAbs, varianceRM, varianceZM,
-					xVal, yVal, zOrigin}));
+        linCircleVec.push_back(
+            transformCoordinates(*otherSP, sign,
+                                 {deltaX, deltaY, deltaZAbs, varianceRM,
+                                  varianceZM, xVal, yVal, zOrigin}));
         outVec.push_back(otherSP.get());
         continue;
       }
@@ -268,10 +268,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-      linCircleVec.push_back(transformCoordinates(
-          *otherSP, sign,
-				{deltaX, deltaY, deltaZAbs, varianceRM, varianceZM,
-				xVal, yVal, zOrigin}));
+      linCircleVec.push_back(
+          transformCoordinates(*otherSP, sign,
+                               {deltaX, deltaY, deltaZAbs, varianceRM,
+                                varianceZM, xVal, yVal, zOrigin}));
 
       outVec.push_back(otherSP.get());
     }

@@ -277,7 +277,7 @@ class BinnedSPGroup {
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-      Acts::Extent& rRangeSPExtent,
+      Acts::Range1D<float>& rMiddleSPRange,
       const SeedFinderConfig<external_spacepoint_t>& _config,
       const SeedFinderOptions& _options);
 
