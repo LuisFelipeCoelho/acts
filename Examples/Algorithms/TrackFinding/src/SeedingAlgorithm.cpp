@@ -225,15 +225,15 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsTop,
                                      m_cfg.numPhiNeighbors));
-  auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
+  auto gridTest = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
       m_cfg.gridConfig, m_cfg.gridOptions);
 
-  auto nPhiBins = grid->numLocalBins()[0];
-  auto nZBins = grid->numLocalBins()[1];
+  auto nPhiBins = gridTest->numLocalBins()[0];
+  auto nZBins = gridTest->numLocalBins()[1];
 
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
-      bottomBinFinder, topBinFinder, std::move(grid), rMiddleSPRange,
+      bottomBinFinder, topBinFinder, gridTest, rMiddleSPRange,
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
 
   //  // safely clamp double to float
@@ -253,13 +253,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
 
-  auto gridTest = spacePointsGrouping.getGrid();
-
-  //	std::cout << "TEST " << std::endl;
   // Loop through all phi bins
   for (size_t phiBin = 0; phiBin <= (size_t)nPhiBins; ++phiBin) {
     // For each phi bin loop through all z bins
-    /// ***** todo: abortar loop
     for (size_t zBin = 0; zBin < (size_t)nZBins; ++zBin) {
       size_t zBinIndex;
       // If zBinsCustomLooping is not empty we follow the z bin order defined in
@@ -274,8 +270,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       // Skip if this particular 2D bin is empty -> is this worth it for high
       // pile-up?
       if (gridTest->atLocalBins({phiBin, zBinIndex}).empty()) {
-        //				std::cout << "TEST gridBinSize(phiBin,
-        // zBinIndex)==0" << std::endl;
         continue;
       }
 
