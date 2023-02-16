@@ -163,13 +163,23 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const int sign = isBottom ? -1 : 1;
 
   outVec.clear();
+  linCircleVec.clear();
+
+  // reserve enough capacity
+  size_t dupletCapacity =
+      isBottom ? m_config.bottomDupletCapacity : m_config.topDupletCapacity;
+  outVec.reserve(dupletCapacity);
+  linCircleVec.reserve(dupletCapacity);
 
   const float& rM = mediumSP.radius();
   const float& xM = mediumSP.x();
   const float& yM = mediumSP.y();
   const float& zM = mediumSP.z();
+  const float& varianceRM = mediumSP.varianceR();
+  const float& varianceZM = mediumSP.varianceZ();
   const float cosPhiM = xM / rM;
   const float sinPhiM = yM / rM;
+  float vIP = m_config.impactMax / (rM * rM);
 
   for (auto cellT : otherSPs) {
     for (auto& otherSP : *cellT) {
@@ -227,8 +237,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
         linCircleVec.push_back(transformCoordinates(
-            *otherSP, mediumSP, sign,
-            {deltaX, deltaY, deltaZAbs, xVal, yVal, zOrigin}));
+            *otherSP, sign,
+					{deltaX, deltaY, deltaZAbs, varianceRM, varianceZM,
+					xVal, yVal, zOrigin}));
         outVec.push_back(otherSP.get());
         continue;
       }
@@ -242,7 +253,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // in the rotated frame the interaction point is positioned at x = -rM
       // and y ~= impactParam
       const float uIP = -1. / rM;
-      float vIP = m_config.impactMax / (rM * rM);
       if (sign * yVal > 0.) {
         vIP = -vIP;
       }
@@ -259,8 +269,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
 
       linCircleVec.push_back(transformCoordinates(
-          *otherSP, mediumSP, sign,
-          {deltaX, deltaY, deltaZAbs, xVal, yVal, zOrigin}));
+          *otherSP, sign,
+				{deltaX, deltaY, deltaZAbs, varianceRM, varianceZM,
+				xVal, yVal, zOrigin}));
 
       outVec.push_back(otherSP.get());
     }
@@ -547,13 +558,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // positive/negative in phi
       state.curvatures.push_back(B / std::sqrt(S2));
       state.impactParameters.push_back(Im);
-
-      // evaluate eta and pT of the seed
-      float cotThetaAvg = std::sqrt(cotThetaAvg2);
-      float theta = std::atan(1. / cotThetaAvg);
-      float eta = -std::log(std::tan(0.5 * theta));
-      state.etaVec.push_back(eta);
-      state.ptVec.push_back(pT);
     }  // loop on tops
 
     if (state.topSpVec.empty()) {

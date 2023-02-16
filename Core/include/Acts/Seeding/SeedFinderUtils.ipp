@@ -59,8 +59,6 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
          iDeltaR2;
   l.x = xNewFrame;
   l.y = yNewFrame;
-  l.z = sp.z();
-  l.r = sp.radius();
 
   sp.setCotTheta(cot_theta);
   sp.setDeltaR(std::sqrt((xNewFrame * xNewFrame) + (yNewFrame * yNewFrame) +
@@ -69,16 +67,14 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               const external_spacepoint_t& spM,
-                               const int bottomSign,
-                               const std::array<float, 6>& transformVariables) {
+LinCircle transformCoordinates(external_spacepoint_t& sp, const int bottomSign,
+                               const std::array<float, 8>& transformVariables) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
   // spacepoint. Please see the other version of this function for more
   // detailed comments.
 
-  auto [deltaX, deltaY, deltaZ, xNewFrame, yNewFrame, zOrigin] =
+  auto [deltaX, deltaY, deltaZ, varR, varZ, xNewFrame, yNewFrame, zOrigin] =
       transformVariables;
 
   float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
@@ -90,13 +86,11 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
   l.iDeltaR = iDeltaR;
   l.U = xNewFrame * iDeltaR2;
   l.V = yNewFrame * iDeltaR2;
-  l.Er = ((spM.varianceZ() + sp.varianceZ()) +
-          (cot_theta * cot_theta) * (spM.varianceR() + sp.varianceR())) *
+  l.Er = ((varZ + sp.varianceZ()) +
+          (cot_theta * cot_theta) * (varR + sp.varianceR())) *
          iDeltaR2;
   l.x = xNewFrame;
   l.y = yNewFrame;
-  l.z = sp.z();
-  l.r = sp.radius();
 
   sp.setCotTheta(cot_theta);
   sp.setDeltaR(std::sqrt((xNewFrame * xNewFrame) + (yNewFrame * yNewFrame) +
@@ -169,8 +163,6 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
            iDeltaR2;
     l.x = xNewFrame;
     l.y = yNewFrame;
-    l.z = sp->z();
-    l.r = sp->radius();
 
     linCircleVec.push_back(l);
     sp->setCotTheta(cot_theta);
