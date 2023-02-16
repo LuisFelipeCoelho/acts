@@ -206,7 +206,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       float deltaZAbs = zO - zM;
       float deltaZ = sign * deltaZAbs;
       if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-        continue;
+//        continue;
       }
 
       // ratio Z/R (forward angle) of space point duplet
