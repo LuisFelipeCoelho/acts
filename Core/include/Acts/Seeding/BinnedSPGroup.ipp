@@ -129,7 +129,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       config.binSizeR * lastRBin - config.deltaRMiddleMaxSPRange);
 
   //	std::cout << "rMiddleSPRange " << firstRBin << " " << lastRBin <<
-  //std::endl;
+  // std::endl;
 
   //  m_binnedSP = std::move(grid); FOR TESTING!!
   m_bottomBinFinder = botBinFinder;

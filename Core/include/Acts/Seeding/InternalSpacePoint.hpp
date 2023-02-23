@@ -42,9 +42,7 @@ class InternalSpacePoint {
   const float& varianceZ() const { return m_varianceZ; }
   const float& deltaR() const { return m_deltaR; }
   const float& quality() const { return m_quality; }
-  const float& cotTheta() const { return m_cotTheta; }
   void setDeltaR(float deltaR) { m_deltaR = deltaR; }
-  void setCotTheta(float cotTheta) { m_cotTheta = cotTheta; }
   void setQuality(float quality) {
     if (quality >= m_quality) {
       m_quality = quality;
