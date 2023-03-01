@@ -46,7 +46,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         "SeedFinderOptions not in ACTS internal units in SeedFinder");
   }
 
-  std::cout << " === New Event === " << std::endl;
+//  std::cout << " === New Event === " << std::endl;
 
   // This is used for seed filtering later
   const std::size_t max_num_seeds_per_spm =
@@ -103,7 +103,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         }
       }
 
-      std::cout << "---> |MIDDLE| " << rM << std::endl;
+//      std::cout << "---> |MIDDLE| " << rM << std::endl;
 
       state.linCircleTop.clear();
       state.linCircleBottom.clear();
@@ -304,7 +304,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
-  std::cout << "--- Filter ---" << std::endl;
+//  std::cout << "--- Filter ---" << std::endl;
 
   auto sorted_bottoms =
       cotThetaSortIndex(state.compatBottomSP, state.linCircleBottom);
