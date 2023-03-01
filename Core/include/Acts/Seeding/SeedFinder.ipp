@@ -46,7 +46,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         "SeedFinderOptions not in ACTS internal units in SeedFinder");
   }
 
-//  std::cout << " === New Event === " << std::endl;
+  //  std::cout << " === New Event === " << std::endl;
 
   // This is used for seed filtering later
   const std::size_t max_num_seeds_per_spm =
@@ -103,7 +103,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         }
       }
 
-//      std::cout << "---> |MIDDLE| " << rM << std::endl;
+      //      std::cout << "---> |MIDDLE| " << rM << std::endl;
 
       state.linCircleTop.clear();
       state.linCircleBottom.clear();
@@ -195,7 +195,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       //			if (isBottom) {
       //				std::cout << "|BOTTOM| " << rO <<
-      //std::endl; 			} else { 				std::cout << "|TOP| " << rO << std::endl;
+      // std::endl; 			} else {
+      // std::cout << "|TOP| " << rO << std::endl;
       //			}
 
       // if r-distance is too small, try next SP in bin
@@ -217,9 +218,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       const float zO = otherSP->z();
       float deltaZAbs = zO - zM;
       float deltaZ = sign * deltaZAbs;
-      if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-        //        continue;
-      }
+      //      if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+      //        //        continue;
+      //      }
 
       // ratio Z/R (forward angle) of space point duplet
       float cotTheta = deltaZ / deltaR;
@@ -239,7 +240,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
             transformCoordinates(*otherSP, mediumSP, isBottom));
         outVec.push_back(otherSP.get());
         //				std::cout << "# Fill pixel SP #" <<
-        //std::endl;
+        // std::endl;
         continue;
       }
 
@@ -256,7 +257,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
                                   varianceZM, xVal, yVal, zOrigin}));
         outVec.push_back(otherSP.get());
         //				std::cout << "# Fill pixel SP #" <<
-        //std::endl;
+        // std::endl;
         continue;
       }
 
@@ -304,7 +305,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
-//  std::cout << "--- Filter ---" << std::endl;
+  //  std::cout << "--- Filter ---" << std::endl;
 
   auto sorted_bottoms =
       cotThetaSortIndex(state.compatBottomSP, state.linCircleBottom);
@@ -337,10 +338,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     float iDeltaRB = lb.iDeltaR;
 
     //		std::cout << "|BOTTOM| " << state.compatBottomSP[b]->radius() <<
-    //std::endl;
+    // std::endl;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
+    float sigmaSquaredSPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -388,7 +390,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       auto lt = state.linCircleTop[t];
 
       //			std::cout << "|TOP| " <<
-      //state.compatTopSP[t]->radius() << std::endl;
+      // state.compatTopSP[t]->radius() << std::endl;
 
       float cotThetaT = lt.cotTheta;
       float rMxy = 0.;
@@ -555,19 +557,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // the two seed segments using a scattering term scaled by the actual
       // measured pT (p2scatterSigma)
       float iHelixDiameter2 = B2 / S2;
-      // calculate scattering for p(T) calculated from seed curvature
-      float pT2scatterSigma = iHelixDiameter2 * options.sigmapT2perRadius;
-      // if pT > maxPtScattering, calculate allowed scattering angle using
-      // maxPtScattering instead of pt.
-      float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
-      if (pT > m_config.maxPtScattering) {
-        float pTscatterSigma = (m_config.highland / m_config.maxPtScattering) *
-                               m_config.sigmaScattering;
-        pT2scatterSigma = pTscatterSigma * pTscatterSigma;
-      }
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
-      float p2scatterSigma = pT2scatterSigma * iSinTheta2;
+      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredSPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
         if (not m_config.skipPreviousTopSP) {
