@@ -63,47 +63,55 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       float zM = spM->z();
 
       // check if spM is outside our radial region of interest
-      if (m_config.useVariableMiddleSPRange) {
-        if (rM < rMiddleSPRange.min()) {
-          continue;
-        }
-        if (rM > rMiddleSPRange.max()) {
-          // break if SP are sorted in r
-          if (m_config.forceRadialSorting) {
-            break;
-          }
-          continue;
-        }
-      } else if (not m_config.rRangeMiddleSP.empty()) {
-        /// get zBin position of the middle SP
-        auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
-                                     m_config.zBinEdges.end(), zM);
-        int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
-        /// protects against zM at the limit of zBinEdges
-        zBin == 0 ? zBin : --zBin;
-        if (rM < m_config.rRangeMiddleSP[zBin][0]) {
-          continue;
-        }
-        if (rM > m_config.rRangeMiddleSP[zBin][1]) {
-          // break if SP are sorted in r
-          if (m_config.forceRadialSorting) {
-            break;
-          }
-          continue;
-        }
-      } else {
-        if (rM > m_config.rMaxMiddle) {
-          continue;
-        }
-        if (rM < m_config.rMinMiddle) {
-          if (m_config.forceRadialSorting) {
-            break;
-          }
-          continue;
-        }
+      //      if (m_config.useVariableMiddleSPRange) {
+      //        if (rM < rMiddleSPRange.min()) {
+      //          continue;
+      //        }
+      //        if (rM > rMiddleSPRange.max()) {
+      //          // break if SP are sorted in r
+      //          if (m_config.forceRadialSorting) {
+      //            break;
+      //          }
+      //          continue;
+      //        }
+      //      } else if (not m_config.rRangeMiddleSP.empty()) {
+      //        /// get zBin position of the middle SP
+      //        auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
+      //                                     m_config.zBinEdges.end(), zM);
+      //        int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
+      //        /// protects against zM at the limit of zBinEdges
+      //        zBin == 0 ? zBin : --zBin;
+      //        if (rM < m_config.rRangeMiddleSP[zBin][0]) {
+      //          continue;
+      //        }
+      //        if (rM > m_config.rRangeMiddleSP[zBin][1]) {
+      //          // break if SP are sorted in r
+      //          if (m_config.forceRadialSorting) {
+      //            break;
+      //          }
+      //          continue;
+      //        }
+      //      } else {
+      //        if (rM > m_config.rMaxMiddle) {
+      //          continue;
+      //        }
+      //        if (rM < m_config.rMinMiddle) {
+      //          if (m_config.forceRadialSorting) {
+      //            break;
+      //          }
+      //          continue;
+      //        }
+      //      }
+
+      if (rM < rMiddleSPRange.min()) {
+        continue;
+      }
+      if (rM > rMiddleSPRange.max()) {
+        // break if SP are sorted in r
+        break;
       }
 
-      //      std::cout << "---> |MIDDLE| " << rM << std::endl;
+      // std::cout << "---> |MIDDLE| " << rM << std::endl;
 
       state.linCircleTop.clear();
       state.linCircleBottom.clear();
@@ -120,25 +128,25 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
       // apply cut on the number of top SP if seedConfirmation is true
       SeedFilterState seedFilterState;
-      if (m_config.seedConfirmation) {
-        // check if middle SP is in the central or forward region
-        SeedConfirmationRangeConfig seedConfRange =
-            (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-             zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
-                ? m_config.forwardSeedConfirmationRange
-                : m_config.centralSeedConfirmationRange;
-        // set the minimum number of top SP depending on whether the middle SP
-        // is in the central or forward region
-        seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
-                                           ? seedConfRange.nTopForLargeR
-                                           : seedConfRange.nTopForSmallR;
-        // set max bottom radius for seed confirmation
-        seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
-        // continue if number of top SPs is smaller than minimum
-        if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
-          continue;
-        }
+      //      if (m_config.seedConfirmation) {
+      // check if middle SP is in the central or forward region
+      SeedConfirmationRangeConfig seedConfRange =
+          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+           zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
+              ? m_config.forwardSeedConfirmationRange
+              : m_config.centralSeedConfirmationRange;
+      // set the minimum number of top SP depending on whether the middle SP
+      // is in the central or forward region
+      seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                                         ? seedConfRange.nTopForLargeR
+                                         : seedConfRange.nTopForSmallR;
+      // set max bottom radius for seed confirmation
+      seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+      // continue if number of top SPs is smaller than minimum
+      if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
+        continue;
       }
+      //      }
 
       // Iterate over middle-bottom duplets
       getCompatibleDoublets(options, bottomSPs, *spM, state.compatBottomSP,
@@ -201,7 +209,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // if r-distance is too small, try next SP in bin
       if (deltaR < deltaRMinSP) {
-        if (isBottom and m_config.forceRadialSorting) {
+        if (isBottom) {
           break;
         }
         continue;
@@ -209,7 +217,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // if r-distance is too big, try next SP in bin
       if (deltaR > deltaRMaxSP) {
-        if (!isBottom and m_config.forceRadialSorting) {
+        if (!isBottom) {
           break;
         }
         continue;
@@ -235,14 +243,15 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-      if (not m_config.interactionPointCut) {
-        linCircleVec.push_back(
-            transformCoordinates(*otherSP, mediumSP, isBottom));
-        outVec.push_back(otherSP.get());
-        //				std::cout << "# Fill pixel SP #" <<
-        // std::endl;
-        continue;
-      }
+      //      if (not m_config.interactionPointCut) {
+      //        linCircleVec.push_back(
+      //            transformCoordinates(*otherSP, mediumSP, isBottom));
+      //        outVec.push_back(otherSP.get());
+      //        //				std::cout << "# Fill pixel SP #"
+      //        <<
+      //        // std::endl;
+      //        continue;
+      //      }
 
       const float deltaX = otherSP->x() - xM;
       const float deltaY = otherSP->y() - yM;
@@ -503,10 +512,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
-        // skip top SPs based on cotTheta sorting when producing triplets
-        if (not m_config.skipPreviousTopSP) {
-          continue;
-        }
         // break if cotTheta from bottom SP < cotTheta from top SP because
         // the SP are sorted by cotTheta
         if (cotThetaB - cotThetaT < 0) {
@@ -562,9 +567,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       float p2scatterSigma = iHelixDiameter2 * sigmaSquaredSPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (not m_config.skipPreviousTopSP) {
-          continue;
-        }
         if (cotThetaB - cotThetaT < 0) {
           break;
         }

@@ -62,7 +62,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     topSPIndexVec[i] = i;
   }
 
-  if (m_cfg.curvatureSortingInFilter and topSpVec.size() > 2) {
+  if (topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
     std::sort(topSPIndexVec.begin(), topSPIndexVec.end(),
               [&invHelixDiameterVec](const size_t& i1, const size_t& i2) {
@@ -89,9 +89,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
     float weight = -(impact * m_cfg.impactWeightFactor);
 
+    // loop over compatible top SP candidates
     for (size_t variableCompTopIndex = beginCompTopIndex;
          variableCompTopIndex < topSPIndexVec.size(); variableCompTopIndex++) {
       size_t compatibleTopSPIndex = topSPIndexVec[variableCompTopIndex];
+      // continue if the two SPs are the same
       if (compatibleTopSPIndex == topSPIndex) {
         continue;
       }
@@ -103,17 +105,12 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // curvature difference within limits?
       if (invHelixDiameterVec[compatibleTopSPIndex] < lowerLimitCurv) {
         // if SPs are sorted in curvature we skip unnecessary iterations
-        if (m_cfg.curvatureSortingInFilter) {
-          beginCompTopIndex = variableCompTopIndex + 1;
-        }
+        beginCompTopIndex = variableCompTopIndex + 1;
         continue;
       }
       if (invHelixDiameterVec[compatibleTopSPIndex] > upperLimitCurv) {
         // if SPs are sorted in curvature we skip unnecessary iterations
-        if (m_cfg.curvatureSortingInFilter) {
-          break;
-        }
-        continue;
+        break;
       }
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
