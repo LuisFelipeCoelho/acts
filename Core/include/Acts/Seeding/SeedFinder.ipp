@@ -243,15 +243,13 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-      //      if (not m_config.interactionPointCut) {
-      //        linCircleVec.push_back(
-      //            transformCoordinates(*otherSP, mediumSP, isBottom));
-      //        outVec.push_back(otherSP.get());
-      //        //				std::cout << "# Fill pixel SP #"
-      //        <<
-      //        // std::endl;
-      //        continue;
-      //      }
+			if (not m_config.interactionPointCut) {
+				linCircleVec.push_back(
+						transformCoordinates(*otherSP, mediumSP, isBottom));
+				outVec.push_back(otherSP.get());
+				//				std::cout << "# Fill pixel SP #"	 << std::endl;
+				continue;
+			}
 
       const float deltaX = otherSP->x() - xM;
       const float deltaY = otherSP->y() - yM;
