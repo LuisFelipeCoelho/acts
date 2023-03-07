@@ -38,8 +38,9 @@ template <typename external_spacepoint_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
+    sp_range_t& bottomSPsIdx, sp_range_t& middleSPsIdx, sp_range_t& topSPsIdx,
     const Acts::Range1D<float>& rMiddleSPRange) const {
   if (not options.isInInternalUnits) {
     throw std::runtime_error(
@@ -57,121 +58,124 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   state.candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                             max_num_quality_seeds_per_spm);
 
-  for (auto cellM : middleSPs) {
-    for (auto& spM : *cellM) {
-      float rM = spM->radius();
-      float zM = spM->z();
+  auto& middleSPs = grid.at(middleSPsIdx[0]);
 
-      // check if spM is outside our radial region of interest
-      //      if (m_config.useVariableMiddleSPRange) {
-      //        if (rM < rMiddleSPRange.min()) {
-      //          continue;
-      //        }
-      //        if (rM > rMiddleSPRange.max()) {
-      //          // break if SP are sorted in r
-      //          if (m_config.forceRadialSorting) {
-      //            break;
-      //          }
-      //          continue;
-      //        }
-      //      } else if (not m_config.rRangeMiddleSP.empty()) {
-      //        /// get zBin position of the middle SP
-      //        auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
-      //                                     m_config.zBinEdges.end(), zM);
-      //        int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
-      //        /// protects against zM at the limit of zBinEdges
-      //        zBin == 0 ? zBin : --zBin;
-      //        if (rM < m_config.rRangeMiddleSP[zBin][0]) {
-      //          continue;
-      //        }
-      //        if (rM > m_config.rRangeMiddleSP[zBin][1]) {
-      //          // break if SP are sorted in r
-      //          if (m_config.forceRadialSorting) {
-      //            break;
-      //          }
-      //          continue;
-      //        }
-      //      } else {
-      //        if (rM > m_config.rMaxMiddle) {
-      //          continue;
-      //        }
-      //        if (rM < m_config.rMinMiddle) {
-      //          if (m_config.forceRadialSorting) {
-      //            break;
-      //          }
-      //          continue;
-      //        }
-      //      }
+  for (auto& spM : middleSPs) {
+    float rM = spM->radius();
+    float zM = spM->z();
 
-      if (rM < rMiddleSPRange.min()) {
-        continue;
-      }
-      if (rM > rMiddleSPRange.max()) {
-        // break if SP are sorted in r
-        break;
-      }
+    // check if spM is outside our radial region of interest
+    //      if (m_config.useVariableMiddleSPRange) {
+    //        if (rM < rMiddleSPRange.min()) {
+    //          continue;
+    //        }
+    //        if (rM > rMiddleSPRange.max()) {
+    //          // break if SP are sorted in r
+    //          if (m_config.forceRadialSorting) {
+    //            break;
+    //          }
+    //          continue;
+    //        }
+    //      } else if (not m_config.rRangeMiddleSP.empty()) {
+    //        /// get zBin position of the middle SP
+    //        auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
+    //                                     m_config.zBinEdges.end(), zM);
+    //        int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
+    //        /// protects against zM at the limit of zBinEdges
+    //        zBin == 0 ? zBin : --zBin;
+    //        if (rM < m_config.rRangeMiddleSP[zBin][0]) {
+    //          continue;
+    //        }
+    //        if (rM > m_config.rRangeMiddleSP[zBin][1]) {
+    //          // break if SP are sorted in r
+    //          if (m_config.forceRadialSorting) {
+    //            break;
+    //          }
+    //          continue;
+    //        }
+    //      } else {
+    //        if (rM > m_config.rMaxMiddle) {
+    //          continue;
+    //        }
+    //        if (rM < m_config.rMinMiddle) {
+    //          if (m_config.forceRadialSorting) {
+    //            break;
+    //          }
+    //          continue;
+    //        }
+    //      }
 
-      // std::cout << "---> |MIDDLE| " << rM << std::endl;
+    if (rM < rMiddleSPRange.min()) {
+      continue;
+    }
+    if (rM > rMiddleSPRange.max()) {
+      // break if SP are sorted in r
+      break;
+    }
 
-      state.linCircleTop.clear();
-      state.linCircleBottom.clear();
+    // std::cout << "---> |MIDDLE| " << rM << std::endl;
 
-      // Iterate over middle-top duplets
-      getCompatibleDoublets(options, topSPs, *spM, state.compatTopSP,
-                            state.linCircleTop, m_config.deltaRMinTopSP,
-                            m_config.deltaRMaxTopSP, false);
+    state.linCircleTop.clear();
+    state.linCircleBottom.clear();
 
-      // no top SP found -> try next spM
-      if (state.compatTopSP.empty()) {
-        continue;
-      }
+    // Iterate over middle-top duplets
+    getCompatibleDoublets(options, grid, topSPsIdx, *spM.get(),
+                          state.compatTopSP, state.linCircleTop,
+                          m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP,
+                          false);
 
-      // apply cut on the number of top SP if seedConfirmation is true
-      SeedFilterState seedFilterState;
-      //      if (m_config.seedConfirmation) {
-      // check if middle SP is in the central or forward region
-      SeedConfirmationRangeConfig seedConfRange =
-          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-           zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
-              ? m_config.forwardSeedConfirmationRange
-              : m_config.centralSeedConfirmationRange;
-      // set the minimum number of top SP depending on whether the middle SP
-      // is in the central or forward region
-      seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
-                                         ? seedConfRange.nTopForLargeR
-                                         : seedConfRange.nTopForSmallR;
-      // set max bottom radius for seed confirmation
-      seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
-      // continue if number of top SPs is smaller than minimum
-      if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
-        continue;
-      }
-      //      }
+    // no top SP found -> try next spM
+    if (state.compatTopSP.empty()) {
+      continue;
+    }
 
-      // Iterate over middle-bottom duplets
-      getCompatibleDoublets(options, bottomSPs, *spM, state.compatBottomSP,
-                            state.linCircleBottom, m_config.deltaRMinBottomSP,
-                            m_config.deltaRMaxBottomSP, true);
+    // apply cut on the number of top SP if seedConfirmation is true
+    SeedFilterState seedFilterState;
+    //      if (m_config.seedConfirmation) {
+    // check if middle SP is in the central or forward region
+    SeedConfirmationRangeConfig seedConfRange =
+        (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_config.forwardSeedConfirmationRange
+            : m_config.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the middle SP
+    // is in the central or forward region
+    seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                                       ? seedConfRange.nTopForLargeR
+                                       : seedConfRange.nTopForSmallR;
+    // set max bottom radius for seed confirmation
+    seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+    // continue if number of top SPs is smaller than minimum
+    if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
+      continue;
+    }
+    //      }
 
-      // no bottom SP found -> try next spM
-      if (state.compatBottomSP.empty()) {
-        continue;
-      }
+    // Iterate over middle-bottom duplets
+    getCompatibleDoublets(options, grid, bottomSPsIdx, *spM.get(),
+                          state.compatBottomSP, state.linCircleBottom,
+                          m_config.deltaRMinBottomSP,
+                          m_config.deltaRMaxBottomSP, true);
 
-      // filter candidates
-      filterCandidates(*spM, options, seedFilterState, state);
+    // no bottom SP found -> try next spM
+    if (state.compatBottomSP.empty()) {
+      continue;
+    }
 
-      m_config.seedFilter->filterSeeds_1SpFixed(
-          state.candidates_collector, seedFilterState.numQualitySeeds, outIt);
+    // filter candidates
+    filterCandidates(*spM.get(), options, seedFilterState, state);
 
-    }  // loop on mediums
-  }
-}
+    m_config.seedFilter->filterSeeds_1SpFixed(
+        state.candidates_collector, seedFilterState.numQualitySeeds, outIt);
+
+  }  // loop on mediums
+}  // namespace Acts
 
 template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t, typename out_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
-    const Acts::SeedFinderOptions& options, sp_range_t& otherSPs,
+    const Acts::SeedFinderOptions& options,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t& otherSPsIdx,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     out_range_t& outVec, std::vector<LinCircle>& linCircleVec,
     const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const {
@@ -196,8 +200,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float sinPhiM = yM / rM;
   float vIP = m_config.impactMax / (rM * rM);
 
-  for (auto cellT : otherSPs) {
-    for (auto& otherSP : *cellT) {
+  for (auto otherSPIdx : otherSPsIdx) {
+    auto& otherSPs = grid.at(otherSPIdx);
+
+    for (auto& otherSP : otherSPs) {
       const float rO = otherSP->radius();
       float deltaR = sign * (rO - rM);
 
@@ -247,8 +253,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         linCircleVec.push_back(
             transformCoordinates(*otherSP, mediumSP, isBottom));
         outVec.push_back(otherSP.get());
-        //				std::cout << "# Fill pixel SP #"	 <<
-        //std::endl;
+        //				std::cout << "# Fill pixel SP #"
+        //<< std::endl;
         continue;
       }
 
