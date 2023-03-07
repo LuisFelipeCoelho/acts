@@ -243,13 +243,14 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-			if (not m_config.interactionPointCut) {
-				linCircleVec.push_back(
-						transformCoordinates(*otherSP, mediumSP, isBottom));
-				outVec.push_back(otherSP.get());
-				//				std::cout << "# Fill pixel SP #"	 << std::endl;
-				continue;
-			}
+      if (not m_config.interactionPointCut) {
+        linCircleVec.push_back(
+            transformCoordinates(*otherSP, mediumSP, isBottom));
+        outVec.push_back(otherSP.get());
+        //				std::cout << "# Fill pixel SP #"	 <<
+        //std::endl;
+        continue;
+      }
 
       const float deltaX = otherSP->x() - xM;
       const float deltaY = otherSP->y() - yM;
@@ -510,9 +511,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
-				if (not m_config.skipPreviousTopSP) {
-					continue;
-				}
+        if (not m_config.skipPreviousTopSP) {
+          continue;
+        }
         // break if cotTheta from bottom SP < cotTheta from top SP because
         // the SP are sorted by cotTheta
         if (cotThetaB - cotThetaT < 0) {
@@ -568,9 +569,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       float p2scatterSigma = iHelixDiameter2 * sigmaSquaredSPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-				if (not m_config.skipPreviousTopSP) {
-					continue;
-				}
+        if (not m_config.skipPreviousTopSP) {
+          continue;
+        }
         if (cotThetaB - cotThetaT < 0) {
           break;
         }
