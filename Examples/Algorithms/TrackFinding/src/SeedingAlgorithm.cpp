@@ -321,6 +321,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
   size_t nSeeds = seeds.size();
+
+  std::cout << "ACTS CHECKING SEEDS PER EVENT : " << seeds.size() << std::endl;
+
   static thread_local ProtoTrackContainer protoTracks;
   protoTracks.clear();
 

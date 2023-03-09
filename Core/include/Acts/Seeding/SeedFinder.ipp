@@ -47,7 +47,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         "SeedFinderOptions not in ACTS internal units in SeedFinder");
   }
 
-  //  std::cout << " === New Event === " << std::endl;
+  std::cout << " === New Event === " << std::endl;
 
   // This is used for seed filtering later
   const std::size_t max_num_seeds_per_spm =
@@ -113,10 +113,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       break;
     }
 
-    // std::cout << "---> |MIDDLE| " << rM << std::endl;
-
     state.linCircleTop.clear();
     state.linCircleBottom.clear();
+
+    std::cout << "---> |MIDDLE| " << rM << std::endl;
 
     // Iterate over middle-top duplets
     getCompatibleDoublets(options, grid, topSPsIdx, *spM.get(),
@@ -253,8 +253,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         linCircleVec.push_back(
             transformCoordinates(*otherSP, mediumSP, isBottom));
         outVec.push_back(otherSP.get());
-        //				std::cout << "# Fill pixel SP #"
-        //<< std::endl;
+        std::cout << "# Fill pixel SP #" << std::endl;
         continue;
       }
 
@@ -270,8 +269,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
                                  {deltaX, deltaY, deltaZAbs, varianceRM,
                                   varianceZM, xVal, yVal, zOrigin}));
         outVec.push_back(otherSP.get());
-        //				std::cout << "# Fill pixel SP #" <<
-        // std::endl;
+        std::cout << "# Fill pixel SP #" << std::endl;
         continue;
       }
 
@@ -304,7 +302,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
                                {deltaX, deltaY, deltaZAbs, varianceRM,
                                 varianceZM, xVal, yVal, zOrigin}));
 
-      //			std::cout << "# Fill pixel SP #" << std::endl;
+      std::cout << "# Fill pixel SP #" << std::endl;
       outVec.push_back(otherSP.get());
     }
   }
@@ -319,7 +317,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
-  //  std::cout << "--- Filter ---" << std::endl;
+  std::cout << "--- Filter ---" << std::endl;
 
   auto sorted_bottoms =
       cotThetaSortIndex(state.compatBottomSP, state.linCircleBottom);
@@ -351,8 +349,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     float ErB = lb.Er;
     float iDeltaRB = lb.iDeltaR;
 
-    //		std::cout << "|BOTTOM| " << state.compatBottomSP[b]->radius() <<
-    // std::endl;
+    std::cout << "|BOTTOM| " << state.compatBottomSP[b]->radius() << std::endl;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
@@ -403,8 +400,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
       auto lt = state.linCircleTop[t];
 
-      //			std::cout << "|TOP| " <<
-      // state.compatTopSP[t]->radius() << std::endl;
+      std::cout << "|TOP| " << state.compatTopSP[t]->radius() << std::endl;
 
       float cotThetaT = lt.cotTheta;
       float rMxy = 0.;
@@ -517,9 +513,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
-				if (not m_config.skipPreviousTopSP) {
-					continue;
-				}
+        if (not m_config.skipPreviousTopSP) {
+          continue;
+        }
         // break if cotTheta from bottom SP < cotTheta from top SP because
         // the SP are sorted by cotTheta
         if (cotThetaB - cotThetaT < 0) {
@@ -575,9 +571,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       float p2scatterSigma = iHelixDiameter2 * sigmaSquaredSPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-				if (not m_config.skipPreviousTopSP) {
-					continue;
-				}
+        if (not m_config.skipPreviousTopSP) {
+          continue;
+        }
         if (cotThetaB - cotThetaT < 0) {
           break;
         }
@@ -611,6 +607,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         *state.compatBottomSP[b], spM, state.topSpVec, state.curvatures,
         state.impactParameters, seedFilterState, state.candidates_collector);
   }  // loop on bottoms
+
+  std::cout << "nSeeds " << seedFilterState.numSeeds << std::endl;
 }
 
 template <typename external_spacepoint_t, typename platform_t>
