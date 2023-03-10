@@ -436,12 +436,12 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         deltaRMax = 600 * u.mm
         deltaRMaxTopSP = 300 * u.mm
         deltaRMaxBottomSP = deltaRMaxTopSP
-        interactionPointCut = False
-        arithmeticAverageCotTheta = True
+        interactionPointCut = False ############# ------<<<<<<
+        arithmeticAverageCotTheta = True ############# ------<<<<<<
         deltaZMax = 900 * u.mm
         impactMax = 20 * u.mm
         zBinsCustomLooping = [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
-        skipPreviousTopSP = False
+        skipPreviousTopSP = True ############# ------<<<<<<
         zBinNeighborsTop = [
             [0, 0],
             [-1, 0],
@@ -470,15 +470,15 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         ]
         deltaRMiddleMinSPRange = 30 * u.mm
         deltaRMiddleMaxSPRange = 150 * u.mm
-        seedConfirmationFilter = False
+        seedConfirmationFilter = False ############# ------<<<<<<
         impactWeightFactor = 1
         compatSeedLimit = 4
         numSeedIncrement = 1
         seedWeightIncrement = 10100
-        useDetailedDoubleMeasurementInfo = True
+        useDetailedDoubleMeasurementInfo = True ############# ------<<<<<<
         maxSeedsPerSpMConf = 1000000000
         maxQualitySeedsPerSpMConf = 1000000000
-        useDeltaRorTopRadius = False
+        useDeltaRorTopRadius = False ############# ------<<<<<<
 
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
