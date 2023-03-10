@@ -79,15 +79,7 @@ class SeedFinder {
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
   template <template <typename...> typename container_t, typename sp_range_t>
-  void createSeedsForGroupPPP(
-      const Acts::SeedFinderOptions& options, SeedingState& state,
-      Acts::SpacePointGrid<external_spacepoint_t>& grid,
-      std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-      sp_range_t& bottomSPs, sp_range_t& middleSPs, sp_range_t& topSPs,
-      const Acts::Range1D<float>& rMiddleSPRange) const;
-
-  template <template <typename...> typename container_t, typename sp_range_t>
-  void createSeedsForGroupSSS(
+  void createSeedsForGroup(
       const Acts::SeedFinderOptions& options, SeedingState& state,
       Acts::SpacePointGrid<external_spacepoint_t>& grid,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
@@ -113,12 +105,7 @@ class SeedFinder {
   /// @param topSPs group of space points to be used as outermost SP in a seed.
   /// @returns a vector of seeds.
   template <typename sp_range_t>
-  std::vector<Seed<external_spacepoint_t>> createSeedsForGroupPPP(
-      const Acts::SeedFinderOptions& options, sp_range_t bottomSPs,
-      sp_range_t middleSPs, sp_range_t topSPs) const;
-
-  template <typename sp_range_t>
-  std::vector<Seed<external_spacepoint_t>> createSeedsForGroupSSS(
+  std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
       const Acts::SeedFinderOptions& options, sp_range_t bottomSPs,
       sp_range_t middleSPs, sp_range_t topSPs) const;
 
@@ -131,15 +118,10 @@ class SeedFinder {
       out_range_t& outVec, std::vector<LinCircle>& linCircleVec,
       const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const;
 
-  void filterCandidatesSSS(InternalSpacePoint<external_spacepoint_t>& SpM,
-                           const Acts::SeedFinderOptions& options,
-                           SeedFilterState& seedFilterState,
-                           SeedingState& state) const;
-
-  void filterCandidatesPPP(InternalSpacePoint<external_spacepoint_t>& SpM,
-                           const Acts::SeedFinderOptions& options,
-                           SeedFilterState& seedFilterState,
-                           SeedingState& state) const;
+  void filterCandidates(InternalSpacePoint<external_spacepoint_t>& SpM,
+                        const Acts::SeedFinderOptions& options,
+                        SeedFilterState& seedFilterState,
+                        SeedingState& state) const;
 
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;
