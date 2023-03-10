@@ -140,11 +140,6 @@ class SeedFinder {
                            const Acts::SeedFinderOptions& options,
                            SeedFilterState& seedFilterState,
                            SeedingState& state) const;
-	
-	void filterCandidates(InternalSpacePoint<external_spacepoint_t>& SpM,
-													 const Acts::SeedFinderOptions& options,
-													 SeedFilterState& seedFilterState,
-													 SeedingState& state) const;
 
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;
