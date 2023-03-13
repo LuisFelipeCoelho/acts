@@ -71,6 +71,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       // break if SP are sorted in r
       break;
     }
+		
+		/// for the central SP, we veto locations on the last disk -
+		/// there would be no "outer" hits to complete a seed.
+		if (zM > 2700 or zM < -2700) {
+			continue;
+		}
 
     state.linCircleTop.clear();
     state.linCircleBottom.clear();
@@ -168,6 +174,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupSSS(
 			break;
 		}
 		
+		/// for the central SP, we veto locations on the last disk -
+		/// there would be no "outer" hits to complete a seed.
+		if (zM > 2700 or zM < -2700) {
+			continue;
+		}
+		
 		state.linCircleTop.clear();
 		state.linCircleBottom.clear();
 		
@@ -261,6 +273,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupPPP(
 		if (rM > rMiddleSPRange.max()) {
 			// break if SP are sorted in r
 			break;
+		}
+		
+		/// for the central SP, we veto locations on the last disk -
+		/// there would be no "outer" hits to complete a seed.
+		if (zM > 2700 or zM < -2700) {
+			continue;
 		}
 		
 		state.linCircleTop.clear();
