@@ -502,6 +502,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         seedConfirmation=seedConfirmation,
         centralSeedConfirmationRange=centralSeedConfirmationRange,
         forwardSeedConfirmationRange=forwardSeedConfirmationRange,
+        useDetailedDoubleMeasurementInfo=useDetailedDoubleMeasurementInfo,
         deltaR=(deltaRMin, deltaRMax),
         deltaRBottomSP=(deltaRMinSP, deltaRMaxBottomSP),
         deltaRTopSP=(deltaRMinSP, deltaRMaxTopSP),

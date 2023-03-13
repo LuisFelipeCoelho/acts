@@ -48,6 +48,7 @@ SeedFinderConfigArg = namedtuple(
         "seedConfirmation",
         "centralSeedConfirmationRange",
         "forwardSeedConfirmationRange",
+        "useDetailedDoubleMeasurementInfo",
         "deltaR",  # (min,max)
         "deltaRBottomSP",  # (min,max)
         "deltaRTopSP",  # (min,max)
@@ -56,7 +57,7 @@ SeedFinderConfigArg = namedtuple(
         "r",  # (min,max)
         "z",  # (min,max)
     ],
-    defaults=[None] * 20 + [(None, None)] * 7,
+    defaults=[None] * 21 + [(None, None)] * 7,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -473,6 +474,7 @@ def addStandardSeeding(
             impactMax=seedFinderConfigArg.impactMax,
             interactionPointCut=seedFinderConfigArg.interactionPointCut,
             arithmeticAverageCotTheta=seedFinderConfigArg.arithmeticAverageCotTheta,
+            useDetailedDoubleMeasurementInfo=seedFinderConfigArg.useDetailedDoubleMeasurementInfo,
             deltaZMax=seedFinderConfigArg.deltaZMax,
             maxPtScattering=seedFinderConfigArg.maxPtScattering,
             zBinEdges=seedFinderConfigArg.zBinEdges,

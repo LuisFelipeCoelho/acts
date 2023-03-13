@@ -68,6 +68,24 @@ class SeedFilter {
       CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector) const;
 
+	virtual void filterSeeds_2SpFixedPPP(
+																		InternalSpacePoint<external_spacepoint_t>& bottomSP,
+																		InternalSpacePoint<external_spacepoint_t>& middleSP,
+																		std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
+																		std::vector<float>& invHelixDiameterVec,
+																		std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
+																		CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
+																		candidates_collector) const;
+	
+	virtual void filterSeeds_2SpFixedSSS(
+																		InternalSpacePoint<external_spacepoint_t>& bottomSP,
+																		InternalSpacePoint<external_spacepoint_t>& middleSP,
+																		std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
+																		std::vector<float>& invHelixDiameterVec,
+																		std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
+																		CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
+																		candidates_collector) const;
+	
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param candidates_collector collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
@@ -80,6 +98,19 @@ class SeedFilter {
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 
+	virtual void filterSeeds_1SpFixedPPP(
+																		CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
+																		candidates_collector,
+																		std::size_t& numQualitySeeds,
+																		std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
+	const;
+	
+	virtual void filterSeeds_1SpFixedSSS(
+																		CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
+																		candidates_collector,
+																		std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
+	const;
+	
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param candidates collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
@@ -92,6 +123,20 @@ class SeedFilter {
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 
+	virtual void filterSeeds_1SpFixedPPP(
+																		std::vector<typename CandidatesForMiddleSp<
+																		InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
+																		std::size_t& numQualitySeeds,
+																		std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
+	const;
+	
+	virtual void filterSeeds_1SpFixedSSS(
+																		std::vector<typename CandidatesForMiddleSp<
+																		InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
+																		std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
+	const;
+	
+	
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
   const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {
     return m_experimentCuts;
