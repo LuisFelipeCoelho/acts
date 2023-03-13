@@ -9,6 +9,7 @@
 #include <cmath>
 #include <numeric>
 #include <type_traits>
+#include <algorithm>
 
 namespace Acts {
 
@@ -59,6 +60,23 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
                                             max_num_quality_seeds_per_spm);
 
   auto& middleSPs = grid.at(middleSPsIdx[0]);
+	
+	// neighbours
+	// clear previous results
+	state.bottomNeighbours.clear();
+	state.topNeighbours.clear();
+	
+	// Fill
+	// bottoms
+	for (const std::size_t idx : bottomSPsIdx) {
+		state.bottomNeighbours.emplace_back(
+																				grid, idx, middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
+	}
+	// tops
+	for (const std::size_t idx : topSPsIdx) {
+		state.topNeighbours.emplace_back(
+																		 grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
+	}
 
   for (auto& spM : middleSPs) {
     float rM = spM->radius();
@@ -84,7 +102,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 //    std::cout << "---> |MIDDLE| " << rM << std::endl;
 
     // Iterate over middle-top duplets
-    getCompatibleDoublets(options, grid, topSPsIdx, *spM.get(),
+    getCompatibleDoublets(options, grid, state.topNeighbours, *spM.get(),
                           state.compatTopSP, state.linCircleTop,
                           m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP,
                           false);
@@ -117,7 +135,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     //      }
 
     // Iterate over middle-bottom duplets
-    getCompatibleDoublets(options, grid, bottomSPsIdx, *spM.get(),
+    getCompatibleDoublets(options, grid, state.bottomNeighbours, *spM.get(),
                           state.compatBottomSP, state.linCircleBottom,
                           m_config.deltaRMinBottomSP,
                           m_config.deltaRMaxBottomSP, true);
@@ -162,6 +180,18 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupSSS(
 	
 	auto& middleSPs = grid.at(middleSPsIdx[0]);
 	
+	// Fill
+	// bottoms
+	for (const std::size_t idx : bottomSPsIdx) {
+		state.bottomNeighbours.emplace_back(
+																				grid, idx, middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
+	}
+	// tops
+	for (const std::size_t idx : topSPsIdx) {
+		state.topNeighbours.emplace_back(
+																		 grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
+	}
+	
 	for (auto& spM : middleSPs) {
 		float rM = spM->radius();
 		float zM = spM->z();
@@ -186,7 +216,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupSSS(
 		//    std::cout << "---> |MIDDLE| " << rM << std::endl;
 		
 		// Iterate over middle-top duplets
-		getCompatibleDoublets(options, grid, topSPsIdx, *spM.get(),
+		getCompatibleDoublets(options, grid, state.topNeighbours, *spM.get(),
 													state.compatTopSP, state.linCircleTop,
 													m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP,
 													false);
@@ -219,7 +249,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupSSS(
 		//      }
 		
 		// Iterate over middle-bottom duplets
-		getCompatibleDoublets(options, grid, bottomSPsIdx, *spM.get(),
+		getCompatibleDoublets(options, grid, state.bottomNeighbours, *spM.get(),
 													state.compatBottomSP, state.linCircleBottom,
 													m_config.deltaRMinBottomSP,
 													m_config.deltaRMaxBottomSP, true);
@@ -264,6 +294,18 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupPPP(
 	
 	auto& middleSPs = grid.at(middleSPsIdx[0]);
 	
+	// Fill
+	// bottoms
+	for (const std::size_t idx : bottomSPsIdx) {
+		state.bottomNeighbours.emplace_back(
+																				grid, idx, middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
+	}
+	// tops
+	for (const std::size_t idx : topSPsIdx) {
+		state.topNeighbours.emplace_back(
+																		 grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
+	}
+	
 	for (auto& spM : middleSPs) {
 		float rM = spM->radius();
 		
@@ -288,7 +330,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupPPP(
 		//    std::cout << "---> |MIDDLE| " << rM << std::endl;
 		
 		// Iterate over middle-top duplets
-		getCompatibleDoublets(options, grid, topSPsIdx, *spM.get(),
+		getCompatibleDoublets(options, grid, state.topNeighbours, *spM.get(),
 													state.compatTopSP, state.linCircleTop,
 													m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP,
 													false);
@@ -336,7 +378,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupPPP(
 		state.linCircleBottom.clear();
 		
 		// Iterate over middle-bottom duplets
-		getCompatibleDoublets(options, grid, bottomSPsIdx, *spM.get(),
+		getCompatibleDoublets(options, grid, state.bottomNeighbours, *spM.get(),
 													state.compatBottomSP, state.linCircleBottom,
 													m_config.deltaRMinBottomSP,
 													m_config.deltaRMaxBottomSP, true);
@@ -356,10 +398,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupPPP(
 }  // namespace Acts
 
 template <typename external_spacepoint_t, typename platform_t>
-template <typename sp_range_t, typename out_range_t>
+template <typename out_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const Acts::SeedFinderOptions& options,
-    Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t& otherSPsIdx,
+		Acts::SpacePointGrid<external_spacepoint_t>& grid,
+		boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
+		otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     out_range_t& outVec, std::vector<LinCircle>& linCircleVec,
     const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const {
@@ -384,10 +428,19 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float sinPhiM = yM / rM;
   float vIP = m_config.impactMax / (rM * rM);
 
-  for (auto otherSPIdx : otherSPsIdx) {
-    auto& otherSPs = grid.at(otherSPIdx);
-
-    for (auto& otherSP : otherSPs) {
+	for (auto& otherSPCol : otherSPsNeighbours) {
+		auto& otherSPs = grid.at(otherSPCol.index);
+		if (otherSPs.size() == 0) {
+			continue;
+		}
+		
+		/// we make a copy of the iterator here since we need it to remain
+		/// the same in the Neighbour object
+		auto min_itr = otherSPCol.itr;
+		bool found = false;
+		
+		for (; min_itr != otherSPs.end(); ++min_itr) {
+			auto& otherSP = *min_itr;
       const float rO = otherSP->radius();
       float deltaR = sign * (rO - rM);
 
@@ -413,6 +466,14 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
+			/// We update the iterator in the Neighbout object
+			/// that mean that we have changed the middle space point
+			/// and the lower bound has moved accordingly
+			if (not found) {
+				found = true;
+				otherSPCol.itr = min_itr;
+			}
+			
       const float zO = otherSP->z();
       float deltaZAbs = zO - zM;
       float deltaZ = sign * deltaZAbs;
