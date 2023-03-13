@@ -302,6 +302,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupPPP(
 //		}
 //		//      }
 		
+		SeedFilterState seedFilterState;
 		
 		size_t Ntm = 2;
 		if (rM > 140)
