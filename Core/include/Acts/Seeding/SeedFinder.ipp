@@ -62,7 +62,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
   for (auto& spM : middleSPs) {
     float rM = spM->radius();
-    float zM = spM->z();
 
     if (rM < rMiddleSPRange.min()) {
       continue;
@@ -72,6 +71,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       break;
     }
 		
+		float zM = spM->z();
 		/// for the central SP, we veto locations on the last disk -
 		/// there would be no "outer" hits to complete a seed.
 		if (zM > 2700 or zM < -2700) {
