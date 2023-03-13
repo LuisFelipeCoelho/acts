@@ -254,7 +254,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupPPP(
 	
 	for (auto& spM : middleSPs) {
 		float rM = spM->radius();
-		float zM = spM->z();
 		
 		if (rM < rMiddleSPRange.min()) {
 			continue;
@@ -265,7 +264,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupPPP(
 		}
 		
 		state.linCircleTop.clear();
-		state.linCircleBottom.clear();
 		
 		//    std::cout << "---> |MIDDLE| " << rM << std::endl;
 		
@@ -280,27 +278,43 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroupPPP(
 			continue;
 		}
 		
-		// apply cut on the number of top SP if seedConfirmation is true
-		SeedFilterState seedFilterState;
-		//      if (m_config.seedConfirmation) {
-		// check if middle SP is in the central or forward region
-		SeedConfirmationRangeConfig seedConfRange =
-		(zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-		 zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
-		? m_config.forwardSeedConfirmationRange
-		: m_config.centralSeedConfirmationRange;
-		// set the minimum number of top SP depending on whether the middle SP
-		// is in the central or forward region
-		seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
-		? seedConfRange.nTopForLargeR
-		: seedConfRange.nTopForSmallR;
-		// set max bottom radius for seed confirmation
-		seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
-		// continue if number of top SPs is smaller than minimum
-		if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
+		float zM = spM->z();
+		
+//		// apply cut on the number of top SP if seedConfirmation is true
+//		SeedFilterState seedFilterState;
+//		//      if (m_config.seedConfirmation) {
+//		// check if middle SP is in the central or forward region
+//		SeedConfirmationRangeConfig seedConfRange =
+//		(zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+//		 zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
+//		? m_config.forwardSeedConfirmationRange
+//		: m_config.centralSeedConfirmationRange;
+//		// set the minimum number of top SP depending on whether the middle SP
+//		// is in the central or forward region
+//		seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+//		? seedConfRange.nTopForLargeR
+//		: seedConfRange.nTopForSmallR;
+//		// set max bottom radius for seed confirmation
+//		seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+//		// continue if number of top SPs is smaller than minimum
+//		if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
+//			continue;
+//		}
+//		//      }
+		
+		
+		size_t Ntm = 2;
+		if (rM > 140)
+			Ntm = 1;
+		
+		seedFilterState.rMaxSeedConf = 140;
+		seedFilterState.nTopSeedConf = Ntm;
+		
+		if (state.compatTopSP.size() < Ntm) {
 			continue;
 		}
-		//      }
+		
+		state.linCircleBottom.clear();
 		
 		// Iterate over middle-bottom duplets
 		getCompatibleDoublets(options, grid, bottomSPsIdx, *spM.get(),
@@ -578,9 +592,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
             cosTheta * std::sqrt(1 + A0 * A0)};
 
         double rMTransf[3];
-//        if (!xyzCoordinateCheck(m_config, &spM, positionMiddle, rMTransf)) {
-//          continue;
-//        }
+        if (!xyzCoordinateCheck(m_config, &spM, positionMiddle, rMTransf)) {
+          continue;
+        }
 
         // coordinate transformation and checks for bottom spacepoint
         float B0 = 2. * (Vb - A0 * Ub);
@@ -593,9 +607,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         auto spB = state.compatBottomSP[b];
         double rBTransf[3];
-//        if (!xyzCoordinateCheck(m_config, spB, positionBottom, rBTransf)) {
-//          continue;
-//        }
+        if (!xyzCoordinateCheck(m_config, spB, positionBottom, rBTransf)) {
+          continue;
+        }
 
         // coordinate transformation and checks for top spacepoint
         float Ct = 1. - B0 * lt.y;
@@ -607,9 +621,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         auto spT = state.compatTopSP[t];
         double rTTransf[3];
-//        if (!xyzCoordinateCheck(m_config, spT, positionTop, rTTransf)) {
-//          continue;
-//        }
+        if (!xyzCoordinateCheck(m_config, spT, positionTop, rTTransf)) {
+          continue;
+        }
 
         // bottom and top coordinates in the spM reference frame
         float xB = rBTransf[0] - rMTransf[0];
