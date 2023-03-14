@@ -99,6 +99,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
     }
+		
+		/// for the central SP, we veto locations on the last disk -
+		/// there would be no "outer" hits to complete a seed.
+		if (zM > 2700 or zM < -2700) {
+			continue;
+		}
 
     getCompatibleDoublets(options, topSPs, *spM, state.compatTopSP,
                           m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP,
