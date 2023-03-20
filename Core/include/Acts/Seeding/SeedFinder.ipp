@@ -279,32 +279,20 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-    const float zO = otherSP->z();
-    float deltaZ = sign * (zO - zM);
+      // ratio Z/R (forward angle) of space point duplet
+      float cotTheta = deltaZ / deltaR;
+      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+        //std::cout << "cotTheta " << std::endl; 
+        continue;
+      }
 
-    //if (rO > 667.4552 and rO < 667.4553) {
-    //  std::cout << "std::abs(dz) " << std::abs(deltaZ) << " m_dzmaxSSS " << m_config.deltaZMax << " zT " << zO << std::endl;	
-    //}   
- 
-    if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-      //std::cout << "std::abs(dz) " << std::abs(deltaZ) << " m_dzmaxSSS " << m_config.deltaZMax << std::endl;
-      continue;
-    }
-
-    // ratio Z/R (forward angle) of space point duplet
-    float cotTheta = deltaZ / deltaR;
-    if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
-      //std::cout << "cotTheta " << std::endl; 
-      continue;
-    }
-
-    // check if duplet origin on z axis within collision region
-    float zOrigin = zM - rM * cotTheta;
-    if (zOrigin < m_config.collisionRegionMin ||
-        zOrigin > m_config.collisionRegionMax) {
-      //std::cout << "std::abs(z0) " << std::abs(zOrigin) << " zmax " << m_config.collisionRegionMax << " " << m_config.collisionRegionMin << std::endl;
-      continue;
-    }
+      // check if duplet origin on z axis within collision region
+      float zOrigin = zM - rM * cotTheta;
+      if (zOrigin < m_config.collisionRegionMin ||
+          zOrigin > m_config.collisionRegionMax) {
+        //std::cout << "std::abs(z0) " << std::abs(zOrigin) << " zmax " << m_config.collisionRegionMax << " " << m_config.collisionRegionMin << std::endl;
+        continue;
+      }
 
       const float deltaX = otherSP->x() - xM;
       const float deltaY = otherSP->y() - yM;
