@@ -225,11 +225,17 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // if r-distance is too small, try next SP in bin
       if (deltaR < deltaRMinSP) {
+        if (isBottom) {
+          break;
+        }
         continue;
       }
 
       // if r-distance is too big, try next SP in bin
       if (deltaR > deltaRMaxSP) {
+        if (not isBottom) {
+          break;
+        }
         continue;
       }
 
