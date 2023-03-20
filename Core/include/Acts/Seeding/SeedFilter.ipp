@@ -27,13 +27,15 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 // return vector must contain weight of each seed
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
-    InternalSpacePoint<external_spacepoint_t>& bottomSP,
-    InternalSpacePoint<external_spacepoint_t>& middleSP,
-    std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
+    Acts::SpacePointData& spacePointData,
+    const InternalSpacePoint<external_spacepoint_t>& bottomSP,
+    const InternalSpacePoint<external_spacepoint_t>& middleSP,
+    const std::vector<const InternalSpacePoint<external_spacepoint_t>*>&
+        topSpVec,
     const std::vector<float>& invHelixDiameterVec,
     const std::vector<float>& impactParametersVec,
     SeedFilterState& seedFilterState,
-    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
+    CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector) const {
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
@@ -83,9 +85,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
     // use deltaR instead of top radius
-    float currentTopR = m_cfg.useDeltaRorTopRadius
-                            ? topSpVec[topSPIndex]->deltaR()
-                            : topSpVec[topSPIndex]->radius();
+    float currentTopR =
+        m_cfg.useDeltaRorTopRadius
+            ? spacePointData.deltaR(topSpVec[topSPIndex]->index())
+            : topSpVec[topSPIndex]->radius();
     float impact = impactParametersVec[topSPIndex];
 
     float weight = -(impact * m_cfg.impactWeightFactor);
@@ -97,9 +100,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
 
-      float otherTopR = m_cfg.useDeltaRorTopRadius
-                            ? topSpVec[compatibleTopSPIndex]->deltaR()
-                            : topSpVec[compatibleTopSPIndex]->radius();
+      float otherTopR =
+          m_cfg.useDeltaRorTopRadius
+              ? spacePointData.deltaR(topSpVec[compatibleTopSPIndex]->index())
+              : topSpVec[compatibleTopSPIndex]->radius();
 
       // curvature difference within limits?
       if (invHelixDiameterVec[compatibleTopSPIndex] < lowerLimitCurv) {
@@ -183,14 +187,14 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < bottomSP.quality() and weight < middleSP.quality() and
-          weight < topSpVec[topSPIndex]->quality()) {
+      if (weight < spacePointData.quality(bottomSP.index()) and
+          weight < spacePointData.quality(middleSP.index()) and
+          weight < spacePointData.quality(topSpVec[topSPIndex]->index())) {
         continue;
       }
-
       if (deltaSeedConf > 0) {
-        // if we have not yet reached our max number of quality seeds we add the
-        // new seed to outCont
+        // if we have not yet reached our max number of quality seeds we add
+        // the new seed to outCont
 
         // Internally, "push" will also checks the max number of quality seeds
         // for a middle sp.
@@ -210,8 +214,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       }
     } else {
       // keep the normal behavior without seed quality confirmation
-      // if we have not yet reached our max number of seeds we add the new seed
-      // to outCont
+      // if we have not yet reached our max number of seeds we add the new
+      // seed to outCont
 
       candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
                                 weight, zOrigin, false);
@@ -225,8 +229,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   // lower quality seeds can be accepted
   if (m_cfg.seedConfirmation and maxWeightSeed and
       seedFilterState.numQualitySeeds == 0) {
-    // if we have not yet reached our max number of seeds we add the new seed to
-    // outCont
+    // if we have not yet reached our max number of seeds we add the new seed
+    // to outCont
 
     candidates_collector.push(bottomSP, middleSP, *topSpVec[maxWeightSeedIndex],
                               weightMax, zOrigin, false);
@@ -241,7 +245,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
+    Acts::SpacePointData& spacePointData,
+    CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector,
     std::size_t& numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
@@ -250,13 +255,16 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // this collection is alredy sorted
   // higher weights first
   auto extended_collection = candidates_collector.storage();
-  filterSeeds_1SpFixed(extended_collection, numQualitySeeds, outIt);
+  filterSeeds_1SpFixed(spacePointData, extended_collection, numQualitySeeds,
+                       outIt);
 }
 
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
+    Acts::SpacePointData& spacePointData,
     std::vector<typename CandidatesForMiddleSp<
-        InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
+        const InternalSpacePoint<external_spacepoint_t>>::value_type>&
+        candidates,
     std::size_t& numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {
@@ -274,8 +282,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // ordering by weight by filterSeeds_2SpFixed means these are the lowest
   // weight seeds
   unsigned int numTotalSeeds = 0;
-  for (auto& [bottom, medium, top, bestSeedQuality, zOrigin, qualitySeed] :
-       candidates) {
+  for (const auto& [bottom, medium, top, bestSeedQuality, zOrigin,
+                    qualitySeed] : candidates) {
     // stop if we reach the maximum number of seeds
     if (numTotalSeeds >= maxSeeds) {
       break;
@@ -286,17 +294,17 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
       if (numQualitySeeds > 0 and not qualitySeed) {
         continue;
       }
-      if (bestSeedQuality < bottom->quality() and
-          bestSeedQuality < medium->quality() and
-          bestSeedQuality < top->quality()) {
+      if (bestSeedQuality < spacePointData.quality(bottom->index()) and
+          bestSeedQuality < spacePointData.quality(medium->index()) and
+          bestSeedQuality < spacePointData.quality(top->index())) {
         continue;
       }
     }
 
     // set quality of seed components
-    bottom->setQuality(bestSeedQuality);
-    medium->setQuality(bestSeedQuality);
-    top->setQuality(bestSeedQuality);
+    spacePointData.setQuality(bottom->index(), bestSeedQuality);
+    spacePointData.setQuality(medium->index(), bestSeedQuality);
+    spacePointData.setQuality(top->index(), bestSeedQuality);
 
     outIt = Seed<external_spacepoint_t>{bottom->sp(), medium->sp(), top->sp(),
                                         zOrigin, bestSeedQuality};
