@@ -16,6 +16,7 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
+#include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include <array>
 #include <list>
@@ -83,8 +84,10 @@ class SeedFinder {
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
       const Acts::SeedFinderOptions& options, SeedingState& state,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
+      const sp_range_t& bottomSPs, const std::size_t middleSPs,
+      const sp_range_t& topSPs,
       const Acts::Range1D<float>& rMiddleSPRange) const;
 
   /// @brief Compatibility method for the new-style seed finding API.
@@ -107,13 +110,16 @@ class SeedFinder {
   /// @returns a vector of seeds.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      const Acts::SeedFinderOptions& options, sp_range_t bottomSPs,
-      sp_range_t middleSPs, sp_range_t topSPs) const;
+      const Acts::SeedFinderOptions& options,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const sp_range_t& bottomSPs, const std::size_t middleSPs,
+      const sp_range_t& topSPs) const;
 
  private:
   template <typename sp_range_t, typename out_range_t>
   void getCompatibleDoublets(
-      const Acts::SeedFinderOptions& options, sp_range_t& otherSPs,
+      const Acts::SeedFinderOptions& options,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t& otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
       bool isBottom) const;
