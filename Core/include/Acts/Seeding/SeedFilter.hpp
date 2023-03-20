@@ -28,6 +28,12 @@ struct SeedFilterState {
   size_t nTopSeedConf = 0;
   // number of high quality seeds in seed confirmation
   std::size_t numQualitySeeds = 0;
+
+  // radius of bottom component of seed that is used to define the number of
+  // compatible top required
+  float rMaxSeedConf =
+      std::numeric_limits<float>::max();  // Acts::UnitConstants::mm
+
   // number of seeds that did not pass the quality confirmation but were still
   // accepted, if quality confirmation is not used this is the total number of
   // seeds

@@ -71,11 +71,6 @@ struct SeedFinderConfig {
   // difference in tan(theta)
   bool arithmeticAverageCotTheta = false;
 
-  // radius of bottom component of seed that is used to define the number of
-  // compatible top required
-  float rMaxSeedConf =
-      std::numeric_limits<float>::max();  // Acts::UnitConstants::mm
-
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
