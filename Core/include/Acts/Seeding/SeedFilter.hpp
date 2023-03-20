@@ -27,6 +27,7 @@ struct SeedFilterState {
   float zOrigin = 0;
   // number of minimum top SPs in seed confirmation
   size_t nTopSeedConf = 0;
+
   // number of high quality seeds in seed confirmation
   std::size_t numQualitySeeds = 0;
 

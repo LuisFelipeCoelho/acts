@@ -87,6 +87,13 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     float rM = spM->radius();
     float zM = spM->z();
 
+    // DELETE THIS!!!
+    //float R = rM;
+    //if ((R > 536.79 or R < 536.75) and (R > 612.7  or R < 612.698) and (R > 454.929 or R < 454.927) and (R > 531.88 or R < 531.878) ) {continue;}
+    //if (R > 186.639 or R < 186.635) {continue;}
+
+    //std::cout << "rM " << rM << std::endl;
+
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
       if (rM < rMiddleSPRange.min()) {
@@ -127,17 +134,21 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
     }
-
+		
     /// for the central SP, we veto locations on the last disk -
     /// there would be no "outer" hits to complete a seed.
     if (zM > 2700 or zM < -2700) {
-      continue;
+	continue;
     }
 
     getCompatibleDoublets(state.spacePointData, options, grid,
                           state.topNeighbours, *spM.get(), state.linCircleTop,
                           state.compatTopSP, m_config.deltaRMinTopSP,
                           m_config.deltaRMaxTopSP, false);
+
+    //std::cout << "nt: " << state.compatTopSP.size() << std::endl;
+
+    //std::cout << "== Bot ==" << std::endl;
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -170,6 +181,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         state.spacePointData, options, grid, state.bottomNeighbours, *spM.get(),
         state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
         m_config.deltaRMaxBottomSP, true);
+
+    //std::cout << "nb: " << state.compatBottomSP.size() << std::endl;
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
@@ -266,18 +279,32 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-      // ratio Z/R (forward angle) of space point duplet
-      float cotTheta = deltaZ / deltaR;
-      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
-        continue;
-      }
+    const float zO = otherSP->z();
+    float deltaZ = sign * (zO - zM);
 
-      // check if duplet origin on z axis within collision region
-      float zOrigin = zM - rM * cotTheta;
-      if (zOrigin < m_config.collisionRegionMin ||
-          zOrigin > m_config.collisionRegionMax) {
-        continue;
-      }
+    //if (rO > 667.4552 and rO < 667.4553) {
+    //  std::cout << "std::abs(dz) " << std::abs(deltaZ) << " m_dzmaxSSS " << m_config.deltaZMax << " zT " << zO << std::endl;	
+    //}   
+ 
+    if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+      //std::cout << "std::abs(dz) " << std::abs(deltaZ) << " m_dzmaxSSS " << m_config.deltaZMax << std::endl;
+      continue;
+    }
+
+    // ratio Z/R (forward angle) of space point duplet
+    float cotTheta = deltaZ / deltaR;
+    if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+      //std::cout << "cotTheta " << std::endl; 
+      continue;
+    }
+
+    // check if duplet origin on z axis within collision region
+    float zOrigin = zM - rM * cotTheta;
+    if (zOrigin < m_config.collisionRegionMin ||
+        zOrigin > m_config.collisionRegionMax) {
+      //std::cout << "std::abs(z0) " << std::abs(zOrigin) << " zmax " << m_config.collisionRegionMax << " " << m_config.collisionRegionMin << std::endl;
+      continue;
+    }
 
       const float deltaX = otherSP->x() - xM;
       const float deltaY = otherSP->y() - yM;
@@ -415,6 +442,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
+    float sigmaSquaredSPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -472,6 +500,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         // protects against division by 0
         float dU = lt.U - Ub;
         if (dU == 0.) {
+ 	  //std::cout << "dU 1 " << std::endl;
           continue;
         }
         // A and B are evaluated as a function of the circumference parameters
@@ -488,6 +517,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         double rMTransf[3];
         if (!xyzCoordinateCheck(spacePointData, m_config, spM, positionMiddle,
                                 rMTransf)) {
+	  //std::cout << "c1 " << std::endl;
           continue;
         }
 
@@ -504,6 +534,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         double rBTransf[3];
         if (!xyzCoordinateCheck(spacePointData, m_config, *spB, positionBottom,
                                 rBTransf)) {
+	  //std::cout << "c2 " << std::endl;
           continue;
         }
 
@@ -519,7 +550,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         double rTTransf[3];
         if (!xyzCoordinateCheck(spacePointData, m_config, *spT, positionTop,
                                 rTTransf)) {
-          continue;
+      	    //std::cout << "c3 " << std::endl;
+	    continue;
         }
 
         // bottom and top coordinates in the spM reference frame
@@ -564,6 +596,12 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
       float deltaCotTheta = cotThetaB - cotThetaT;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+
+
+      //std::cout << "Tzb " << cotThetaB << " Tzt " << cotThetaT << std::endl;
+      //std::cout << "error2 " << error2  << std::endl;
+      //std::cout << "sigmaSquaredSPtDependent " << iSinTheta2 << " * " << options.sigmapT2perRadius << std::endl;
+
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
       // between slopes, and comparing to the squared uncertainty in this
@@ -575,7 +613,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
-        // skip top SPs based on cotTheta sorting when producing triplets
+         //std::cout << "deltaCotTheta2 1F" << std::endl;
+	 // skip top SPs based on cotTheta sorting when producing triplets
         if (not m_config.skipPreviousTopSP) {
           continue;
         }
@@ -598,6 +637,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         dU = ut - ub;
         // protects against division by 0
         if (dU == 0.) {
+	  std::cout << "dU " << std::endl;
           continue;
         }
         A = (vt - vb) / dU;
@@ -622,32 +662,35 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // calculated radius must not be smaller than minimum radius
 
       if (S2 < B2 * options.minHelixDiameter2) {
-        continue;
+      	  //std::cout << "S2 " << S2 << " " << B2 << " " << 1/options.minHelixDiameter2 << std::endl;
+	  continue;
       }
 
       // refinement of the cut on the compatibility between the r-z slope of
       // the two seed segments using a scattering term scaled by the actual
       // measured pT (p2scatterSigma)
       float iHelixDiameter2 = B2 / S2;
-      // calculate scattering for p(T) calculated from seed curvature
-      float pT2scatterSigma = iHelixDiameter2 * options.sigmapT2perRadius;
+      // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
+      // from rad to deltaCotTheta
+      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredSPtDependent;
+      if (!std::isinf(m_config.maxPtScattering)) {
       // if pT > maxPtScattering, calculate allowed scattering angle using
       // maxPtScattering instead of pt.
       float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
       if (pT > m_config.maxPtScattering) {
-        float pTscatterSigma = (m_config.highland / m_config.maxPtScattering) *
-                               m_config.sigmaScattering;
-        pT2scatterSigma = pTscatterSigma * pTscatterSigma;
+         float pTscatterSigma =
+               (m_config.highland / m_config.maxPtScattering) *	m_config.sigmaScattering;
+         p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
+         }
       }
-      // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
-      // from rad to deltaCotTheta
-      float p2scatterSigma = pT2scatterSigma * iSinTheta2;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
+      //std::cout << "deltaCotTheta2 " << deltaCotTheta2 << " > " << error2 << " + " << p2scatterSigma << std::endl;
+      //std::cout << " cotThetaB - cotThetaT " << cotThetaB << " " << cotThetaT << std::endl;
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (not m_config.skipPreviousTopSP) {
+	if (not m_config.skipPreviousTopSP) {
           continue;
         }
-        if (cotThetaB - cotThetaT < 0) {
+	if (cotThetaB - cotThetaT < 0) {
           break;
         }
         t0 = index_t;
@@ -669,13 +712,6 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // positive/negative in phi
       state.curvatures.push_back(B / std::sqrt(S2));
       state.impactParameters.push_back(Im);
-
-      // evaluate eta and pT of the seed
-      float cotThetaAvg = std::sqrt(cotThetaAvg2);
-      float theta = std::atan(1. / cotThetaAvg);
-      float eta = -std::log(std::tan(0.5 * theta));
-      state.etaVec.push_back(eta);
-      state.ptVec.push_back(pT);
     }  // loop on tops
 
     // continue if number of top SPs is smaller than minimum required for filter
@@ -683,11 +719,16 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       continue;
     }
 
+    //std::cout << "|FILTER MIDDLE + BOTTOM| " << spM.radius() << " " << (*state.compatBottomSP[b]).radius() << std::endl;
+
     m_config.seedFilter->filterSeeds_2SpFixed(
         state.spacePointData, *state.compatBottomSP[b], spM, state.topSpVec,
         state.curvatures, state.impactParameters, seedFilterState,
         state.candidates_collector);
   }  // loop on bottoms
+
+  //std::cout << "-------> rM = " << rM << std::endl;
+  //std::cout << "|Seeds Map| nSeedsQ, nSeeds: " << seedFilterState.numQualitySeeds << " " << seedFilterState.numSeeds  << std::endl;
 }
 
 template <typename external_spacepoint_t, typename platform_t>

@@ -10,6 +10,8 @@
 #include <numeric>
 #include <utility>
 
+#include <iostream>
+
 namespace Acts {
 // constructor
 template <typename external_spacepoint_t>
@@ -104,6 +106,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
           m_cfg.useDeltaRorTopRadius
               ? spacePointData.deltaR(topSpVec[compatibleTopSPIndex]->index())
               : topSpVec[compatibleTopSPIndex]->radius();
+
+      //std::cout << std::endl;
+      //std::cout << "----------------" << std::endl;
+      //std::cout << "(i, j): " << currentTopR << ", " << otherTopR << std::endl;
 
       // curvature difference within limits?
       if (invHelixDiameterVec[compatibleTopSPIndex] < lowerLimitCurv) {
