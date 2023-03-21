@@ -232,6 +232,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
   size_t idx = 0;
 
+  float vIPAbs;
+  if (m_config.interactionPointCut) {
+   vIPAbs = m_config.impactMax / (rM * rM);
+  }
+
   for (auto& otherSPCol : otherSPsNeighbours) {
     const auto& otherSPs = grid.at(otherSPCol.index);
     if (otherSPs.size() == 0) {
@@ -625,7 +630,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         dU = ut - ub;
         // protects against division by 0
         if (dU == 0.) {
-	  std::cout << "dU " << std::endl;
+	  //std::cout << "dU " << std::endl;
           continue;
         }
         A = (vt - vb) / dU;
@@ -662,10 +667,10 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // from rad to deltaCotTheta
       float p2scatterSigma = iHelixDiameter2 * sigmaSquaredSPtDependent;
       if (!std::isinf(m_config.maxPtScattering)) {
-      // if pT > maxPtScattering, calculate allowed scattering angle using
-      // maxPtScattering instead of pt.
-      float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
-      if (pT > m_config.maxPtScattering) {
+       // if pT > maxPtScattering, calculate allowed scattering angle using
+       // maxPtScattering instead of pt.
+       float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+       if (pT > m_config.maxPtScattering) {
          float pTscatterSigma =
                (m_config.highland / m_config.maxPtScattering) *	m_config.sigmaScattering;
          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
