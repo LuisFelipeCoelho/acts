@@ -47,6 +47,12 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
                                const external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
+template <typename external_spacepoint_t>
+LinCircle transformCoordinates(Acts::SpacePointData& spacePointData,
+                               const external_spacepoint_t& sp,
+                               const int bottomSign,
+                               const std::array<float, 8>& transformVariables);
+
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
 ///

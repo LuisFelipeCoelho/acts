@@ -134,7 +134,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       continue;
     }
 
-    getCompatibleDoublets(options, grid, state.topNeighbours, *spM.get(),
+    getCompatibleDoublets(state.spacePointData, options, grid,
+                          state.topNeighbours, *spM.get(), state.linCircleTop,
                           state.compatTopSP, m_config.deltaRMinTopSP,
                           m_config.deltaRMaxTopSP, false);
 
@@ -165,9 +166,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    getCompatibleDoublets(options, grid, state.bottomNeighbours, *spM.get(),
-                          state.compatBottomSP, m_config.deltaRMinBottomSP,
-                          m_config.deltaRMaxBottomSP, true);
+    getCompatibleDoublets(
+        state.spacePointData, options, grid, state.bottomNeighbours, *spM.get(),
+        state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
+        m_config.deltaRMaxBottomSP, true);
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
@@ -189,23 +191,33 @@ template <typename external_spacepoint_t, typename platform_t>
 template <typename out_range_t>
 inline void
 SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
+    Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderOptions& options,
     const Acts::SpacePointGrid<external_spacepoint_t>& grid,
     boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
         otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
-    out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
-    bool isBottom) const {
+    std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
+    const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const {
   const int sign = isBottom ? -1 : 1;
 
   outVec.clear();
+  linCircleVec.clear();
 
   const float& rM = mediumSP.radius();
   const float& xM = mediumSP.x();
   const float& yM = mediumSP.y();
   const float& zM = mediumSP.z();
-  const float ratio_xM_rM = xM / rM;
-  const float ratio_yM_rM = yM / rM;
+  const float& varianceRM = mediumSP.varianceR();
+  const float& varianceZM = mediumSP.varianceZ();
+  const float cosPhiM = xM / rM;
+  const float sinPhiM = yM / rM;
+  float vIPAbs;
+  if (not m_config.interactionPointCut) {
+    vIPAbs = m_config.impactMax / (rM * rM);
+  }
+
+  size_t idx = 0;
 
   for (auto& otherSPCol : otherSPsNeighbours) {
     const auto& otherSPs = grid.at(otherSPCol.index);
@@ -248,7 +260,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
 
       const float zO = otherSP->z();
-      float deltaZ = sign * (zO - zM);
+      float deltaZAbs = zO - zM;
+      float deltaZ = sign * deltaZAbs;
       if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
         continue;
       }
@@ -266,18 +279,31 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
+      const float deltaX = otherSP->x() - xM;
+      const float deltaY = otherSP->y() - yM;
+
+      const float xVal = deltaX * cosPhiM + deltaY * sinPhiM;
+      const float yVal = deltaY * cosPhiM - deltaX * sinPhiM;
+
       if (not m_config.interactionPointCut) {
+        // transform coordinates and fill output vector
+        linCircleVec[idx] =
+            transformCoordinates(spacePointData, *otherSP, sign,
+                                 {deltaX, deltaY, deltaZAbs, varianceRM,
+                                  varianceZM, xVal, yVal, zOrigin});
         outVec.push_back(otherSP.get());
+        idx++;
         continue;
       }
 
-      const float xVal =
-          (otherSP->x() - xM) * ratio_xM_rM + (otherSP->y() - yM) * ratio_yM_rM;
-      const float yVal =
-          (otherSP->y() - yM) * ratio_xM_rM - (otherSP->x() - xM) * ratio_yM_rM;
-
       if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
+        // transform coordinates and fill output vector
+        linCircleVec[idx] =
+            transformCoordinates(spacePointData, *otherSP, sign,
+                                 {deltaX, deltaY, deltaZAbs, varianceRM,
+                                  varianceZM, xVal, yVal, zOrigin});
         outVec.push_back(otherSP.get());
+        idx++;
         continue;
       }
 
@@ -290,9 +316,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // in the rotated frame the interaction point is positioned at x = -rM
       // and y ~= impactParam
       const float uIP = -1. / rM;
-      float vIP = m_config.impactMax / (rM * rM);
+      float vIP;
       if (sign * yVal > 0.) {
-        vIP = -vIP;
+        vIP = -vIPAbs;
+      } else {
+        vIP = vIPAbs;
       }
       // we can obtain aCoef as the slope dv/du of the linear function,
       // estimated using du and dv between the two SP bCoef is obtained by
@@ -305,7 +333,14 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
         continue;
       }
+
+      // transform coordinates and fill output vector
+      linCircleVec[idx] =
+          transformCoordinates(spacePointData, *otherSP, sign,
+                               {deltaX, deltaY, deltaZAbs, varianceRM,
+                                varianceZM, xVal, yVal, zOrigin});
       outVec.push_back(otherSP.get());
+      idx++;
     }
   }
 }
@@ -320,15 +355,16 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
-  state.linCircleBottom.clear();
-  state.linCircleTop.clear();
+  //  state.linCircleBottom.clear();
+  //  state.linCircleTop.clear();
 
   std::size_t numTopSP = state.compatTopSP.size();
 
-  transformCoordinates(state.spacePointData, state.compatBottomSP, spM, true,
-                       state.linCircleBottom);
-  transformCoordinates(state.spacePointData, state.compatTopSP, spM, false,
-                       state.linCircleTop);
+  //  transformCoordinates(state.spacePointData, state.compatBottomSP, spM,
+  //  true,
+  //                       state.linCircleBottom);
+  //  transformCoordinates(state.spacePointData, state.compatTopSP, spM, false,
+  //                       state.linCircleTop);
 
   // sort: make index vector
   std::vector<std::size_t> sorted_bottoms(state.linCircleBottom.size());

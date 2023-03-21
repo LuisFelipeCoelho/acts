@@ -61,6 +61,39 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
+inline LinCircle transformCoordinates(
+    Acts::SpacePointData& spacePointData, const external_spacepoint_t& sp,
+    const int bottomSign, const std::array<float, 8>& transformVariables) {
+  // The computation inside this function is exactly identical to that in the
+  // vectorized version of this function, except that it operates on a single
+  // spacepoint. Please see the other version of this function for more
+  // detailed comments.
+
+  auto [deltaX, deltaY, deltaZ, varR, varZ, xNewFrame, yNewFrame, zOrigin] =
+      transformVariables;
+
+  float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
+  float iDeltaR = std::sqrt(iDeltaR2);
+  float cot_theta = deltaZ * iDeltaR * bottomSign;
+  LinCircle l{};
+  l.cotTheta = cot_theta;
+  l.Zo = zOrigin;
+  l.iDeltaR = iDeltaR;
+  l.U = xNewFrame * iDeltaR2;
+  l.V = yNewFrame * iDeltaR2;
+  l.Er = ((varZ + sp.varianceZ()) +
+          (cot_theta * cot_theta) * (varR + sp.varianceR())) *
+         iDeltaR2;
+  l.x = xNewFrame;
+  l.y = yNewFrame;
+
+  spacePointData.setDeltaR(
+      sp.index(), std::sqrt((xNewFrame * xNewFrame) + (yNewFrame * yNewFrame) +
+                            (deltaZ * deltaZ)));
+  return l;
+}
+
+template <typename external_spacepoint_t>
 inline void transformCoordinates(
     Acts::SpacePointData& spacePointData,
     const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
