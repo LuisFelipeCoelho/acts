@@ -230,13 +230,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     vIPAbs = m_config.impactMax / (rM * rM);
   }
 
-  size_t idx = 0;
-
-  float vIPAbs;
-  if (m_config.interactionPointCut) {
-   vIPAbs = m_config.impactMax / (rM * rM);
-  }
-
   for (auto& otherSPCol : otherSPsNeighbours) {
     const auto& otherSPs = grid.at(otherSPCol.index);
     if (otherSPs.size() == 0) {
@@ -307,23 +300,21 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       if (not m_config.interactionPointCut) {
         // transform coordinates and fill output vector
-        linCircleVec[idx] =
+        linCircleVec.push_back(
             transformCoordinates(spacePointData, *otherSP, sign,
                                  {deltaX, deltaY, deltaZAbs, varianceRM,
-                                  varianceZM, xVal, yVal, zOrigin});
+                                  varianceZM, xVal, yVal, zOrigin}));
         outVec.push_back(otherSP.get());
-        idx++;
         continue;
       }
 
       if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
         // transform coordinates and fill output vector
-        linCircleVec[idx] =
-            transformCoordinates(spacePointData, *otherSP, sign,
-                                 {deltaX, deltaY, deltaZAbs, varianceRM,
-                                  varianceZM, xVal, yVal, zOrigin});
+        linCircleVec.push_back(
+		transformCoordinates(spacePointData, *otherSP, sign,
+                                {deltaX, deltaY, deltaZAbs, varianceRM,
+                                  varianceZM, xVal, yVal, zOrigin}));
         outVec.push_back(otherSP.get());
-        idx++;
         continue;
       }
 
@@ -336,7 +327,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // in the rotated frame the interaction point is positioned at x = -rM
       // and y ~= impactParam
       const float uIP = -1. / rM;
-      float vIP;
       if (sign * yVal > 0.) {
         vIP = -vIPAbs;
       } else {
@@ -355,12 +345,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
 
       // transform coordinates and fill output vector
-      linCircleVec[idx] =
+      linCircleVec.push_back(
           transformCoordinates(spacePointData, *otherSP, sign,
                                {deltaX, deltaY, deltaZAbs, varianceRM,
-                                varianceZM, xVal, yVal, zOrigin});
+                                varianceZM, xVal, yVal, zOrigin}));
       outVec.push_back(otherSP.get());
-      idx++;
     }
   }
 }
@@ -375,15 +364,14 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
-  //  state.linCircleBottom.clear();
-  //  state.linCircleTop.clear();
+  //state.linCircleBottom.clear();
+  //state.linCircleTop.clear();
 
   std::size_t numTopSP = state.compatTopSP.size();
 
-  //  transformCoordinates(state.spacePointData, state.compatBottomSP, spM,
-  //  true,
-  //                       state.linCircleBottom);
-  //  transformCoordinates(state.spacePointData, state.compatTopSP, spM, false,
+  //transformCoordinates(state.spacePointData, state.compatBottomSP, spM,
+  //     true,state.linCircleBottom);
+  //transformCoordinates(state.spacePointData, state.compatTopSP, spM, false,
   //                       state.linCircleTop);
 
   // sort: make index vector
