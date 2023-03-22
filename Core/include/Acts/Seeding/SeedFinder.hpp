@@ -137,7 +137,7 @@ class SeedFinder {
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
       const float& deltaRMinSP, const float& deltaRMaxSP) const;
 
-	template <typename out_range_t>
+  template <typename out_range_t>
   void getCompatibleDoubletsBot(
       Acts::SpacePointData& spacePointData,
       const Acts::SeedFinderOptions& options,
