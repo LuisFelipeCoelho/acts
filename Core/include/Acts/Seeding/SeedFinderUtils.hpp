@@ -16,7 +16,6 @@
 namespace Acts {
 /// @brief A partial description of a circle in u-v space.
 struct LinCircle {
-  float Zo;
   float cotTheta;
   float iDeltaR;
   float Er;
@@ -24,8 +23,6 @@ struct LinCircle {
   float V;
   float x;
   float y;
-  float z;
-  float r;
 };
 
 /// @brief Transform two spacepoints to a u-v space circle.
@@ -47,10 +44,11 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
                                const external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
-template <typename external_spacepoint_t>
-LinCircle transformCoordinates(Acts::SpacePointData& spacePointData,
-                               const external_spacepoint_t& sp,
-                               const std::array<float, 8>& transformVariables);
+/// @brief Fills LineCircle object for a SP dublet in u-v frame.
+/////
+///// @param[in] transformVariables Vector contaning LineCircle variables
+inline LinCircle fillLineCircle(
+    const std::array<float, 7>& lineCircleVariables);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
