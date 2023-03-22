@@ -226,7 +226,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float cosPhiM = xM / rM;
   const float sinPhiM = yM / rM;
   float vIPAbs;
-  if (not m_config.interactionPointCut) {
+  if (m_config.interactionPointCut) {
     vIPAbs = m_config.impactMax / (rM * rM);
   }
 
@@ -298,40 +298,75 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       const float xVal = deltaX * cosPhiM + deltaY * sinPhiM;
       const float yVal = deltaY * cosPhiM - deltaX * sinPhiM;
 
-      if (not m_config.interactionPointCut) {
-        // transform coordinates and fill output vector
-        linCircleVec.push_back(
-            transformCoordinates(spacePointData, *otherSP, sign,
-                                 {deltaX, deltaY, deltaZAbs, varianceRM,
-                                  varianceZM, xVal, yVal, zOrigin}));
-        outVec.push_back(otherSP.get());
-        continue;
-      }
-
-      if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
-        // transform coordinates and fill output vector
-        linCircleVec.push_back(
-		transformCoordinates(spacePointData, *otherSP, sign,
-                                {deltaX, deltaY, deltaZAbs, varianceRM,
-                                  varianceZM, xVal, yVal, zOrigin}));
-        outVec.push_back(otherSP.get());
-        continue;
-      }
+      const float deltaR2 = (xVal * xVal + yVal * yVal);
+      const float iDeltaR2 = 1. / deltaR2;
 
       // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
       // circle into straight lines in the u/v plane the line equation can
       // be described in terms of aCoef and bCoef, where v = aCoef * u +
       // bCoef
-      const float uT = xVal / (xVal * xVal + yVal * yVal);
-      const float vT = yVal / (xVal * xVal + yVal * yVal);
+      const float uT = xVal * iDeltaR2;
+      const float vT = yVal * iDeltaR2;
+
+      if (not m_config.interactionPointCut) {
+       
+	float iDeltaR = std::sqrt(iDeltaR2); 
+	float cot_theta = deltaZ * iDeltaR;
+ 	LinCircle l{};
+ 	l.cotTheta = cot_theta;
+	l.Zo = zOrigin;
+	l.iDeltaR = iDeltaR;
+        l.U = uT;
+        l.V = vT;
+        l.Er = ((varianceZM + otherSP->varianceZ()) +
+          (cot_theta * cot_theta) * (varianceRM + otherSP->varianceR())) *
+         iDeltaR2;
+        l.x = xVal;
+	l.y = yVal;
+
+	spacePointData.setDeltaR(otherSP->index(), std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+
+	// transform coordinates and fill output vector
+        linCircleVec.push_back(l);
+        outVec.push_back(otherSP.get());
+        continue;
+      }
+
+      if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
+
+	float iDeltaR = std::sqrt(iDeltaR2);
+        float cot_theta = deltaZ * iDeltaR;
+        LinCircle l{};
+        l.cotTheta = cot_theta;
+        l.Zo = zOrigin;
+        l.iDeltaR = iDeltaR;
+        l.U = uT;
+        l.V = vT;
+        l.Er = ((varianceZM + otherSP->varianceZ()) +
+          (cot_theta * cot_theta) * (varianceRM + otherSP->varianceR())) *
+         iDeltaR2;
+        l.x = xVal;
+        l.y = yVal;
+
+        spacePointData.setDeltaR(otherSP->index(), std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+
+        // transform coordinates and fill output vector
+        linCircleVec.push_back(l);
+
+        outVec.push_back(otherSP.get());
+        continue;
+      }
+
       // in the rotated frame the interaction point is positioned at x = -rM
       // and y ~= impactParam
       const float uIP = -1. / rM;
+      float vIP;
       if (sign * yVal > 0.) {
         vIP = -vIPAbs;
       } else {
         vIP = vIPAbs;
       }
+
       // we can obtain aCoef as the slope dv/du of the linear function,
       // estimated using du and dv between the two SP bCoef is obtained by
       // inserting aCoef into the linear equation
@@ -344,11 +379,27 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
+	float iDeltaR = std::sqrt(iDeltaR2);
+        float cot_theta = deltaZ * iDeltaR;
+        LinCircle l{};
+        l.cotTheta = cot_theta;
+        l.Zo = zOrigin;
+        l.iDeltaR = iDeltaR;
+        l.U = uT;
+        l.V = vT;
+        l.Er = ((varianceZM + otherSP->varianceZ()) +
+          (cot_theta * cot_theta) * (varianceRM + otherSP->varianceR())) *
+         iDeltaR2;
+        l.x = xVal;
+        l.y = yVal;
+
+        spacePointData.setDeltaR(otherSP->index(), std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+
+
       // transform coordinates and fill output vector
-      linCircleVec.push_back(
-          transformCoordinates(spacePointData, *otherSP, sign,
-                               {deltaX, deltaY, deltaZAbs, varianceRM,
-                                varianceZM, xVal, yVal, zOrigin}));
+      linCircleVec.push_back(l);
+
+      // transform coordinates and fill output vector
       outVec.push_back(otherSP.get());
     }
   }
