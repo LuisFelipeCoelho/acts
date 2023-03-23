@@ -416,17 +416,19 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     sorted_tops[i] = i;
   }
 
-  std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
+  if (m_config.skipPreviousTopSP) {
+  	std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
             [&state](const std::size_t& a, const std::size_t& b) -> bool {
               return state.linCircleBottom[a].cotTheta <
                      state.linCircleBottom[b].cotTheta;
             });
 
-  std::sort(sorted_tops.begin(), sorted_tops.end(),
+  	std::sort(sorted_tops.begin(), sorted_tops.end(),
             [&state](const std::size_t& a, const std::size_t& b) -> bool {
               return state.linCircleTop[a].cotTheta <
                      state.linCircleTop[b].cotTheta;
             });
+  }
 
   // Reserve enough space, in case current capacity is too little
   state.topSpVec.reserve(numTopSP);
@@ -437,6 +439,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
   // clear previous results and then loop on bottoms and tops
   state.candidates_collector.clear();
+
+  //std::cout << "----> Middle " << rM << std::endl;
 
   for (const std::size_t& b : sorted_bottoms) {
     // break if we reached the last top SP
@@ -450,6 +454,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     float Ub = lb.U;
     float ErB = lb.Er;
     float iDeltaRB = lb.iDeltaR;
+
+    //std::cout << "> BOT " << state.compatBottomSP[b]->radius() << std::endl;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
@@ -505,10 +511,9 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       float deltaCotTheta = cotThetaB - cotThetaT;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
-      // std::cout << "Tzb " << cotThetaB << " Tzt " << cotThetaT << std::endl;
-      // std::cout << "error2 " << error2  << std::endl;
-      // std::cout << "sigmaSquaredSPtDependent " << iSinTheta2 << " * " <<
-      // options.sigmapT2perRadius << std::endl;
+      //std::cout << "Tzb " << cotThetaB << " Tzt " << cotThetaT << std::endl;
+      //std::cout << "error2 " << error2  << " sigmaSquaredSPtDependent " << scatteringInRegion2 << std::endl;
+      //std::cout << "deltaCotTheta2 " << deltaCotTheta2 << " > " <<  error2 + scatteringInRegion2 << std::endl;
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -525,8 +530,10 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         // break if cotTheta from bottom SP < cotTheta from top SP because
         // the SP are sorted by cotTheta
         if (cotThetaB - cotThetaT < 0) {
-          break;
+         //std::cout << "break" << std::endl;
+	 break;
         }
+	//std::cout << "continue" << std::endl;
         t0 = index_t + 1;
         continue;
       }
