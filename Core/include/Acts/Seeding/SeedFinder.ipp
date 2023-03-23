@@ -142,20 +142,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       continue;
     }
 
-    getCompatibleDoublets(state.spacePointData, options, grid,
-                          state.topNeighbours, *spM.get(), state.linCircleTop,
-                          state.compatTopSP, m_config.deltaRMinTopSP,
-                          m_config.deltaRMaxTopSP, false);
-
-    // std::cout << "nt: " << state.compatTopSP.size() << std::endl;
-
-    // std::cout << "== Bot ==" << std::endl;
-
-    // no top SP found -> try next spM
-    if (state.compatTopSP.empty()) {
-      continue;
-    }
-
     // apply cut on the number of top SP if seedConfirmation is true
     SeedFilterState seedFilterState;
     if (m_config.seedConfirmation) {
@@ -189,6 +175,21 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     if (state.compatBottomSP.empty()) {
       continue;
     }
+		
+		
+		getCompatibleDoublets(state.spacePointData, options, grid,
+													state.topNeighbours, *spM.get(), state.linCircleTop,
+													state.compatTopSP, m_config.deltaRMinTopSP,
+													m_config.deltaRMaxTopSP, false);
+		
+		// std::cout << "nt: " << state.compatTopSP.size() << std::endl;
+		
+		// std::cout << "== Bot ==" << std::endl;
+		
+		// no top SP found -> try next spM
+		if (state.compatTopSP.empty()) {
+			continue;
+		}
 
     // filter candidates
     if (not m_config.useDetailedDoubleMeasurementInfo) {
