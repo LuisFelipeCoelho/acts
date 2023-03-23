@@ -217,24 +217,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   };
 
   // extent used to store r range for middle spacepoint
-  Acts::Extent rRangeSPExtent;
+  Acts::Range1D<float> rMiddleSPRange;
 
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
       m_cfg.gridConfig, m_cfg.gridOptions);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
-      m_bottomBinFinder, m_topBinFinder, std::move(grid), rRangeSPExtent,
+      m_bottomBinFinder, m_topBinFinder, std::move(grid), rMiddleSPRange,
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
-
-  // safely clamp double to float
-  float up = Acts::clampValue<float>(
-      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
-
-  /// variable middle SP radial region of interest
-  const Acts::Range1D<float> rMiddleSPRange(
-      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
-          m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
-      up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 
   // run the seeding
   static thread_local SimSeedContainer seeds;

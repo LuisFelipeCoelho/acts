@@ -120,7 +120,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-    Acts::Extent& rRangeSPExtent,
+    Acts::Range1D<float>& rMiddleSPRange,
     const SeedFinderConfig<external_spacepoint_t>& config,
     const SeedFinderOptions& options) {
   if (not config.isInInternalUnits) {
@@ -154,6 +154,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // keep track of changed bins while sorting
   boost::container::flat_set<size_t> rBinsIndex;
 
+  // first and last non-empty bins
+  int firstRBin = 0;
+  int lastRBin = 0;
+  int binNumber = 0;
+
   std::size_t counter = 0;
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
     if (*it == nullptr) {
@@ -166,9 +171,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     float spX = spPosition[0];
     float spY = spPosition[1];
     float spZ = spPosition[2];
-
-    // store x,y,z values in extent
-    rRangeSPExtent.extend({spX, spY, spZ});
 
     if (spZ > zMax || spZ < zMin) {
       continue;
@@ -187,6 +189,13 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     if (rIndex >= numRBins) {
       continue;
     }
+
+    // remember the first and last non-empty bins
+    if (firstRBin == 0) {
+      firstRBin = binNumber;
+    }
+    lastRBin = binNumber;
+    ++binNumber;
 
     // fill rbins into grid
     Acts::Vector2 spLocation(isp->phi(), isp->z());
@@ -212,6 +221,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
           return a->radius() < b->radius();
         });
   }
+
+  // variable middle SP radial region of interest
+  rMiddleSPRange.set(
+      config.binSizeR * firstRBin + config.deltaRMiddleMinSPRange,
+      config.binSizeR * lastRBin - config.deltaRMiddleMaxSPRange);
 
   m_grid = std::move(grid);
   m_bottomBinFinder = botBinFinder;
