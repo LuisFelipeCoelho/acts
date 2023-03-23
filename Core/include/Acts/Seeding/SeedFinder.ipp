@@ -142,28 +142,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       continue;
     }
 
-    // apply cut on the number of top SP if seedConfirmation is true
-    SeedFilterState seedFilterState;
-    if (m_config.seedConfirmation) {
-      // check if middle SP is in the central or forward region
-      SeedConfirmationRangeConfig seedConfRange =
-          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-           zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
-              ? m_config.forwardSeedConfirmationRange
-              : m_config.centralSeedConfirmationRange;
-      // set the minimum number of top SP depending on whether the middle SP is
-      // in the central or forward region
-      seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
-                                         ? seedConfRange.nTopForLargeR
-                                         : seedConfRange.nTopForSmallR;
-      // set max bottom radius for seed confirmation
-      seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
-      // continue if number of top SPs is smaller than minimum
-      if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
-        continue;
-      }
-    }
-
     getCompatibleDoublets(
         state.spacePointData, options, grid, state.bottomNeighbours, *spM.get(),
         state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
@@ -189,6 +167,28 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 		// no top SP found -> try next spM
 		if (state.compatTopSP.empty()) {
 			continue;
+		}
+		
+		// apply cut on the number of top SP if seedConfirmation is true
+		SeedFilterState seedFilterState;
+		if (m_config.seedConfirmation) {
+			// check if middle SP is in the central or forward region
+			SeedConfirmationRangeConfig seedConfRange =
+			(zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+			 zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
+			? m_config.forwardSeedConfirmationRange
+			: m_config.centralSeedConfirmationRange;
+			// set the minimum number of top SP depending on whether the middle SP is
+			// in the central or forward region
+			seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+			? seedConfRange.nTopForLargeR
+			: seedConfRange.nTopForSmallR;
+			// set max bottom radius for seed confirmation
+			seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+			// continue if number of top SPs is smaller than minimum
+			if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
+				continue;
+			}
 		}
 
     // filter candidates
@@ -735,7 +735,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::
       double positionBottom[3] = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
-				zPositionMiddle)};
+				zPositionMiddle};
 
       auto spB = state.compatBottomSP[b];
       double rBTransf[3];
