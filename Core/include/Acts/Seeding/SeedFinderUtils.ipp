@@ -189,27 +189,25 @@ inline bool xyzCoordinateCheck(
       spacePointData.getBottomStripDirection(index);
   const Acts::Vector3& stripCenterDistance =
       spacePointData.getStripCenterDistance(index);
-	
-	// prepare variables
-	double xTopStripVector = topHalfStripLength * topStripDirection[0];
-	double yTopStripVector = topHalfStripLength * topStripDirection[1];
-	double zTopStripVector = topHalfStripLength * topStripDirection[2];
-	double xBottomStripVector = bottomHalfStripLength * bottomStripDirection[0];
-	double yBottomStripVector = bottomHalfStripLength * bottomStripDirection[1];
-	double zBottomStripVector = bottomHalfStripLength * bottomStripDirection[2];
-	
+
+  // prepare variables
+  double xTopStripVector = topHalfStripLength * topStripDirection[0];
+  double yTopStripVector = topHalfStripLength * topStripDirection[1];
+  double zTopStripVector = topHalfStripLength * topStripDirection[2];
+  double xBottomStripVector = bottomHalfStripLength * bottomStripDirection[0];
+  double yBottomStripVector = bottomHalfStripLength * bottomStripDirection[1];
+  double zBottomStripVector = bottomHalfStripLength * bottomStripDirection[2];
+
   // cross product between top strip vector and spacepointPosition
-  double d1[3] = {
-      yTopStripVector * spacepointPosition[2] -
-          zTopStripVector * spacepointPosition[1],
-      zTopStripVector * spacepointPosition[0] -
-          xTopStripVector * spacepointPosition[2],
-      xTopStripVector * spacepointPosition[1] -
-          yTopStripVector * spacepointPosition[0]};
+  double d1[3] = {yTopStripVector * spacepointPosition[2] -
+                      zTopStripVector * spacepointPosition[1],
+                  zTopStripVector * spacepointPosition[0] -
+                      xTopStripVector * spacepointPosition[2],
+                  xTopStripVector * spacepointPosition[1] -
+                      yTopStripVector * spacepointPosition[0]};
 
   // scalar product between bottom strip vector and d1
-  double bd1 = xBottomStripVector * d1[0] +
-               yBottomStripVector * d1[1] +
+  double bd1 = xBottomStripVector * d1[0] + yBottomStripVector * d1[1] +
                zBottomStripVector * d1[2];
 
   // compatibility check using distance between strips to evaluate if
@@ -221,18 +219,12 @@ inline bool xyzCoordinateCheck(
   }
 
   // cross product between bottom strip vector and spacepointPosition
-  double d0[3] = {yBottomStripVector *
-                          spacepointPosition[2] -
-                      zBottomStripVector *
-                          spacepointPosition[1],
-                  zBottomStripVector *
-                          spacepointPosition[0] -
-                      xBottomStripVector *
-                          spacepointPosition[2],
-                  xBottomStripVector *
-                          spacepointPosition[1] -
-                      yBottomStripVector *
-                          spacepointPosition[0]};
+  double d0[3] = {yBottomStripVector * spacepointPosition[2] -
+                      zBottomStripVector * spacepointPosition[1],
+                  zBottomStripVector * spacepointPosition[0] -
+                      xBottomStripVector * spacepointPosition[2],
+                  xBottomStripVector * spacepointPosition[1] -
+                      yBottomStripVector * spacepointPosition[0]};
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the top detector element
@@ -251,12 +243,9 @@ inline bool xyzCoordinateCheck(
   // spacepointPosition corected with respect to the top strip position and
   // direction and the distance between the strips
   s0 = s0 / bd1;
-  outputCoordinates[0] = topStripCenterPosition[0] +
-                         xTopStripVector * s0;
-  outputCoordinates[1] = topStripCenterPosition[1] +
-                         yTopStripVector * s0;
-  outputCoordinates[2] = topStripCenterPosition[2] +
-                         zTopStripVector * s0;
+  outputCoordinates[0] = topStripCenterPosition[0] + xTopStripVector * s0;
+  outputCoordinates[1] = topStripCenterPosition[1] + yTopStripVector * s0;
+  outputCoordinates[2] = topStripCenterPosition[2] + zTopStripVector * s0;
   return true;
 }
 }  // namespace Acts
