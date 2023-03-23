@@ -59,7 +59,6 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
   return l;
 }
 
-
 inline LinCircle fillLineCircle(
     const std::array<float, 7>& lineCircleVariables) {
   auto [cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame] =
@@ -138,22 +137,30 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
     // cot_theta = (deltaZ/deltaR)
     float cot_theta = deltaZ * iDeltaR * bottomFactor;
     // VERY frequent (SP^3) access
-    //LinCircle l{};
-    //l.cotTheta = cot_theta;
-    //l.iDeltaR = iDeltaR;
-    //l.U = x * iDeltaR2;
-    //l.V = y * iDeltaR2;
-    //l.Er = ((varianceZM + sp->varianceZ()) +
+    // LinCircle l{};
+    // l.cotTheta = cot_theta;
+    // l.iDeltaR = iDeltaR;
+    // l.U = x * iDeltaR2;
+    // l.V = y * iDeltaR2;
+    // l.Er = ((varianceZM + sp->varianceZ()) +
     //        (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
     //       iDeltaR2;
 
-    //l.x = x;
-    //l.y = y;
+    // l.x = x;
+    // l.y = y;
 
-    //std::cout << "parm2 " << cot_theta << " " << iDeltaR << " " << ((varianceZM + sp->varianceZ()) +(cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *iDeltaR2 << " " << x * iDeltaR2 << " " << y * iDeltaR2 << " " << x << " " << y << std::endl;
+    // std::cout << "parm2 " << cot_theta << " " << iDeltaR << " " <<
+    // ((varianceZM + sp->varianceZ()) +(cot_theta * cot_theta) * (varianceRM +
+    // sp->varianceR())) *iDeltaR2 << " " << x * iDeltaR2 << " " << y * iDeltaR2
+    // << " " << x << " " << y << std::endl;
 
-    linCircleVec[idx] = fillLineCircle({cot_theta, iDeltaR, ((varianceZM + sp->varianceZ()) +(cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *iDeltaR2, x * iDeltaR2, y * iDeltaR2, x, y});
-    //spacePointData.setDeltaR(sp->index(),
+    linCircleVec[idx] = fillLineCircle(
+        {cot_theta, iDeltaR,
+         ((varianceZM + sp->varianceZ()) +
+          (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
+             iDeltaR2,
+         x * iDeltaR2, y * iDeltaR2, x, y});
+    // spacePointData.setDeltaR(sp->index(),
     //                         std::sqrt(deltaR2 + (deltaZ * deltaZ)));
   }
 }
@@ -182,20 +189,28 @@ inline bool xyzCoordinateCheck(
       spacePointData.getBottomStripDirection(index);
   const Acts::Vector3& stripCenterDistance =
       spacePointData.getStripCenterDistance(index);
-
+	
+	// prepare variables
+	double xTopStripVector = topHalfStripLength * topStripDirection[0];
+	double yTopStripVector = topHalfStripLength * topStripDirection[1];
+	double zTopStripVector = topHalfStripLength * topStripDirection[2];
+	double xBottomStripVector = bottomHalfStripLength * bottomStripDirection[0];
+	double yBottomStripVector = bottomHalfStripLength * bottomStripDirection[1];
+	double zBottomStripVector = bottomHalfStripLength * bottomStripDirection[2];
+	
   // cross product between top strip vector and spacepointPosition
   double d1[3] = {
-      (topHalfStripLength * topStripDirection[1]) * spacepointPosition[2] -
-          (topHalfStripLength * topStripDirection[2]) * spacepointPosition[1],
-      (topHalfStripLength * topStripDirection[2]) * spacepointPosition[0] -
-          (topHalfStripLength * topStripDirection[0]) * spacepointPosition[2],
-      (topHalfStripLength * topStripDirection[0]) * spacepointPosition[1] -
-          (topHalfStripLength * topStripDirection[1]) * spacepointPosition[0]};
+      yTopStripVector * spacepointPosition[2] -
+          zTopStripVector * spacepointPosition[1],
+      zTopStripVector * spacepointPosition[0] -
+          xTopStripVector * spacepointPosition[2],
+      xTopStripVector * spacepointPosition[1] -
+          yTopStripVector * spacepointPosition[0]};
 
   // scalar product between bottom strip vector and d1
-  double bd1 = (bottomHalfStripLength * bottomStripDirection[0]) * d1[0] +
-               (bottomHalfStripLength * bottomStripDirection[1]) * d1[1] +
-               (bottomHalfStripLength * bottomStripDirection[2]) * d1[2];
+  double bd1 = xBottomStripVector * d1[0] +
+               yBottomStripVector * d1[1] +
+               zBottomStripVector * d1[2];
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the bottom detector element
@@ -206,17 +221,17 @@ inline bool xyzCoordinateCheck(
   }
 
   // cross product between bottom strip vector and spacepointPosition
-  double d0[3] = {(bottomHalfStripLength * bottomStripDirection[1]) *
+  double d0[3] = {yBottomStripVector *
                           spacepointPosition[2] -
-                      (bottomHalfStripLength * bottomStripDirection[2]) *
+                      zBottomStripVector *
                           spacepointPosition[1],
-                  (bottomHalfStripLength * bottomStripDirection[2]) *
+                  zBottomStripVector *
                           spacepointPosition[0] -
-                      (bottomHalfStripLength * bottomStripDirection[0]) *
+                      xBottomStripVector *
                           spacepointPosition[2],
-                  (bottomHalfStripLength * bottomStripDirection[0]) *
+                  xBottomStripVector *
                           spacepointPosition[1] -
-                      (bottomHalfStripLength * bottomStripDirection[1]) *
+                      yBottomStripVector *
                           spacepointPosition[0]};
 
   // compatibility check using distance between strips to evaluate if
@@ -237,11 +252,11 @@ inline bool xyzCoordinateCheck(
   // direction and the distance between the strips
   s0 = s0 / bd1;
   outputCoordinates[0] = topStripCenterPosition[0] +
-                         (topHalfStripLength * topStripDirection[0]) * s0;
+                         xTopStripVector * s0;
   outputCoordinates[1] = topStripCenterPosition[1] +
-                         (topHalfStripLength * topStripDirection[1]) * s0;
+                         yTopStripVector * s0;
   outputCoordinates[2] = topStripCenterPosition[2] +
-                         (topHalfStripLength * topStripDirection[2]) * s0;
+                         zTopStripVector * s0;
   return true;
 }
 }  // namespace Acts
