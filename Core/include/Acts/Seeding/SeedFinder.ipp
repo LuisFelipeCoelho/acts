@@ -717,13 +717,15 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
       float A0 = (lt.V - Vb) / dU;
+			
+			float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
 
       // position of Middle SP converted from UV to XY assuming cotTheta
       // evaluated from the Bottom and Middle SPs double
       double positionMiddle[3] = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
-          cosTheta * std::sqrt(1 + A0 * A0)};
+					zPositionMiddle};
 
       double rMTransf[3];
       if (!xyzCoordinateCheck(spacePointData, m_config, spM, positionMiddle,
@@ -739,7 +741,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::
       double positionBottom[3] = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
-          cosTheta * std::sqrt(1 + A0 * A0)};
+				zPositionMiddle)};
 
       auto spB = state.compatBottomSP[b];
       double rBTransf[3];
@@ -755,7 +757,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::
       double positionTop[3] = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
-          cosTheta * std::sqrt(1 + A0 * A0)};
+				zPositionMiddle};
 
       auto spT = state.compatTopSP[t];
       double rTTransf[3];
