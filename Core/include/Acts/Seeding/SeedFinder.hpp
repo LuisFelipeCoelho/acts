@@ -135,7 +135,18 @@ class SeedFinder {
           otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-      const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const;
+      const float& deltaRMinSP, const float& deltaRMaxSP) const;
+
+	template <typename out_range_t>
+  void getCompatibleDoubletsBot(
+      Acts::SpacePointData& spacePointData,
+      const Acts::SeedFinderOptions& options,
+      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>&
+          otherSPs,
+      const InternalSpacePoint<external_spacepoint_t>& mediumSP,
+      std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
+      const float& deltaRMinSP, const float& deltaRMaxSP) const;
 
   void filterCandidates(Acts::SpacePointData& spacePointData,
                         const InternalSpacePoint<external_spacepoint_t>& SpM,
