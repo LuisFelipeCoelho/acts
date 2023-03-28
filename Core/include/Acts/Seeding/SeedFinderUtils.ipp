@@ -76,6 +76,23 @@ inline LinCircle fillLineCircle(
   return l;
 }
 
+inline LinCircle fillLineCircleDetailed(
+    const std::array<float, 7>& lineCircleVariables) {
+  auto [cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame] =
+      lineCircleVariables;
+
+  LinCircle l{};
+  l.cotTheta = cotTheta;
+  l.iDeltaR = iDeltaR;
+  l.U = U;
+  l.V = V;
+  l.Er = Er;
+  l.x = xNewFrame;
+  l.y = yNewFrame;
+
+  return l;
+}
+
 template <typename external_spacepoint_t>
 inline void transformCoordinates(
     Acts::SpacePointData& spacePointData,

@@ -50,6 +50,10 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
 inline LinCircle fillLineCircle(
     const std::array<float, 7>& lineCircleVariables);
 
+
+inline LinCircle fillLineCircleDetailed(
+    const std::array<float, 7>& lineCircleVariables);
+
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
 ///
