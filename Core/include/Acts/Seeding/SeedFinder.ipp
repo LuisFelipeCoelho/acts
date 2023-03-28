@@ -221,6 +221,13 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   outVec.clear();
   linCircleVec.clear();
 
+  // get number of neighbour SPs
+  std::size_t nsp = 0;
+  for (auto& otherSPCol : otherSPsNeighbours) nsp += grid.at(otherSPCol.index).size();
+  // resize + operator[] is faster then reserve and push_back?
+  linCircleVec.reserve(nsp);
+  outVec.reserve(nsp);
+
   const float& rM = mediumSP.radius();
   const float& xM = mediumSP.x();
   const float& yM = mediumSP.y();
@@ -234,6 +241,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     vIPAbs = m_config.impactMax / (rM * rM);
   }
 
+  size_t idx = 0;
   for (auto& otherSPCol : otherSPsNeighbours) {
     const auto& otherSPs = grid.at(otherSPCol.index);
     if (otherSPs.size() == 0) {
@@ -272,16 +280,9 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       const float zO = otherSP->z();
       float deltaZ = (zO - zM);
-      if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-        continue;
-      }
 
       // ratio Z/R (forward angle) of space point duplet
       float cotTheta = deltaZ / deltaR;
-      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
-        // std::cout << "cotTheta " << std::endl;
-        continue;
-      }
 
       // check if duplet origin on z axis within collision region
       float zOrigin = zM - rM * cotTheta;
@@ -290,6 +291,44 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         // std::cout << "std::abs(z0) " << std::abs(zOrigin) << " zmax " <<
         // m_config.collisionRegionMax << " " << m_config.collisionRegionMin <<
         // std::endl;
+        continue;
+      }
+
+      if (not m_config.interactionPointCut) {
+
+        if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+            continue;
+        }
+        if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+           continue;
+        }
+
+        const float deltaX = otherSP->x() - xM;
+        const float deltaY = otherSP->y() - yM;
+
+        const float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+        const float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
+
+        const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
+        const float iDeltaR2 = 1. / deltaR2;
+
+        const float uT = xNewFrame * iDeltaR2;
+        const float vT = yNewFrame * iDeltaR2;
+
+        const float iDeltaR = std::sqrt(iDeltaR2);
+        cotTheta = deltaZ * iDeltaR;
+
+        const float Er =
+            ((varianceZM + otherSP->varianceZ()) +
+             (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
+            iDeltaR2;
+
+        linCircleVec.emplace_back(fillLineCircle(
+            {cotTheta, iDeltaR, Er, uT, vT, xNewFrame, yNewFrame}));
+
+        spacePointData.setDeltaR(otherSP->index(),
+                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+        outVec.emplace_back(otherSP.get());
         continue;
       }
 
@@ -302,36 +341,16 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
       const float iDeltaR2 = 1. / deltaR2;
 
-      // std::cout << (deltaX * deltaX + deltaY * deltaY) << " " << (xNewFrame *
-      // xNewFrame + yNewFrame * yNewFrame) << std::endl;
-
-      // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
-      // circle into straight lines in the u/v plane the line equation can
-      // be described in terms of aCoef and bCoef, where v = aCoef * u +
-      // bCoef
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      if (not m_config.interactionPointCut) {
-        const float iDeltaR = std::sqrt(iDeltaR2);
-        cotTheta = deltaZ * iDeltaR;
-
-        const float Er =
-            ((varianceZM + otherSP->varianceZ()) +
-             (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
-            iDeltaR2;
-
-        linCircleVec.emplace_back(fillLineCircle(
-            {cotTheta, iDeltaR, Er, uT, vT, xNewFrame, yNewFrame}));
-
-        spacePointData.setDeltaR(otherSP->index(),
-                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-        outVec.emplace_back(otherSP.get());
-
-        continue;
-      }
 
       if (std::abs(rM * yNewFrame) <= m_config.impactMax * xNewFrame) {
+
+        if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+          continue;
+        }
+
         const float iDeltaR = std::sqrt(iDeltaR2);
         cotTheta = deltaZ * iDeltaR;
 
@@ -347,7 +366,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
                                  std::sqrt(deltaR2 + (deltaZ * deltaZ)));
 
         outVec.emplace_back(otherSP.get());
-
         continue;
       }
 
@@ -366,6 +384,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
       if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
         continue;
+      }
+
+
+      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+          continue;
       }
 
       const float iDeltaR = std::sqrt(iDeltaR2);
@@ -400,6 +423,13 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsBot(
   outVec.clear();
   linCircleVec.clear();
 
+  // get number of neighbour SPs
+  std::size_t nsp = 0;
+  for (auto& otherSPCol : otherSPsNeighbours) nsp += grid.at(otherSPCol.index).size();
+  //////////rever + emplace_back vs resize + operator[] is faster then reserve and push_back?
+  linCircleVec.reserve(nsp);
+  outVec.reserve(nsp);
+
   const float& rM = mediumSP.radius();
   const float& xM = mediumSP.x();
   const float& yM = mediumSP.y();
@@ -413,6 +443,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsBot(
     vIPAbs = m_config.impactMax / (rM * rM);
   }
 
+  size_t idx = 0;
   for (auto& otherSPCol : otherSPsNeighbours) {
     const auto& otherSPs = grid.at(otherSPCol.index);
     if (otherSPs.size() == 0) {
@@ -451,16 +482,9 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsBot(
 
       const float zO = otherSP->z();
       float deltaZ = (zM - zO);
-      if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-        continue;
-      }
 
       // ratio Z/R (forward angle) of space point duplet
       float cotTheta = deltaZ / deltaR;
-      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
-        // std::cout << "cotTheta " << std::endl;
-        continue;
-      }
 
       // check if duplet origin on z axis within collision region
       float zOrigin = zM - rM * cotTheta;
@@ -469,6 +493,44 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsBot(
         // std::cout << "std::abs(z0) " << std::abs(zOrigin) << " zmax " <<
         // m_config.collisionRegionMax << " " << m_config.collisionRegionMin <<
         // std::endl;
+        continue;
+      }
+
+      if (not m_config.interactionPointCut) {
+
+        if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+            continue;
+        }
+        if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+           continue;
+        }
+
+        const float deltaX = otherSP->x() - xM;
+        const float deltaY = otherSP->y() - yM;
+
+        const float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+        const float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
+
+        const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
+        const float iDeltaR2 = 1. / deltaR2;
+
+        const float uT = xNewFrame * iDeltaR2;
+        const float vT = yNewFrame * iDeltaR2;
+
+        const float iDeltaR = std::sqrt(iDeltaR2);
+        cotTheta = deltaZ * iDeltaR;
+
+        const float Er =
+            ((varianceZM + otherSP->varianceZ()) +
+             (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
+            iDeltaR2;
+
+        linCircleVec.emplace_back(fillLineCircle(
+            {cotTheta, iDeltaR, Er, uT, vT, xNewFrame, yNewFrame}));
+
+        spacePointData.setDeltaR(otherSP->index(),
+                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+        outVec.emplace_back(otherSP.get());
         continue;
       }
 
@@ -481,36 +543,15 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsBot(
       const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
       const float iDeltaR2 = 1. / deltaR2;
 
-      // std::cout << (deltaX * deltaX + deltaY * deltaY) << " " << (xNewFrame *
-      // xNewFrame + yNewFrame * yNewFrame) << std::endl;
-
-      // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
-      // circle into straight lines in the u/v plane the line equation can
-      // be described in terms of aCoef and bCoef, where v = aCoef * u +
-      // bCoef
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      if (not m_config.interactionPointCut) {
-        const float iDeltaR = std::sqrt(iDeltaR2);
-        cotTheta = deltaZ * iDeltaR;
+      if (std::abs(rM * yNewFrame) <= -m_config.impactMax * xNewFrame) {
 
-        const float Er =
-            ((varianceZM + otherSP->varianceZ()) +
-             (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
-            iDeltaR2;
+        if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+          continue;
+        }
 
-        linCircleVec.emplace_back(fillLineCircle(
-            {cotTheta, iDeltaR, Er, uT, vT, xNewFrame, yNewFrame}));
-
-        spacePointData.setDeltaR(otherSP->index(),
-                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-        outVec.emplace_back(otherSP.get());
-
-        continue;
-      }
-
-      if (std::abs(rM * yNewFrame) <= -1 * m_config.impactMax * xNewFrame) {
         const float iDeltaR = std::sqrt(iDeltaR2);
         cotTheta = deltaZ * iDeltaR;
 
@@ -526,14 +567,13 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsBot(
                                  std::sqrt(deltaR2 + (deltaZ * deltaZ)));
 
         outVec.emplace_back(otherSP.get());
-
         continue;
       }
 
       // in the rotated frame the interaction point is positioned at x = -rM
       // and y ~= impactParam
       const float uIP = -1. / rM;
-      const float vIP = (-1 * yNewFrame > 0.) ? -vIPAbs : vIPAbs;
+      const float vIP = (-yNewFrame > 0.) ? -vIPAbs : vIPAbs;
 
       // we can obtain aCoef as the slope dv/du of the linear function,
       // estimated using du and dv between the two SP bCoef is obtained by
@@ -546,6 +586,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsBot(
       if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
         continue;
       }
+
+      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+          continue;
+      }
+
 
       const float iDeltaR = std::sqrt(iDeltaR2);
       cotTheta = deltaZ * iDeltaR;
