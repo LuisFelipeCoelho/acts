@@ -94,7 +94,7 @@ bool xyzCoordinateCheck(
     Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
-    const float* spacepointPosition, float* outputCoordinates);
+    const double* spacepointPosition, double* outputCoordinates);
 
 }  // namespace Acts
 
