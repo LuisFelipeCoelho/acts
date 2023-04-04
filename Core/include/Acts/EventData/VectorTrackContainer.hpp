@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 
 #include <unordered_map>
@@ -186,6 +187,15 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   ConstCovariance covariance(IndexType itrack) const {
     return ConstCovariance{m_cov[itrack].data()};
   }
+
+  void copyDynamicFrom_impl(IndexType dstIdx,
+                            const VectorTrackContainerBase& src,
+                            IndexType srcIdx);
+
+  void ensureDynamicColumns_impl(
+      const detail_vtc::VectorTrackContainerBase& other);
+
+  void reserve(IndexType size);
 
   // END INTERFACE
 };
