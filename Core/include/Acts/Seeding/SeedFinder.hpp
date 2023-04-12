@@ -32,6 +32,8 @@
 
 namespace Acts {
 
+enum class SpacePointCandidateType : short {BOTTOM, TOP};
+
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////
@@ -126,6 +128,29 @@ class SeedFinder {
       const sp_range_t& topSPs) const;
 
  private:
+  template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
+  void getCompatibleDoubletsTest(
+      Acts::SpacePointData& spacePointData,
+      const Acts::SeedFinderOptions& options,
+      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>&
+          otherSPs,
+      const InternalSpacePoint<external_spacepoint_t>& mediumSP,
+      std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
+      const float& deltaRMinSP, const float& deltaRMaxSP) const;
+
+  template <typename out_range_t>
+  void getCompatibleDoubletsTest2(
+      Acts::SpacePointData& spacePointData,
+      const Acts::SeedFinderOptions& options,
+      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>&
+          otherSPs,
+      const InternalSpacePoint<external_spacepoint_t>& mediumSP,
+      std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
+      const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const;
+
+
   template <typename out_range_t>
   void getCompatibleDoublets(
       Acts::SpacePointData& spacePointData,

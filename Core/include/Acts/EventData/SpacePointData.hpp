@@ -134,15 +134,6 @@ inline void SpacePointData::resize(std::size_t n, bool resizeDynamic) {
   }
 }
 
-inline void SpacePointData::resizeDynamic(std::size_t n) {
-  m_topHalfStripLength.resize(n);
-  m_bottomHalfStripLength.resize(n);
-  m_topStripDirection.resize(n);
-  m_bottomStripDirection.resize(n);
-  m_stripCenterDistance.resize(n);
-  m_topStripCenterPosition.resize(n);
-}
-
 inline void SpacePointData::clear() {
   // mutable variables
   m_quality.clear();
