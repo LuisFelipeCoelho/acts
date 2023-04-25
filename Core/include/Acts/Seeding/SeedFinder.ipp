@@ -302,8 +302,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
         // transform SP cordinates to the u-v reference frame
         const auto& [deltaR2, iDeltaR2, uT, vT, xNewFrame, yNewFrame] =
-            transformCoordinates(otherSP->x() - xM, otherSP->y() - yM, cosPhiM,
-                                 sinPhiM);
+            transformCoordinates(
+                {otherSP->x() - xM, otherSP->y() - yM, cosPhiM, sinPhiM});
 
         const float iDeltaR = std::sqrt(iDeltaR2);
         cotTheta = deltaZ * iDeltaR;
@@ -324,8 +324,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // transform SP cordinates to the u-v reference frame
       const auto& [deltaR2, iDeltaR2, uT, vT, xNewFrame, yNewFrame] =
-          transformCoordinates(otherSP->x() - xM, otherSP->y() - yM, cosPhiM,
-                               sinPhiM);
+          transformCoordinates(
+              {otherSP->x() - xM, otherSP->y() - yM, cosPhiM, sinPhiM});
 
       // interactionPointCut == true we apply this cut first cuts before
       // coordinate transformation to avoid unnecessary calculations
