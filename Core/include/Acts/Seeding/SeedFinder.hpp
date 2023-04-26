@@ -152,11 +152,22 @@ class SeedFinder {
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
       const float& deltaRMinSP, const float& deltaRMaxSP) const;
 
+  template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
+  void getCompatibleDoubletsTest(
+      Acts::SpacePointData& spacePointData,
+      const Acts::SeedFinderOptions& options,
+      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
+          otherSPsNeighbours,
+      const InternalSpacePoint<external_spacepoint_t>& mediumSP,
+      std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
+      const float& deltaRMinSP, const float& deltaRMaxSP) const;
+
   /// Apply compatibility  cuts to the origin of the dublet and the z-distance
   /// between the two SPs
   /// @param zOrigin longitudinal impact parameter of the dublet
   /// @param deltaZ z-distance between the two SPs in the dublet
-  bool longitudinalCollisionRange(const float& zOrigin,
+  bool longitudinalCollisionRange(const float& cotTheta,
                                    const float& deltaZ) const;
 
   /// Iterates over the seed candidates tests the compatibility between three
