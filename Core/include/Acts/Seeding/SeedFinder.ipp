@@ -66,6 +66,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   // Get the middle space point candidates
   const auto& middleSPs = grid.at(middleSPsIdx);
 
+/*  
+  // find the first central SP candidate above the minimum radius
+  auto midItr = middleSPs.itr;
+  for (; midItr != middleSPs.end(); ++midItr) {
+	const auto& spM = *midItr;
+	if (spM->radius() > rMiddleSPRange.min()) { break; }
+  }
+  middleSPs.itr = midItr;
+  */
+
   // neighbours
   // clear previous results
   state.bottomNeighbours.clear();
@@ -458,7 +468,19 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
     /// we make a copy of the iterator here since we need it to remain
     /// the same in the Neighbour object
     auto min_itr = otherSPCol.itr;
-    bool found = false;
+    //bool found = false;
+    
+    for (; min_itr != otherSPs.end(); ++min_itr) {
+	const auto& otherSP = *min_itr;
+	 if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
+		if ((rM - otherSP->radius()) <= deltaRMaxSP) { break; }
+   	 } else {
+
+		//std::cout << " R " << rM << " " << otherSP->radius() << std::endl;
+		if ((otherSP->radius() - rM) >= deltaRMinSP) { break; }
+    	}
+    }
+    otherSPCol.itr = min_itr;
 
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
@@ -471,9 +493,9 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
 	  break;
 	}	
 	// if r-distance is too big, try next SP in bin
-	if (deltaR > deltaRMaxSP) {
-	  continue;
-	}
+	//if (deltaR > deltaRMaxSP) {
+	//  continue;
+	//}
 	
       } else {
 	deltaR = (otherSP->radius() - rM);
@@ -483,19 +505,19 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
 	  break;
 	}
 	// if r-distance is too small, try next SP in bin
-	if (deltaR < deltaRMinSP) {
-	  continue;
-	}
+	//if (deltaR < deltaRMinSP) {
+	//  continue;
+	//}
 	
       }
       
       /// We update the iterator in the Neighbout object
       /// that mean that we have changed the middle space point
       /// and the lower bound has moved accordingly
-      if (not found) {
-        found = true;
-        otherSPCol.itr = min_itr;
-      }
+      //if (not found) {
+      //  found = true;
+      //  otherSPCol.itr = min_itr;
+      //}
 
       if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
         deltaZ = (zM - otherSP->z());
