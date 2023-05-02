@@ -79,10 +79,27 @@ class TrackContainer {
   TrackContainer(track_container_t& container, traj_t& traj)
       : m_container{&container}, m_traj{&traj} {}
 
+  /// Constructor from const references to a track container backend and to a
+  /// track state container backend
+  /// @note The track container will not assume ownership over the backends in this case.
+  ///       You need to ensure suitable lifetime
+  /// @param container the track container backend
+  /// @param traj the track state container backend
+  template <
+      template <typename> class H = holder_t,
+      bool RO = (IsReadOnlyTrackContainer<track_container_t>::value &&
+                 IsReadOnlyMultiTrajectory<traj_t>::value),
+      typename = std::enable_if_t<
+          detail::is_same_template<H, detail::ConstRefHolder>::value && RO>>
+  TrackContainer(const track_container_t& container, const traj_t& traj)
+      : m_container{&container}, m_traj{&traj} {}
+
   /// Get a const track proxy for a track index
   /// @param itrack the track index in the container
   /// @return A const track proxy for the index
-  ConstTrackProxy getTrack(IndexType itrack) const { return {*this, itrack}; }
+  ConstTrackProxy getTrack(IndexType itrack) const {
+    return {*this, itrack};
+  }
 
   /// Get a mutable track proxy for a track index
   /// @param itrack the track index in the container
@@ -94,7 +111,9 @@ class TrackContainer {
 
   /// Get the size of the track container
   /// @return the sixe
-  constexpr IndexType size() const { return m_container->size_impl(); }
+  constexpr IndexType size() const {
+    return m_container->size_impl();
+  }
 
   /// Add a track to the container. Note this only creates the logical track and
   /// allocates memory. You can combine this with @c getTrack to obtain a track proxy
@@ -142,7 +161,9 @@ class TrackContainer {
 
   /// Get a const reference to the track container backend
   /// @return a const reference to the backend
-  const auto& container() const { return *m_container; }
+  const auto& container() const {
+    return *m_container;
+  }
 
   /// Get a mutable reference to the track state container backend
   /// @return a mutable reference to the backend
@@ -160,11 +181,15 @@ class TrackContainer {
 
   /// Get a const reference to the track state container backend
   /// @return a const reference to the backend
-  const auto& trackStateContainer() const { return *m_traj; }
+  const auto& trackStateContainer() const {
+    return *m_traj;
+  }
 
   /// Retrieve the holder of the track state container
   /// @return The track state container including it's holder
-  const auto& trackStateContainerHolder() const { return m_traj; }
+  const auto& trackStateContainerHolder() const {
+    return m_traj;
+  }
 
   /// Get a mutable iterator to the first track in the container
   /// @return a mutable iterator to the first track
@@ -274,6 +299,10 @@ class TrackContainer {
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
+
+template <typename track_container_t, typename traj_t>
+TrackContainer(const track_container_t& container, const traj_t& traj)
+    -> TrackContainer<track_container_t, traj_t, detail::ConstRefHolder>;
 
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
