@@ -34,6 +34,8 @@ namespace Acts {
 
 enum class SpacePointCandidateType : short { BOTTOM, TOP };
 
+enum class DetectorMeasurementInfo : short { DEFAULT, DETAILED };
+
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////
@@ -188,6 +190,13 @@ class SeedFinder {
       const InternalSpacePoint<external_spacepoint_t>& SpM,
       const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
       SeedingState& state) const;
+
+  template <Acts::DetectorMeasurementInfo detailedMeasurement>
+  void filterCandidates(Acts::SpacePointData& spacePointData,
+                        const InternalSpacePoint<external_spacepoint_t>& SpM,
+                        const Acts::SeedFinderOptions& options,
+                        SeedFilterState& seedFilterState,
+                        SeedingState& state) const;
 
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;

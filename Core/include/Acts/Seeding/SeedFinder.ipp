@@ -66,16 +66,15 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   // Get the middle space point candidates
   const auto& middleSPs = grid.at(middleSPsIdx);
 
-/*  
+/* 
   // find the first central SP candidate above the minimum radius
-  auto midItr = middleSPs.itr;
+  auto midItr = middleSPsIdx.itr;
   for (; midItr != middleSPs.end(); ++midItr) {
 	const auto& spM = *midItr;
 	if (spM->radius() > rMiddleSPRange.min()) { break; }
   }
-  middleSPs.itr = midItr;
-  */
-
+  //middleSPsIdx.itr = midItr;
+*/
   // neighbours
   // clear previous results
   state.bottomNeighbours.clear();
@@ -93,8 +92,17 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
   }
 
+  float time_since_last_d;
+
+  //int nmid = 0;
+
+  //bool mbool = false;
+
   for (const auto& spM : middleSPs) {
     float rM = spM->radius();
+
+  //for (; midItr != middleSPs.end(); ++midItr) {
+  //  const auto& spM = *midItr;
 
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
@@ -129,6 +137,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
+    //nmid++;
+
+    //if (rM > 226.103 || rM < 226.101) {continue; }
+
+    //std::cout << "--> MIddle " << rM << std::endl;
+
     // remove middle SPs on the last layer since there would be no outer SPs to
     // complete a seed
     float zM = spM->z();
@@ -137,10 +151,18 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       continue;
     }
 
+    //auto old_time_d = std::chrono::high_resolution_clock::now();
+
     getCompatibleDoubletsTest<Acts::SpacePointCandidateType::TOP>(
          state.spacePointData, options, grid, state.topNeighbours, *spM.get(),
          state.linCircleTop, state.compatTopSP, m_config.deltaRMinTopSP,
          m_config.deltaRMaxTopSP);
+
+    //auto new_time_d = std::chrono::high_resolution_clock::now();
+    //time_since_last_d += std::chrono::duration<float, std::nano>(new_time_d - old_time_d).count();
+    //std::cout << "TIMER:  " << time_since_last_d << std::endl;
+
+    // mbool = true;
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -174,18 +196,28 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
          state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
          m_config.deltaRMaxBottomSP);
 
+
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
       continue;
     }
 
     // filter candidates
-    if (not m_config.useDetailedDoubleMeasurementInfo) {
+/*    if (not m_config.useDetailedDoubleMeasurementInfo) {
       filterCandidates(state.spacePointData, *spM.get(), options,
                        seedFilterState, state);
     } else {
       filterCandidatesDetailedMeasurements(state.spacePointData, *spM.get(),
                                            options, seedFilterState, state);
+    }*/
+
+     // filter candidates
+    if (m_config.useDetailedDoubleMeasurementInfo) {
+        filterCandidates<Acts::DetectorMeasurementInfo::DETAILED>(
+            state.spacePointData, *spM.get(), options, seedFilterState, state);
+    } else {
+	filterCandidates<Acts::DetectorMeasurementInfo::DEFAULT>(
+            state.spacePointData, *spM.get(), options, seedFilterState, state);
     }
 
     m_config.seedFilter->filterSeeds_1SpFixed(
@@ -193,6 +225,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         seedFilterState.numQualitySeeds, outIt);
 
   }  // loop on mediums
+
+ // if (mbool){
+ // std::cout << "nmid " << nmid << std::endl;} 
+ //  mbool = false;
 }
 
 template <typename external_spacepoint_t, typename platform_t>
@@ -432,14 +468,14 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
   outVec.clear();
   linCircleVec.clear();
 
-  // get number of neighbour SPs
-  std::size_t nsp = 0;
-  for (const auto& otherSPCol : otherSPsNeighbours) {
-    nsp += grid.at(otherSPCol.index).size();
-  }
+  // get number of neighbour SPs ------> this needs to be removed
+  //std::size_t nsp = 0;
+  //for (const auto& otherSPCol : otherSPsNeighbours) {
+  //  nsp += grid.at(otherSPCol.index).size();
+  //}
 
-  linCircleVec.reserve(nsp);
-  outVec.reserve(nsp);
+  //linCircleVec.reserve(nsp);
+  //outVec.reserve(nsp);
   
   const float& rM = mediumSP.radius();
   const float& xM = mediumSP.x();
@@ -448,17 +484,27 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
   const float& varianceRM = mediumSP.varianceR();
   const float& varianceZM = mediumSP.varianceZ();
 
+  const float& cotThetaMax = m_config.cotThetaMax;
+  const float& deltaZMax = m_config.deltaZMax;
+  const float& collisionRegionMax = m_config.collisionRegionMax;
+  const float& collisionRegionMin = m_config.collisionRegionMin;
+  const float& minHelixDiameter2 = options.minHelixDiameter2;
+  const float& interactionPointCut = m_config.interactionPointCut;
+
   const float uIP = -1. / rM;
   const float cosPhiM = - xM * uIP;
   const float sinPhiM = - yM * uIP;
   float vIPAbs = 0;
-  if (m_config.interactionPointCut) {
+  if (interactionPointCut) {
     vIPAbs = impactMax / (rM * rM);
   }
 
   float deltaR = 0.;
   float deltaZ = 0.;
-  
+
+  //int ione = 0;
+  //int itwo = 0;
+
   for (auto& otherSPCol : otherSPsNeighbours) {
     const auto& otherSPs = grid.at(otherSPCol.index);
     if (otherSPs.size() == 0) {
@@ -475,8 +521,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
 	 if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
 		if ((rM - otherSP->radius()) <= deltaRMaxSP) { break; }
    	 } else {
-
-		//std::cout << " R " << rM << " " << otherSP->radius() << std::endl;
+		//ione++;
+		//std::cout << "r: " << rM << " " << otherSP->radius() << std::endl;
 		if ((otherSP->radius() - rM) >= deltaRMinSP) { break; }
     	}
     }
@@ -484,6 +530,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
 
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
+
+	//itwo++;
 
       if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
 	deltaR = (rM - otherSP->radius());
@@ -499,6 +547,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
 	
       } else {
 	deltaR = (otherSP->radius() - rM);
+
+	//std::cout << "R: " << rM << " " << otherSP->radius() << std::endl;
 	
 	// if r-distance is too big, try next SP in bin
 	if (deltaR > deltaRMaxSP) {
@@ -529,18 +579,19 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
       float cotTheta = deltaZ / deltaR;
       // check if duplet origin on z axis within collision region
       float zOrigin = zM - rM * cotTheta;
-      if (zOrigin < m_config.collisionRegionMin ||
-          zOrigin > m_config.collisionRegionMax) {
+      if (zOrigin < collisionRegionMin ||
+          zOrigin > collisionRegionMax) {
         continue;
       }
 
-      if (not m_config.interactionPointCut) {
+      
+      if (not interactionPointCut) {
 
 
-        if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+        if (cotTheta > cotThetaMax or cotTheta < -cotThetaMax) {
             continue;
         }
-        if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+        if (deltaZ > deltaZMax or deltaZ < -deltaZMax) {
            continue;
         }
 
@@ -568,11 +619,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
                                 xNewFrame, yNewFrame);
         spacePointData.setDeltaR(otherSP->index(),
                                std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-        outVec.push_back(otherSP.get());
+        outVec.emplace_back(otherSP.get());
 
         continue;
       }
-
+	
       const float deltaX = otherSP->x() - xM;
       const float deltaY = otherSP->y() - yM;
 
@@ -606,13 +657,13 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
 	// the distance of the straight line from the origin (radius of the
 	// circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
 	// aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-	if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
+	if ((bCoef * bCoef) * minHelixDiameter2 > (1 + aCoef * aCoef)) {
 	  continue;
 	}
       }      
      
 
-      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+      if (cotTheta > cotThetaMax or cotTheta < -cotThetaMax) {
         continue;
       }
 
@@ -630,9 +681,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoubletsTest(
 				xNewFrame, yNewFrame);
       spacePointData.setDeltaR(otherSP->index(),
 			       std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-      outVec.push_back(otherSP.get());
+      outVec.emplace_back(otherSP.get());
     }
   }
+
+  //std::cout << "it " << ione << " " << itwo << std::endl;
 }
 
 template <typename external_spacepoint_t, typename platform_t>
@@ -1106,6 +1159,364 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::
 
     // continue if number of top SPs is smaller than minimum required for filter
     if (state.topSpVec.empty()) {
+      continue;
+    }
+
+    seedFilterState.zOrigin = spM.z() - rM * lb.cotTheta;
+
+    m_config.seedFilter->filterSeeds_2SpFixed(
+        state.spacePointData, *state.compatBottomSP[b], spM, state.topSpVec,
+        state.curvatures, state.impactParameters, seedFilterState,
+        state.candidates_collector);
+  }  // loop on bottoms
+}
+
+template <typename external_spacepoint_t, typename platform_t>
+template <Acts::DetectorMeasurementInfo detailedMeasurement>
+inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
+    Acts::SpacePointData& spacePointData,
+    const InternalSpacePoint<external_spacepoint_t>& spM,
+    const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
+    SeedingState& state) const {
+  float rM = spM.radius();
+  float cosPhiM = spM.x() / rM;
+  float sinPhiM = spM.y() / rM;
+  float varianceRM = spM.varianceR();
+  float varianceZM = spM.varianceZ();
+
+  std::size_t numTopSP = state.compatTopSP.size();
+
+  // sort: make index vector
+  std::vector<std::size_t> sorted_bottoms(state.linCircleBottom.size());
+  for (std::size_t i(0); i < sorted_bottoms.size(); ++i) {
+    sorted_bottoms[i] = i;
+  }
+
+  std::vector<std::size_t> sorted_tops(state.linCircleTop.size());
+  for (std::size_t i(0); i < sorted_tops.size(); ++i) {
+    sorted_tops[i] = i;
+  }
+
+  if constexpr (detailedMeasurement == Acts::DetectorMeasurementInfo::DEFAULT) {
+    std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
+              [&state](const std::size_t& a, const std::size_t& b) -> bool {
+                return state.linCircleBottom[a].cotTheta <
+                       state.linCircleBottom[b].cotTheta;
+              });
+
+    std::sort(sorted_tops.begin(), sorted_tops.end(),
+              [&state](const std::size_t& a, const std::size_t& b) -> bool {
+                return state.linCircleTop[a].cotTheta <
+                       state.linCircleTop[b].cotTheta;
+              });
+  }
+
+  // Reserve enough space, in case current capacity is too little
+  state.topSpVec.reserve(numTopSP);
+  state.curvatures.reserve(numTopSP);
+  state.impactParameters.reserve(numTopSP);
+
+  size_t t0 = 0;
+
+  // clear previous results and then loop on bottoms and tops
+  state.candidates_collector.clear();
+
+  for (const std::size_t& b : sorted_bottoms) {
+    // break if we reached the last top SP
+    if (t0 == numTopSP) {
+      break;
+    }
+
+    auto lb = state.linCircleBottom[b];
+    float cotThetaB = lb.cotTheta;
+    float Vb = lb.V;
+    float Ub = lb.U;
+    float ErB = lb.Er;
+    float iDeltaRB = lb.iDeltaR;
+
+    // 1+(cot^2(theta)) = 1/sin^2(theta)
+    float iSinTheta2 = (1. + cotThetaB * cotThetaB);
+    float sigmaSquaredPtDependent = iSinTheta2 * options.sigmapT2perRadius;
+    // calculate max scattering for min momentum at the seed's theta angle
+    // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
+    // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
+    // scattering
+    // but to avoid trig functions we approximate cot by scaling by
+    // 1/sin^4(theta)
+    // resolving with pT to p scaling --> only divide by sin^2(theta)
+    // max approximation error for allowed scattering angles of 0.04 rad at
+    // eta=infinity: ~8.5%
+    float scatteringInRegion2 = options.multipleScattering2 * iSinTheta2;
+
+    float sinTheta = 1 / std::sqrt(iSinTheta2);
+    float cosTheta = cotThetaB * sinTheta;
+
+    // clear all vectors used in each inner for loop
+    state.topSpVec.clear();
+    state.curvatures.clear();
+    state.impactParameters.clear();
+
+    // coordinate transformation and checks for middle spacepoint
+    // x and y terms for the rotation from UV to XY plane
+    float rotationTermsUVtoXY[2] = {0, 0};
+    if constexpr (detailedMeasurement ==
+                  Acts::DetectorMeasurementInfo::DETAILED) {
+      rotationTermsUVtoXY[0] = cosPhiM * sinTheta;
+      rotationTermsUVtoXY[1] = sinPhiM * sinTheta;
+    }
+
+    // minimum number of compatible top SPs to trigger the filter for a certain
+    // middle bottom pair if seedConfirmation is false we always ask for at
+    // least one compatible top to trigger the filter
+    size_t minCompatibleTopSPs = 2;
+    if (!m_config.seedConfirmation or
+        state.compatBottomSP[b]->radius() > seedFilterState.rMaxSeedConf) {
+      minCompatibleTopSPs = 1;
+    }
+    if (m_config.seedConfirmation and seedFilterState.numQualitySeeds) {
+      minCompatibleTopSPs++;
+    }
+
+    for (size_t index_t = t0; index_t < numTopSP; index_t++) {
+      const std::size_t& t = sorted_tops[index_t];
+
+      auto lt = state.linCircleTop[t];
+
+      float cotThetaT = lt.cotTheta;
+      float rMxy = 0.;
+      float ub = 0.;
+      float vb = 0.;
+      float ut = 0.;
+      float vt = 0.;
+      double rMTransf[3];
+      float xB = 0.;
+      float yB = 0.;
+      float xT = 0.;
+      float yT = 0.;
+      float iDeltaRB2 = 0.;
+      float iDeltaRT2 = 0.;
+
+      if constexpr (detailedMeasurement ==
+                    Acts::DetectorMeasurementInfo::DETAILED) {
+        // protects against division by 0
+        float dU = lt.U - Ub;
+        if (dU == 0.) {
+          continue;
+        }
+        // A and B are evaluated as a function of the circumference parameters
+        // x_0 and y_0
+        float A0 = (lt.V - Vb) / dU;
+
+        float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
+
+        // position of Middle SP converted from UV to XY assuming cotTheta
+        // evaluated from the Bottom and Middle SPs double
+        double positionMiddle[3] = {
+            rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
+            rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
+            zPositionMiddle};
+
+        if (!xyzCoordinateCheck(spacePointData, m_config, spM, positionMiddle,
+                                rMTransf)) {
+          continue;
+        }
+
+        // coordinate transformation and checks for bottom spacepoint
+        float B0 = 2. * (Vb - A0 * Ub);
+        float Cb = 1. - B0 * lb.y;
+        float Sb = A0 + B0 * lb.x;
+        double positionBottom[3] = {
+            rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
+            rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
+            zPositionMiddle};
+
+        auto spB = state.compatBottomSP[b];
+        double rBTransf[3];
+        if (!xyzCoordinateCheck(spacePointData, m_config, *spB, positionBottom,
+                                rBTransf)) {
+          continue;
+        }
+
+        // coordinate transformation and checks for top spacepoint
+        float Ct = 1. - B0 * lt.y;
+        float St = A0 + B0 * lt.x;
+        double positionTop[3] = {
+            rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
+            rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
+            zPositionMiddle};
+
+        auto spT = state.compatTopSP[t];
+        double rTTransf[3];
+        if (!xyzCoordinateCheck(spacePointData, m_config, *spT, positionTop,
+                                rTTransf)) {
+          continue;
+        }
+
+        // bottom and top coordinates in the spM reference frame
+        xB = rBTransf[0] - rMTransf[0];
+        yB = rBTransf[1] - rMTransf[1];
+        float zB = rBTransf[2] - rMTransf[2];
+        xT = rTTransf[0] - rMTransf[0];
+        yT = rTTransf[1] - rMTransf[1];
+        float zT = rTTransf[2] - rMTransf[2];
+
+        iDeltaRB2 = 1. / (xB * xB + yB * yB);
+        iDeltaRT2 = 1. / (xT * xT + yT * yT);
+
+        cotThetaB = -zB * std::sqrt(iDeltaRB2);
+        cotThetaT = zT * std::sqrt(iDeltaRT2);
+      }
+
+      // use geometric average
+      float cotThetaAvg2 = cotThetaB * cotThetaT;
+      if constexpr (detailedMeasurement ==
+                    Acts::DetectorMeasurementInfo::DETAILED) {
+        // use arithmetic average
+        float averageCotTheta = 0.5 * (cotThetaB + cotThetaT);
+        cotThetaAvg2 = averageCotTheta * averageCotTheta;
+      } else if (cotThetaAvg2 <= 0) {
+        continue;
+      }
+
+      // add errors of spB-spM and spM-spT pairs and add the correlation term
+      // for errors on spM
+      float error2 =
+          lt.Er + ErB +
+          2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB * lt.iDeltaR;
+
+      float deltaCotTheta = cotThetaB - cotThetaT;
+      float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+
+      // Apply a cut on the compatibility between the r-z slope of the two
+      // seed segments. This is done by comparing the squared difference
+      // between slopes, and comparing to the squared uncertainty in this
+      // difference - we keep a seed if the difference is compatible within
+      // the assumed uncertainties. The uncertainties get contribution from
+      // the  space-point-related squared error (error2) and a scattering term
+      // calculated assuming the minimum pt we expect to reconstruct
+      // (scatteringInRegion2). This assumes gaussian error propagation which
+      // allows just adding the two errors if they are uncorrelated (which is
+      // fair for scattering and measurement uncertainties)
+      if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
+        // skip top SPs based on cotTheta sorting when producing triplets
+	if constexpr (detailedMeasurement ==
+			Acts::DetectorMeasurementInfo::DETAILED) {
+          continue;
+        }
+        // break if cotTheta from bottom SP < cotTheta from top SP because
+        // the SP are sorted by cotTheta
+        if (cotThetaB - cotThetaT < 0) {
+          break;
+        }
+        t0 = index_t + 1;
+        continue;
+      }
+
+      if constexpr (detailedMeasurement ==
+                             Acts::DetectorMeasurementInfo::DETAILED) {
+        rMxy = std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
+        float irMxy = 1/rMxy;
+	float Ax = rMTransf[0] * irMxy;
+        float Ay = rMTransf[1] * irMxy;
+
+        ub = (xB * Ax + yB * Ay) * iDeltaRB2;
+        vb = (yB * Ax - xB * Ay) * iDeltaRB2;
+        ut = (xT * Ax + yT * Ay) * iDeltaRT2;
+        vt = (yT * Ax - xT * Ay) * iDeltaRT2;
+      }
+
+      float dU = 0;
+      float A = 0;
+      float S2 = 0;
+      float B = 0;
+      float B2 = 0;
+
+      if constexpr (detailedMeasurement ==
+                    Acts::DetectorMeasurementInfo::DETAILED) {
+        dU = ut - ub;
+        // protects against division by 0
+        if (dU == 0.) {
+          continue;
+        }
+        A = (vt - vb) / dU;
+        S2 = 1. + A * A;
+        B = vb - A * ub;
+        B2 = B * B;
+      } else {
+        dU = lt.U - Ub;
+        // protects against division by 0
+        if (dU == 0.) {
+          continue;
+        }
+        // A and B are evaluated as a function of the circumference parameters
+        // x_0 and y_0
+        A = (lt.V - Vb) / dU;
+        S2 = 1. + A * A;
+        B = Vb - A * Ub;
+        B2 = B * B;
+      }
+
+      // sqrt(S2)/B = 2 * helixradius
+      // calculated radius must not be smaller than minimum radius
+      if (S2 < B2 * options.minHelixDiameter2) {
+        continue;
+      }
+
+      // refinement of the cut on the compatibility between the r-z slope of
+      // the two seed segments using a scattering term scaled by the actual
+      // measured pT (p2scatterSigma)
+      float iHelixDiameter2 = B2 / S2;
+      // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
+      // from rad to deltaCotTheta
+      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
+      if (!std::isinf(m_config.maxPtScattering)) {
+        // if pT > maxPtScattering, calculate allowed scattering angle using
+        // maxPtScattering instead of pt.
+        float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+        if (pT > m_config.maxPtScattering) {
+          float pTscatterSigma =
+              (m_config.highland / m_config.maxPtScattering) *
+              m_config.sigmaScattering;
+          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
+        }
+      }
+
+      // if deltaTheta larger than allowed scattering for calculated pT, skip
+      if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
+				if constexpr (detailedMeasurement ==
+											Acts::DetectorMeasurementInfo::DETAILED) {
+          continue;
+        }
+        if (cotThetaB - cotThetaT < 0) {
+          break;
+        }
+        t0 = index_t;
+        continue;
+      }
+      // A and B allow calculation of impact params in U/V plane with linear
+      // function
+      // (in contrast to having to solve a quadratic function in x/y plane)
+      float Im = 0;
+      if constexpr (detailedMeasurement ==
+                    Acts::DetectorMeasurementInfo::DETAILED) {
+        Im = std::abs((A - B * rMxy) * rMxy);
+      } else {
+        Im = std::abs((A - B * rM) * rM);
+      }
+
+      if (Im > m_config.impactMax) {
+        continue;
+      }
+
+      state.topSpVec.push_back(state.compatTopSP[t]);
+      // inverse diameter is signed depending if the curvature is
+      // positive/negative in phi
+      state.curvatures.push_back(B / std::sqrt(S2));
+      state.impactParameters.push_back(Im);
+    }  // loop on tops
+
+    // continue if number of top SPs is smaller than minimum required for filter
+    if (state.topSpVec.size() < minCompatibleTopSPs) {
       continue;
     }
 
