@@ -74,10 +74,6 @@ struct SeedFinderConfig {
   float fastTrackingRMin = 50. * Acts::UnitConstants::mm;
   float fastTrackingCotThetaMax = 2.13;
 
-  // use arithmetic average in the calculation of the squared error on the
-  // difference in tan(theta)
-  bool arithmeticAverageCotTheta = false;
-
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
