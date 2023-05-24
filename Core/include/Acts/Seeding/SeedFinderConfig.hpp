@@ -74,6 +74,8 @@ struct SeedFinderConfig {
   // parameters for forward seed confirmation
   SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
+
+
   // FIXME: this is not used yet
   //        float upperPtResolutionPerSeed = 20* Acts::GeV;
 

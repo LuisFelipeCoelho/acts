@@ -179,6 +179,12 @@ class SeedFinder {
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
+  void filterCandidatesTest(Acts::SpacePointData& spacePointData,
+                        const InternalSpacePoint<external_spacepoint_t>& SpM,
+                        const Acts::SeedFinderOptions& options,
+                        SeedFilterState& seedFilterState,
+                        SeedingState& state) const;
+
   void filterCandidates(Acts::SpacePointData& spacePointData,
                         const InternalSpacePoint<external_spacepoint_t>& SpM,
                         const Acts::SeedFinderOptions& options,
