@@ -86,7 +86,7 @@ addSeeding(
     else TruthSeedRanges(),
     seedingAlgorithm=SeedingAlgorithm.Default,
     *acts.examples.itk.itkSeedingAlgConfig(
-        acts.examples.itk.InputSpacePointsType.PixelSpacePoints
+        acts.examples.itk.InputSpacePointsType.PixelSpacePoints, fastSeeding=True
     ),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
