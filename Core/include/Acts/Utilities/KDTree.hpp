@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iostream>
 
 namespace Acts {
 /// @brief A general k-d tree with fast range search.
@@ -338,6 +339,8 @@ class KDTree {
         constexpr std::size_t max_exact_median = 128;
 
         iterator_t pivot;
+				
+//				std::cout << "size() " << size() << " max_exact_median " << max_exact_median << " LeafSize " << LeafSize << std::endl;
 
         // Next, we need to determine the pivot point of this node, that is to
         // say the point in the selected pivot dimension along which point we
@@ -414,6 +417,9 @@ class KDTree {
       // check for them being inside the range again.
       bool contained = r >= m_range;
 
+//      std::cout << "Node Size = " << std::distance(m_begin_it, m_end_it)
+//                << std::endl;
+
       if (m_type == NodeType::Internal) {
         // Firstly, we can check if the range completely contains the bounding
         // box of this node. If that is the case, we know for certain that any
@@ -422,6 +428,9 @@ class KDTree {
         if (contained) {
           // We can also pre-allocate space for the number of elements, since we
           // are inserting all of them anyway.
+
+//          std::cout << "Internal Node " << std::endl;
+
           for (iterator_t i = m_begin_it; i != m_end_it; ++i) {
             f(i->first, i->second);
           }
@@ -445,11 +454,18 @@ class KDTree {
       } else {
         // Iterate over all the elements in this leaf node. This should be a
         // relatively small number (the LeafSize template parameter).
+
+//        std::cout << "Leaf Node " << std::endl;
+
         for (iterator_t i = m_begin_it; i != m_end_it; ++i) {
           // We need to check whether the element is actually inside the range.
           // In case this node's bounding box is fully contained within the
           // range, we don't actually need to check this.
-          if (contained || r.contains(i->first)) {
+
+//          std::cout << "contained or r.contains(i->first) "
+//                    << (contained or r.contains(i->first)) << std::endl;
+
+          if (contained or r.contains(i->first)) {
             f(i->first, i->second);
           }
         }

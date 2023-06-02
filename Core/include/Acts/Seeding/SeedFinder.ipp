@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <numeric>
 #include <type_traits>
 
@@ -83,6 +84,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
   }
 
+  int nSP = 0;
+
   for (auto& spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -119,6 +122,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         break;
       }
     }
+
+    nSP++;
 
     getCompatibleDoublets(options, grid, state.topNeighbours, *spM.get(),
                           state.compatTopSP, m_config.deltaRMinTopSP,
@@ -160,6 +165,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       continue;
     }
 
+		std::cout << "Middle " << rM << " nTops " << state.compatTopSP.size() << " nBots " << state.compatBottomSP.size() << std::endl;
+		
     // filter candidates
     filterCandidates(*spM.get(), options, seedFilterState, state);
 
@@ -167,6 +174,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         state.candidates_collector, seedFilterState.numQualitySeeds, outIt);
 
   }  // loop on mediums
+
+//  std::cout << "nSP " << nSP << std::endl;
 }
 
 template <typename external_spacepoint_t, typename platform_t>

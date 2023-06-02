@@ -14,6 +14,7 @@
 
 #include <cmath>
 #include <functional>
+#include <iostream>
 #include <numeric>
 #include <type_traits>
 
@@ -33,8 +34,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
    * Cut: Ensure that we search only in φ_min ≤ φ ≤ φ_max, as defined by the
    * seeding configuration.
    */
-  res[DimPhi].shrinkMin(m_config.phiMin);
-  res[DimPhi].shrinkMax(m_config.phiMax);
+  //  res[DimPhi].shrinkMin(m_config.phiMin);
+  //  res[DimPhi].shrinkMax(m_config.phiMax);
 
   /*
    * Cut: Ensure that we search only in r ≤ r_max, as defined by the seeding
@@ -46,8 +47,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
    * Cut: Ensure that we search only in z_min ≤ z ≤ z_max, as defined by the
    * seeding configuration.
    */
-  res[DimZ].shrinkMin(m_config.zMin);
-  res[DimZ].shrinkMax(m_config.zMax);
+  //  res[DimZ].shrinkMin(m_config.zMin);
+  //  res[DimZ].shrinkMax(m_config.zMax);
 
   /*
    * Cut: Ensure that we search only in Δr_min ≤ r - r_L ≤ Δr_max, as defined
@@ -84,6 +85,12 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
   res[DimPhi].shrinkMin(pL - m_config.deltaPhiMax);
   res[DimPhi].shrinkMax(pL + m_config.deltaPhiMax);
 
+  /*
+   * Cut: Shrink the φ range, such that Δφ_min ≤ φ - φ_H ≤ Δφ_max
+   */
+  //	res[DimZ].shrinkMin(zL - 500);
+  //	res[DimZ].shrinkMax(zL + 500);
+
   return res;
 }
 
@@ -99,8 +106,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
    * Cut: Ensure that we search only in φ_min ≤ φ ≤ φ_max, as defined by the
    * seeding configuration.
    */
-  res[DimPhi].shrinkMin(m_config.phiMin);
-  res[DimPhi].shrinkMax(m_config.phiMax);
+  //  res[DimPhi].shrinkMin(m_config.phiMin);
+  //  res[DimPhi].shrinkMax(m_config.phiMax);
 
   /*
    * Cut: Ensure that we search only in r ≤ r_max, as defined by the seeding
@@ -112,8 +119,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
    * Cut: Ensure that we search only in z_min ≤ z ≤ z_max, as defined by the
    * seeding configuration.
    */
-  res[DimZ].shrinkMin(m_config.zMin);
-  res[DimZ].shrinkMax(m_config.zMax);
+  //  res[DimZ].shrinkMin(m_config.zMin);
+  //  res[DimZ].shrinkMax(m_config.zMax);
 
   /*
    * Cut: Ensure that we search only in Δr_min ≤ r_H - r ≤ Δr_max, as defined
@@ -142,6 +149,12 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
   res[DimPhi].shrinkMin(pM - m_config.deltaPhiMax);
   res[DimPhi].shrinkMax(pM + m_config.deltaPhiMax);
 
+  /*
+   * Cut: Shrink the φ range, such that Δφ_min ≤ φ - φ_H ≤ Δφ_max
+   */
+  //	res[DimZ].shrinkMin(high.z() - 500);
+  //	res[DimZ].shrinkMax(high.z() + 500);
+
   return res;
 }
 
@@ -151,7 +164,7 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
     const internal_sp_t &high, bool isMiddleInverted) const {
   float rL = low.radius();
   float rH = high.radius();
-
+	
   float zL = low.z();
   float zH = high.z();
 
@@ -395,6 +408,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
       float dU = lt.U - Ub;
 
+      //			std::cout << error2 + scatteringInRegion2 << "
+      // test" << std::endl;
+
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
       float A = (lt.V - Vb) / dU;
@@ -492,7 +508,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
       candidates_collector;
   candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                       max_num_quality_seeds_per_spm);
-
+	
   /*
    * Calculate the search ranges for bottom and top candidates for this middle
    * space point.
@@ -524,6 +540,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   bottom_lh_r[DimZ].shrink(middle.z() - myCotTheta * deltaRMaxBottom,
                            middle.z());
 
+  bottom_lh_r[DimZ].shrink(middle.z() - m_config.deltaZFactor, middle.z());
+
+  //	float cotThetaOrigin = middle.z()/middle.radius();
+
+  //	bottom_lh_r[DimCotThetaOrigin].shrink(cotThetaOrigin -
+  // m_config.deltaZFactor,
+  // cotThetaOrigin);
+
   /*
    * Calculate the search ranges for the other four sets of points in a
    * similar fashion.
@@ -531,11 +555,18 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   range_t top_lh_r = top_r;
   top_lh_r[DimZ].shrink(middle.z(), middle.z() + myCotTheta * deltaRMaxTop);
 
+  top_lh_r[DimZ].shrink(middle.z(), middle.z() + m_config.deltaZFactor);
+
   range_t bottom_hl_r = bottom_r;
   bottom_hl_r[DimZ].shrink(middle.z(),
                            middle.z() + myCotTheta * deltaRMaxBottom);
+
+  bottom_hl_r[DimZ].shrink(middle.z(), middle.z() + m_config.deltaZFactor);
+
   range_t top_hl_r = top_r;
   top_hl_r[DimZ].shrink(middle.z() - myCotTheta * deltaRMaxTop, middle.z());
+
+  top_hl_r[DimZ].shrink(middle.z() - m_config.deltaZFactor, middle.z());
 
   /*
    * Make sure the candidate vectors are clear, in case we've used them
@@ -554,17 +585,17 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * any seeds and we do not need to bother doing the search.
    */
   if (!bottom_lh_r.degenerate() && !top_lh_r.degenerate()) {
-    /*
-     * Search the trees for points that lie in the given search range.
-     */
-    tree.rangeSearchMapDiscard(
-        bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
-                         const typename tree_t::coordinate_t &,
-                         const typename tree_t::value_t &bottom) {
-          if (validTuple(options, *bottom, middle, false)) {
-            bottom_lh_v.push_back(bottom);
-          }
-        });
+		/*
+		 * Search the trees for points that lie in the given search range.
+		 */
+		tree.rangeSearchMapDiscard(top_lh_r,
+															 [this, &options, &middle, &top_lh_v](
+																																		const typename tree_t::coordinate_t &,
+																																		const typename tree_t::value_t &top) {
+			if (validTuple(options, *top, middle, true)) {
+				top_lh_v.push_back(top);
+			}
+		});
   }
 
   /*
@@ -572,68 +603,127 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * monotonically decreasing z tracks.
    */
   if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
-    tree.rangeSearchMapDiscard(
-        bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
-                         const typename tree_t::coordinate_t &,
-                         const typename tree_t::value_t &bottom) {
-          if (validTuple(options, middle, *bottom, true)) {
-            bottom_hl_v.push_back(bottom);
-          }
-        });
+		tree.rangeSearchMapDiscard(top_hl_r,
+															 [this, &options, &middle, &top_hl_v](
+																																		const typename tree_t::coordinate_t &,
+																																		const typename tree_t::value_t &top) {
+			if (validTuple(options, middle, *top, false)) {
+				top_hl_v.push_back(top);
+			}
+		});
   }
 
+	// apply cut on the number of top SP if seedConfirmation is true
+	SeedFilterState seedFilterState;
+	if (m_config.seedConfirmation) {
+		// check if middle SP is in the central or forward region
+		SeedConfirmationRangeConfig seedConfRange =
+		(middle.z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+		 middle.z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+		? m_config.forwardSeedConfirmationRange
+		: m_config.centralSeedConfirmationRange;
+		// set the minimum number of top SP depending on whether the middle SP is
+		// in the central or forward region
+		seedFilterState.nTopSeedConf = middle.radius() > seedConfRange.rMaxSeedConf
+		? seedConfRange.nTopForLargeR
+		: seedConfRange.nTopForSmallR;
+		// set max bottom radius for seed confirmation
+		seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+		// continue if number of top SPs is smaller than minimum
+		if (top_lh_v.size()+top_hl_v.size() < seedFilterState.nTopSeedConf) {
+//			std::cout << "conf " << top_lh_v.size()+top_hl_v.size()  << " seedFilterState.nTopSeedConf " << seedFilterState.nTopSeedConf << std::endl;
+			return;
+		}
+	}
+	
   /*
-   * Next, we perform a search for top candidates in increasing z tracks,
+   * Next, we perform a search for bottom candidates in increasing z tracks,
    * which only makes sense if we found any bottom candidates.
    */
-  if (!bottom_lh_v.empty()) {
-    tree.rangeSearchMapDiscard(top_lh_r,
-                               [this, &options, &middle, &top_lh_v](
-                                   const typename tree_t::coordinate_t &,
-                                   const typename tree_t::value_t &top) {
-                                 if (validTuple(options, *top, middle, true)) {
-                                   top_lh_v.push_back(top);
-                                 }
-                               });
+  if (!top_lh_v.empty()) {
+		tree.rangeSearchMapDiscard(
+															 bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
+																																										const typename tree_t::coordinate_t &,
+																																										const typename tree_t::value_t &bottom) {
+			if (validTuple(options, *bottom, middle, false)) {
+				bottom_lh_v.push_back(bottom);
+			}
+		});
   }
 
   /*
    * And repeat for the top spacepoints for decreasing z tracks!
    */
-  if (!bottom_hl_v.empty()) {
-    tree.rangeSearchMapDiscard(top_hl_r,
-                               [this, &options, &middle, &top_hl_v](
-                                   const typename tree_t::coordinate_t &,
-                                   const typename tree_t::value_t &top) {
-                                 if (validTuple(options, middle, *top, false)) {
-                                   top_hl_v.push_back(top);
-                                 }
-                               });
+  if (!top_hl_v.empty()) {
+		tree.rangeSearchMapDiscard(
+															 bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
+																																			const typename tree_t::coordinate_t &,
+																																			const typename tree_t::value_t &bottom) {
+			if (validTuple(options, middle, *bottom, true)) {
+				bottom_hl_v.push_back(bottom);
+			}
+		});
   }
+	
+	if ((!bottom_lh_v.empty() && !top_lh_v.empty()) or (!bottom_hl_v.empty() && !top_hl_v.empty())) {
 
-  // TODO: add seed confirmation
-  SeedFilterState seedFilterState;
+		std::vector<internal_sp_t *> bottom_v, top_v;
 
-  /*
+		// reserve memory
+		bottom_v.reserve(bottom_lh_v.size()+bottom_hl_v.size());
+		top_v.reserve(top_lh_v.size()+top_hl_v.size());
+
+		// concatenate the vectors
+		bottom_v.insert( bottom_v.end(), bottom_lh_v.begin(), bottom_lh_v.end() );
+		bottom_v.insert( bottom_v.end(), bottom_hl_v.begin(), bottom_hl_v.end() );
+		top_v.insert( top_v.end(), top_lh_v.begin(), top_lh_v.end() );
+		top_v.insert( top_v.end(), top_hl_v.begin(), top_hl_v.end() );
+		
+//		std::cout << "Middle " << middle.radius() << " nTops " << top_v.size() << " nBots " << bottom_v.size() << std::endl;
+		
+//		for (const auto& bottomSP: bottom_v) {
+//
+//			const float zOrigin = middle.z()  - middle.radius() * (bottomSP->z() - middle.z())/(bottomSP->radius() - middle.radius());
+//
+//			for (const auto& topSP: top_v) {
+//				candidates_collector.push(*bottomSP, middle, *topSP, 0, zOrigin, false);
+//			}
+//		}
+		
+		/*
+		 * Run a seed filter, just like in other seeding algorithms.
+		 */
+		filterCandidates(options, middle, bottom_v, top_v, seedFilterState, candidates_collector);
+		m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
+																							seedFilterState.numQualitySeeds,
+																							std::back_inserter(out_cont));
+	}
+	
+	
+	/*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
-  if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(options, middle, bottom_lh_v, top_lh_v, seedFilterState,
-                     candidates_collector);
-  }
+//  if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
+//		std::cout << std::endl;
+//		std::cout << "Middle " << middle.radius() << " nTops " << top_lh_v.size() << " nBots " << bottom_lh_v.size() << std::endl;
+//    filterCandidates(options, middle, bottom_lh_v, top_lh_v, seedFilterState,
+//                     candidates_collector);
+//  }
   /*
    * Try to combine candidates for decreasing z tracks.
    */
-  if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
-                     candidates_collector);
-  }
+//  if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
+//		std::cout << std::endl;
+//		std::cout << "Middle " << middle.radius() << " nTops " << top_hl_v.size() << " nBots " << bottom_hl_v.size() << std::endl;
+//    filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
+//                     candidates_collector);
+//  }
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
-                                            seedFilterState.numQualitySeeds,
-                                            std::back_inserter(out_cont));
+//  m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
+//                                            seedFilterState.numQualitySeeds,
+//                                            std::back_inserter(out_cont));
 }
 
 template <typename external_spacepoint_t>
@@ -652,6 +742,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
     point[DimPhi] = sp->phi();
     point[DimR] = sp->radius();
     point[DimZ] = sp->z();
+    //		point[DimCotThetaOrigin] = sp->z()/sp->radius();
 
     points.emplace_back(point, sp);
   }
@@ -693,10 +784,27 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   std::vector<internal_sp_t *> internalSpacePoints;
   for (const external_spacepoint_t *p : spacePoints) {
     auto [position, variance] = extract_coordinates(p);
-    internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
-        *p, position, options.beamPos, variance));
+
     // store x,y,z values in extent
     rRangeSPExtent.extend(position);
+
+    float spX = position[0];
+    float spY = position[1];
+    float spZ = position[2];
+
+    // remove all SPs outside region of interest
+    if (spZ > m_config.zMax || spZ < m_config.zMin) {
+      //			std::cout << "continue z " << std::endl;
+      continue;
+    }
+    float spPhi = std::atan2(spY, spX);
+    if (spPhi > m_config.phiMax || spPhi < m_config.phiMin) {
+      //			std::cout << "continue phi " << std::endl;
+      continue;
+    }
+
+    internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
+        *p, position, options.beamPos, variance));
   }
   // variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
@@ -710,10 +818,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * take ownership of the points.
    */
   tree_t tree = createTree(internalSpacePoints);
+
+  //	std::cout << "nSP " << internalSpacePoints.size() << std::endl;
+
   /*
    * Run the seeding algorithm by iterating over all the points in the tree
    * and seeing what happens if we take them to be our middle spacepoint.
    */
+
+  int nSP = 0;
+
   for (const typename tree_t::pair_t &middle_p : tree) {
     internal_sp_t &middle = *middle_p.second;
     auto rM = middle.radius();
@@ -732,8 +846,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
       }
     }
 
+    nSP++;
+
     processFromMiddleSP(options, tree, out_cont, middle_p);
   }
+
+//  std::cout << "nSP " << nSP << std::endl;
 
   /*
    * Don't forget to get rid of all the spacepoints we just allocated!

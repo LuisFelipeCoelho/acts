@@ -295,8 +295,8 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     assert isinstance(inputSpacePointsType, InputSpacePointsType)
 
     # variables that do not change for pixel and strip SPs:
-    zMax = 3000 * u.mm
-    zMin = -3000 * u.mm
+    zMax = 2700 * u.mm
+    zMin = -2700 * u.mm
     beamPos = (0 * u.mm, 0 * u.mm)
     collisionRegionMin = -200 * u.mm
     collisionRegionMax = 200 * u.mm

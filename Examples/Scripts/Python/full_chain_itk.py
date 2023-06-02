@@ -21,11 +21,13 @@ from acts.examples.reconstruction import (
     AmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
+    SeedFinderConfigArg,
+    SeedFinderOptionsArg,
 )
 
-ttbar_pu200 = False
+ttbar_pu200 = True
 u = acts.UnitConstants
-geo_dir = pathlib.Path("acts-itk")
+geo_dir = pathlib.Path("/Users/luiscoelho/lcoelho/acts/acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
@@ -33,7 +35,7 @@ detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=3, numThreads=1, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
@@ -85,34 +87,11 @@ addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
     if ttbar_pu200
     else TruthSeedRanges(),
-    seedingAlgorithm=SeedingAlgorithm.Default,
+    seedingAlgorithm=SeedingAlgorithm.Orthogonal,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
-    outputDirRoot=outputDir,
-)
-
-addCKFTracks(
-    s,
-    trackingGeometry,
-    field,
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0)),
-    outputDirRoot=outputDir,
-)
-
-addAmbiguityResolution(
-    s,
-    AmbiguityResolutionConfig(maximumSharedHits=3),
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
-    outputDirRoot=outputDir,
-)
-
-addVertexFitting(
-    s,
-    field,
-    vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
 )
 

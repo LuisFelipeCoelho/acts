@@ -76,6 +76,7 @@ struct SeedFinderOrthogonalConfig {
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
   float deltaPhiMax = 0.085;
+  float deltaZFactor = 400;
 
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
