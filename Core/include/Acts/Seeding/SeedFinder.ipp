@@ -11,6 +11,8 @@
 #include <numeric>
 #include <type_traits>
 
+#include <iostream>
+
 namespace Acts {
 
 template <typename external_spacepoint_t, typename platform_t>
@@ -88,6 +90,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
+
+	std::cout << "**1"<< std::endl;
+
       if (rM < rMiddleSPRange.min()) {
         continue;
       }
@@ -102,6 +107,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
       /// protects against zM at the limit of zBinEdges
       zBin == 0 ? zBin : --zBin;
+
+      std::cout << "zBin " << zBin << " " << m_config.rRangeMiddleSP[zBin][0] << " " << m_config.rRangeMiddleSP[zBin][1] << std::endl;
+
       if (rM < m_config.rRangeMiddleSP[zBin][0]) {
         continue;
       }
@@ -110,6 +118,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         break;
       }
     } else {
+
+	std::cout << "**2" << m_config.rRangeMiddleSP.empty() << std::endl;
+
       if (rM < m_config.rMinMiddle) {
         continue;
       }
@@ -119,19 +130,26 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
+    std::cout << "======== MIDDLE ========" << std::endl;
+    std::cout << "rM = " << rM << std::endl;
+
     // remove middle SPs on the last layer since there would be no outer SPs to
     // complete a seed
     float zM = spM->z();
     if (zM < m_config.zOutermostLayers.first or
         zM > m_config.zOutermostLayers.second) {
-      continue;
+      //continue;
     }
+
+    std::cout << "--- TOP ---" << std::endl;
 
     // Iterate over middle-top dublets
     getCompatibleDoublets<Acts::SpacePointCandidateType::TOP>(
         state.spacePointData, options, grid, state.topNeighbours, *spM.get(),
         state.linCircleTop, state.compatTopSP, m_config.deltaRMinTopSP,
         m_config.deltaRMaxTopSP);
+
+     std::cout << "nT: " << state.compatTopSP.size() << std::endl;
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -160,11 +178,15 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
+    std::cout << "--- BOT ---" << std::endl;
+
     // Iterate over middle-bottom dublets
     getCompatibleDoublets<Acts::SpacePointCandidateType::BOTTOM>(
         state.spacePointData, options, grid, state.bottomNeighbours, *spM.get(),
         state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
         m_config.deltaRMaxBottomSP);
+
+    std::cout << "nB: " << state.compatBottomSP.size() << std::endl;
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
@@ -243,6 +265,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
+
+        std::cout << "r = " << otherSP->radius() << std::endl;
 
       if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
         deltaR = (rM - otherSP->radius());
@@ -338,6 +362,9 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         spacePointData.setDeltaR(otherSP->index(),
                                  std::sqrt(deltaR2 + (deltaZ * deltaZ)));
         outVec.push_back(otherSP.get());
+
+        std::cout << "# fill SP" << std::endl;
+
         continue;
       }
 
@@ -388,6 +415,9 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         spacePointData.setDeltaR(otherSP->index(),
                                  std::sqrt(deltaR2 + (deltaZ * deltaZ)));
         outVec.emplace_back(otherSP.get());
+
+	std::cout << "# fill SP" << std::endl;
+
         continue;
       }
 
@@ -437,6 +467,9 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       spacePointData.setDeltaR(otherSP->index(),
                                std::sqrt(deltaR2 + (deltaZ * deltaZ)));
       outVec.emplace_back(otherSP.get());
+
+	std::cout << "# fill SP" << std::endl;
+
     }
   }
 }

@@ -52,7 +52,7 @@ struct SeedFinderConfig {
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
   // range defined in vector for each z region
-  std::vector<std::vector<float>> rRangeMiddleSP;
+  std::vector<std::vector<double>> rRangeMiddleSP;
   // range defined by rMinMiddle and rMaxMiddle
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
@@ -179,6 +179,9 @@ struct SeedFinderConfig {
   // Returns position of the center of the top strip.
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
+  // Delegate to apply experiment specific cuts
+  Delegate<bool(float& spX, float& spY, float& spZ)> experimentCuts;
+
   bool isInInternalUnits = false;
 
   SeedFinderConfig toInternalUnits() const {
@@ -211,6 +214,8 @@ struct SeedFinderConfig {
 
     config.zAlign /= 1_mm;
     config.rAlign /= 1_mm;
+
+    config.fastTrackingRMin /= 1_mm;
 
     config.toleranceParam /= 1_mm;
 

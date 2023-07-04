@@ -10,6 +10,8 @@
 
 #include <memory>
 
+#include <iostream>
+
 template <typename SpacePoint>
 std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
 Acts::SpacePointGridCreator::createGrid(
@@ -26,6 +28,7 @@ Acts::SpacePointGridCreator::createGrid(
         "SpacePointGridCreator::createGrid");
   }
   using AxisScalar = Acts::Vector3::Scalar;
+  using namespace Acts::UnitLiterals;
 
   int phiBins = 0;
   // for no magnetic field, create 100 phi-bins
@@ -35,7 +38,7 @@ Acts::SpacePointGridCreator::createGrid(
     // calculate circle intersections of helix and max detector radius
     float minHelixRadius =
         config.minPt /
-        (300. * options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
+        (1_T * 1e6 * options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
                                      // = pT[MeV] / (300 *Bz[kT])
 
     // sanity check: if yOuter takes the square root of a negative number
@@ -62,6 +65,11 @@ Acts::SpacePointGridCreator::createGrid(
       innerAngle = std::atan(xInner / yInner);
     }
 
+    std::cout << "Grid config.impactMax" << config.impactMax << std::endl;
+    std::cout << "Grid minHelixRadius" << minHelixRadius << std::endl;
+
+    std::cout << "Grid " << config.rMax << " " << config.deltaRMax << " " << config.phiBinDeflectionCoverage << " " << options.bFieldInZ << std::endl;
+
     // evaluating the azimutal deflection including the maximum impact parameter
     float deltaAngleWithMaxD0 =
         std::abs(std::asin(config.impactMax / (rMin)) -
@@ -77,6 +85,8 @@ Acts::SpacePointGridCreator::createGrid(
     float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0) /
                      config.phiBinDeflectionCoverage;
 
+    std::cout << "Grid sI + sF " << deltaAngleWithMaxD0 << " + " << (outerAngle - innerAngle) << std::endl;
+
     // sanity check: if the delta phi is equal to or less than zero, we'll be
     // creating an infinite or a negative number of bins, which would be bad!
     if (deltaPhi <= 0.f) {
@@ -84,6 +94,10 @@ Acts::SpacePointGridCreator::createGrid(
           "Delta phi value is equal to or less than zero, leading to an "
           "impossible number of bins (negative or infinite)");
     }
+    // set protection for large number of bins, by default it is infinite
+  //  if (deltaPhi > 1./31.831) {
+//	deltaPhi = 1./31.831;
+   // }
 
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
@@ -92,6 +106,11 @@ Acts::SpacePointGridCreator::createGrid(
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on this
     // number) of the maximum expected azimutal deflection.
+
+    if (phiBins > 200) {phiBins =200;}
+
+    std::cout << "Grid " << phiBins << std::endl;
+
   }
 
   Acts::detail::Axis<detail::AxisType::Equidistant,

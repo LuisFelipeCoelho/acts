@@ -127,7 +127,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
     Acts::Extent& rRangeSPExtent,
     const SeedFinderConfig<external_spacepoint_t>& config,
-    const SeedFinderOptions& options) {
+    const SeedFinderOptions& options){
   if (not config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
@@ -182,6 +182,29 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     if (spPhi > phiMax || spPhi < phiMin) {
       continue;
     }
+
+    // discard SPs according to detector specific cuts
+    if (!config.experimentCuts(spX, spY, spZ)) {
+	continue;
+    }
+
+
+    //if (experimentCuts != nullptr) {
+      // discard SPs according to detector specific cuts
+    //  if (!experimentCuts(spZ, spX * spX + spY * spY)) {
+    //    continue;
+    //  }
+    //}
+
+    /*
+    float smallR = spX * spX + spY * spY;   
+
+    if (std::abs(spZ) > 200. && smallR < 2500.) {
+	continue;
+    }
+    if (std::abs(spZ) - config.collisionRegionMax > config.cotThetaMax * std::sqrt(smallR)) {
+        continue;
+    }*/
 
     auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
         counter, sp, spPosition, options.beamPos, variance);
