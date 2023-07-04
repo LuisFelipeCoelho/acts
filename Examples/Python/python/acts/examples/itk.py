@@ -298,7 +298,7 @@ def buildITkGeometry(
     )
 
 
-def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
+def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=False):
     assert isinstance(inputSpacePointsType, InputSpacePointsType)
 
     # variables that do not change for pixel and strip SPs:
@@ -309,7 +309,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     collisionRegionMin = -200 * u.mm
     collisionRegionMax = 200 * u.mm
     maxSeedsPerSpM = 4
-    cotThetaMax = 27.2899
+    cotThetaMax = 27.2899  # (4.0 eta) --> 27.2899 = 1/tan(2*arctan(exp(-4)))
     sigmaScattering = 2
     radLengthPerSeed = 0.0975
     minPt = 900 * u.MeV
@@ -439,6 +439,17 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         maxSeedsPerSpMConf = 5
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
+
+        if fastSeeding == True:
+            rMaxGridConfig = 250 * u.mm
+            deltaRMax = 200 * u.mm
+            zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
+            # variables that are only used for fast tracking:
+            skipZMiddleBinSearch = 2
+            fastTrackingCut = True
+            fastTrackingRMin = 50 * u.mm
+            fastTrackingCotThetaMax = 2.1293  # 1.5 eta
+
     elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
         outputSeeds = "StripSeeds"
         allowSeparateRMax = True
@@ -491,6 +502,44 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         maxQualitySeedsPerSpMConf = 100
         useDeltaRorTopRadius = False
 
+    if fastSeeding == True:
+        minPt = 1000 * u.MeV
+        collisionRegionMin = -150 * u.mm
+        collisionRegionMax = 150 * u.mm
+        zBinEdges = [
+            -3000.0,
+            -2500.0,
+            -1400.0,
+            -925.0,
+            -450.0,
+            -250.0,
+            250.0,
+            450.0,
+            925.0,
+            1400.0,
+            2500.0,
+            3000.0,
+        ]
+        rRangeMiddleSP = [
+            [40.0, 80.0],
+            [40.0, 200.0],
+            [70.0, 200.0],
+            [70.0, 200.0],
+            [70.0, 250.0],
+            [70.0, 250.0],
+            [70.0, 250.0],
+            [70.0, 200.0],
+            [70.0, 200.0],
+            [40.0, 200.0],
+            [40.0, 80.0],
+        ]
+        useVariableMiddleSPRange = False
+    else:
+        skipZMiddleBinSearch = 0
+        fastTrackingCut = False
+        fastTrackingRMin = 0 * u.mm
+        fastTrackingCotThetaMax = 0
+
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
         maxSeedsPerSpM=maxSeedsPerSpM,
@@ -506,12 +555,16 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,
         zBinsCustomLooping=zBinsCustomLooping,
+        skipZMiddleBinSearch=skipZMiddleBinSearch,
         rRangeMiddleSP=rRangeMiddleSP,
         useVariableMiddleSPRange=useVariableMiddleSPRange,
         binSizeR=binSizeR,
         seedConfirmation=seedConfirmation,
         centralSeedConfirmationRange=centralSeedConfirmationRange,
         forwardSeedConfirmationRange=forwardSeedConfirmationRange,
+        fastTrackingCut=fastTrackingCut,
+        fastTrackingRMin=fastTrackingRMin,
+        fastTrackingCotThetaMax=fastTrackingCotThetaMax,
         deltaR=(deltaRMin, deltaRMax),
         deltaRBottomSP=(deltaRMinSP, deltaRMaxBottomSP),
         deltaRTopSP=(deltaRMinSP, deltaRMaxTopSP),
@@ -538,6 +591,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     )
     spacePointGridConfigArg = SpacePointGridConfigArg(
         rMax=rMaxGridConfig,
+        deltaRMax=deltaRMax,
         zBinEdges=zBinEdges,
         phiBinDeflectionCoverage=phiBinDeflectionCoverage,
         phi=(phiMin, phiMax),
