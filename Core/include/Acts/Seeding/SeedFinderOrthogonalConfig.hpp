@@ -74,7 +74,7 @@ struct SeedFinderOrthogonalConfig {
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
   // range defined in vector for each z region
-  std::vector<std::vector<float>> rRangeMiddleSP;
+  std::vector<std::vector<double>> rRangeMiddleSP;
   // range defined by rMinMiddle and rMaxMiddle
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;

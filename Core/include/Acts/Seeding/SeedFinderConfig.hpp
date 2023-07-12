@@ -52,7 +52,7 @@ struct SeedFinderConfig {
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
   // range defined in vector for each z region
-  std::vector<std::vector<float>> rRangeMiddleSP;
+  std::vector<std::vector<double>> rRangeMiddleSP;
   // range defined by rMinMiddle and rMaxMiddle
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
@@ -288,7 +288,7 @@ struct SeedFinderOptions {
     // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
     // millimeter
     // TODO: change using ACTS units
-    options.pTPerHelixRadius = 1_T * 1e6 * options.bFieldInZ;
+    options.pTPerHelixRadius = 300 * options.bFieldInZ;
     options.minHelixDiameter2 =
         std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2);
     options.pT2perRadius =
