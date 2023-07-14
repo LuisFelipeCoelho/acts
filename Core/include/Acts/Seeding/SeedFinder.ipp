@@ -83,6 +83,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
   }
 
+  //std::cout << " ==== Middle SP ==== " << std::endl;
+
   for (const auto& spM : middleSPs) {
     float rM = spM->radius();
 
@@ -127,6 +129,17 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       continue;
     }
 
+    /*if (  (rM < 81.1666+0.001 and rM > 81.1666-0.001) or    
+          (rM < 81.9077+0.001 and rM > 81.9077-0.001) or
+          (rM < 90.6867+0.001 and rM > 90.6867-0.001) or
+          (rM < 91.4038+0.001 and rM > 91.4038-0.001) or 
+          (rM < 101.776+0.001 and rM > 101.776-0.001) or
+          (rM < 102.496+0.001 and rM > 102.496-0.001) ) {
+        std::cout << std::endl;
+    } else { continue;}*/
+
+    //std::cout << "----> |Middle| " << rM << std::endl;
+
     const float uIP = -1. / rM;
     const float cosPhiM = -spM->x() * uIP;
     const float sinPhiM = -spM->y() * uIP;
@@ -137,6 +150,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         state.spacePointData, options, grid, state.topNeighbours, *spM.get(),
         state.linCircleTop, state.compatTopSP, m_config.deltaRMinTopSP,
         m_config.deltaRMaxTopSP, uIP, uIP2, cosPhiM, sinPhiM);
+
+    //std::cout << "nt "<< state.compatTopSP.size() << std::endl;
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -170,6 +185,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         state.spacePointData, options, grid, state.bottomNeighbours, *spM.get(),
         state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
         m_config.deltaRMaxBottomSP, uIP, uIP2, cosPhiM, sinPhiM);
+
+    //std::cout << "nb "<< state.compatBottomSP.size() << std::endl;
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
@@ -248,6 +265,20 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     // the same in the Neighbour object
     auto min_itr = otherSPCol.itr;
     bool found = false;
+    //std::cout << std::endl;
+
+    /*
+    for (; min_itr != otherSPs.end(); ++min_itr) {
+	const auto& otherSP = *min_itr;
+	 if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+		//std::cout << "rb. " << otherSP->radius() << std::endl;
+		if ((rM - otherSP->radius()) <= deltaRMaxSP) { break; }
+   	 } else {
+		//std::cout << "rt. " << otherSP->radius()  << std::endl;
+		if ((otherSP->radius() - rM) >= deltaRMinSP) { break; }
+    	}
+    }
+    otherSPCol.itr = min_itr;*/
 
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
@@ -255,32 +286,39 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
         deltaR = (rM - otherSP->radius());
 
-        // if r-distance is too small, try next SP in bin
+	// if r-distance is too small, try next SP in bin
         if (deltaR < deltaRMinSP) {
+          //std::cout << "rb " << otherSP->radius() << " break deltaR < deltaRMinSP" << std::endl;
           break;
         }
         // if r-distance is too big, try next SP in bin
         if (deltaR > deltaRMaxSP) {
+	//  std::cout << "rb " << otherSP->radius() << " continue deltaR > deltaRMaxSP" << std::endl;
           continue;
         }
+	//std::cout << "rb " << otherSP->radius() << std::endl;
 
       } else {
         deltaR = (otherSP->radius() - rM);
 
         // if r-distance is too big, try next SP in bin
         if (deltaR > deltaRMaxSP) {
+	  //std::cout << "rt " << otherSP->radius() << " break deltaR > deltaRMaxSP" << std::endl;
           break;
         }
         // if r-distance is too small, try next SP in bin
         if (deltaR < deltaRMinSP) {
+	//  std::cout << "rt " << otherSP->radius() << " continue deltaR < deltaRMinSP" << std::endl;
           continue;
         }
+	//std::cout << "rt " << otherSP->radius() << std::endl;
       }
 
       // We update the iterator in the Neighbout object
       // that mean that we have changed the middle space point
       // and the lower bound has moved accordingly
       if (not found) {
+	//std::cout << "found = true" << std::endl;
         found = true;
         otherSPCol.itr = min_itr;
       }
@@ -374,6 +412,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
           continue;
         }
 
+	//std::cout << "cut " << otherSP->radius() << " " << cotTheta << " " << m_config.fastTrackingRMin << " " << m_config.fastTrackingCotThetaMax << std::endl;
         // cut on bottom SPs in a certain (r, eta) region of the detector for
         // fast seeding
         if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
@@ -381,6 +420,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
               otherSP->radius() < m_config.fastTrackingRMin and
               (cotTheta > m_config.fastTrackingCotThetaMax or
                cotTheta < -m_config.fastTrackingCotThetaMax)) {
+	    //std::cout << "cut " << otherSP->radius() << " " << cotTheta << " " << m_config.fastTrackingRMin << " " << m_config.fastTrackingCotThetaMax << std::endl;
             continue;
           }
         }
@@ -423,6 +463,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
+      //std::cout << "cut " << otherSP->radius() << " " << cotTheta << " " << m_config.fastTrackingRMin << " " << m_config.fastTrackingCotThetaMax << std::endl;
       // cut on bottom SPs in a certain (r, eta) region of the detector for
       // fast seeding
       if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
@@ -430,6 +471,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
             otherSP->radius() < m_config.fastTrackingRMin and
             (cotTheta > m_config.fastTrackingCotThetaMax or
              cotTheta < -m_config.fastTrackingCotThetaMax)) {
+          //std::cout << "cut " << otherSP->radius() << " " << cotTheta << " " << m_config.fastTrackingRMin << " " << m_config.fastTrackingCotThetaMax << std::endl;
           continue;
         }
       }
