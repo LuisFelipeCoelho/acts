@@ -149,7 +149,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
 template <typename external_spacepoint_t>
 bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
     const SeedFinderOptions &options, const internal_sp_t &low,
-    const internal_sp_t &high, bool isMiddleInverted) const {
+    const internal_sp_t &high, bool isMiddleInverted, bool bottom) const {
   float rL = low.radius();
   float rH = high.radius();
 
@@ -160,6 +160,17 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
 
   float deltaZ = (zH - zL);
   float cotTheta = deltaZ / deltaR;
+	
+	if (isMiddleInverted and not bottom) {
+		std::cout << "|Orthogonal Seeding| Middle-Top (r,phi,z): " << high.radius() << " " << high.phi() << " " << high.z() << " " << low.radius() << " " << low.phi() << " " << low.z() << std::endl;
+	} else if (not isMiddleInverted and not bottom) {
+		std::cout << "|Orthogonal Seeding| Middle-Top (r,phi,z): " << low.radius() << " " << low.phi() << " " << low.z() << " " << high.radius() << " " << high.phi() << " " << high.z() << std::endl;
+	} else if (not isMiddleInverted and bottom) {
+		std::cout << "|Orthogonal Seeding| Middle-Bottom (r,phi,z): " << high.radius() << " " << high.phi() << " " << high.z() << " " << low.radius() << " " << low.phi() << " " << low.z() << std::endl;
+	} else if (isMiddleInverted and bottom) {
+		std::cout << "|Orthogonal Seeding| Middle-Bottom (r,phi,z): " << low.radius() << " " << low.phi() << " " << low.z() << " " << high.radius() << " " << high.phi() << " " << high.z() << std::endl;
+	}
+		
   /*
    * Cut: Ensure that the origin of the dublet (the intersection of the line
    * between them with the z axis) lies within the collision region.
@@ -564,11 +575,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     /*
      * Search the trees for points that lie in the given search range.
      */
-    tree.rangeSearchMapDiscard(top_lh_r,
+		tree.rangeSearchMapDiscard(top_lh_r,
                                [this, &options, &middle, &top_lh_v](
                                    const typename tree_t::coordinate_t &,
                                    const typename tree_t::value_t &top) {
-                                 if (validTuple(options, *top, middle, true)) {
+                                 if (validTuple(options, *top, middle, true, false)) {
                                    top_lh_v.push_back(top);
                                  }
                                });
@@ -583,7 +594,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                [this, &options, &middle, &top_hl_v](
                                    const typename tree_t::coordinate_t &,
                                    const typename tree_t::value_t &top) {
-                                 if (validTuple(options, middle, *top, false)) {
+                                 if (validTuple(options, middle, *top, false, false)) {
                                    top_hl_v.push_back(top);
                                  }
                                });
@@ -625,7 +636,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
         bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
                          const typename tree_t::coordinate_t &,
                          const typename tree_t::value_t &bottom) {
-          if (validTuple(options, *bottom, middle, false)) {
+          if (validTuple(options, *bottom, middle, false, true)) {
             bottom_lh_v.push_back(bottom);
           }
         });
@@ -639,7 +650,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
         bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
                          const typename tree_t::coordinate_t &,
                          const typename tree_t::value_t &bottom) {
-          if (validTuple(options, middle, *bottom, true)) {
+          if (validTuple(options, middle, *bottom, true, true)) {
             bottom_hl_v.push_back(bottom);
           }
         });

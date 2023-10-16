@@ -160,7 +160,7 @@ class Particle {
   /// Particle charge.
   constexpr Scalar charge() const { return m_charge; }
   /// Particle absolute charge.
-  constexpr Scalar absoluteCharge() const { return std::abs(m_charge); }
+  constexpr Scalar absoluteCharge() const { return m_charge; }
   /// Particle mass.
   constexpr Scalar mass() const { return m_mass; }
 

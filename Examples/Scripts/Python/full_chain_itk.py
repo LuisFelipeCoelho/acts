@@ -23,23 +23,29 @@ from acts.examples.reconstruction import (
 )
 
 ttbar_pu200 = False
+orthogonal = True
 u = acts.UnitConstants
-geo_dir = pathlib.Path("acts-itk")
-outputDir = pathlib.Path.cwd() / "itk_output"
+geo_dir = pathlib.Path("/Users/luiscoelho/lcoelho/acts/acts-itk")
+
+if not orthogonal:
+	outputDir = pathlib.Path.cwd() / "itk_output"
+else:
+	outputDir = pathlib.Path.cwd() / "itk_output_ort"
+
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
 detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=1, numThreads=1, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
         s,
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
         EtaConfig(-4.0, 4.0, uniform=True),
-        ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
+        ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
         rnd=rnd,
     )
 else:
@@ -88,7 +94,8 @@ addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
     if ttbar_pu200
     else TruthSeedRanges(),
-    seedingAlgorithm=SeedingAlgorithm.Default,
+		seedingAlgorithm = SeedingAlgorithm.Orthogonal if orthogonal
+    else SeedingAlgorithm.Default,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),

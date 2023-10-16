@@ -11,6 +11,8 @@
 #include <numeric>
 #include <type_traits>
 
+#include <iostream>
+
 namespace Acts {
 
 template <typename external_spacepoint_t, typename platform_t>
@@ -287,7 +289,13 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
           break;
         }
       }
-
+			
+			if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+			  std::cout << "|Default Seeding| Middle-Bottom (r,phi,z): " << rM << " " << mediumSP.phi() << " " << zM << " " << otherSP->radius() << " " << otherSP->phi() << " " << otherSP->z() << std::endl;
+			} else {
+				std::cout << "|Default Seeding| Middle-Top (r,phi,z): " << rM << " " << mediumSP.phi() << " " << zM << " " << otherSP->radius() << " " << otherSP->phi() << " " << otherSP->z() << std::endl;
+			}
+				
       if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
         deltaZ = (zM - otherSP->z());
       } else {

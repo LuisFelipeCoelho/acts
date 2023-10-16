@@ -190,7 +190,7 @@ class SeedFinderOrthogonal {
    * @return True if the two points form a valid pair, false otherwise.
    */
   bool validTuple(const SeedFinderOptions &options, const internal_sp_t &low,
-                  const internal_sp_t &high, bool isMiddleInverted) const;
+                  const internal_sp_t &high, bool isMiddleInverted, bool bottom) const;
 
   /**
    * @brief Create a k-d tree from a set of spacepoints.
