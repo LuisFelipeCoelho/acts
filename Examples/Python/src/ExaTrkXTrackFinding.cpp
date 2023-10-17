@@ -8,10 +8,12 @@
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/CugraphTrackBuilding.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
@@ -21,6 +23,7 @@
 
 #include <memory>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -31,7 +34,7 @@ using namespace Acts;
 
 namespace Acts::Python {
 
-void addExaTrkXTrackFinding(Context& ctx) {
+void addExaTrkXTrackFinding(Context &ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
@@ -55,13 +58,17 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
             mex, "TorchMetricLearning")
-            .def(py::init<const Config&>(), py::arg("config"))
+            .def(py::init([](const Config &c, Logging::Level lvl) {
+                   return std::make_shared<Alg>(
+                       c, getDefaultLogger("MetricLearning", lvl));
+                 }),
+                 py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(spacepointFeatures);
+    ACTS_PYTHON_MEMBER(numFeatures);
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
@@ -74,14 +81,20 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
             mex, "TorchEdgeClassifier")
-            .def(py::init<const Config&>(), py::arg("config"))
+            .def(py::init([](const Config &c, Logging::Level lvl) {
+                   return std::make_shared<Alg>(
+                       c, getDefaultLogger("EdgeClassifier", lvl));
+                 }),
+                 py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelPath);
+    ACTS_PYTHON_MEMBER(numFeatures);
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_MEMBER(nChunks);
+    ACTS_PYTHON_MEMBER(undirected);
     ACTS_PYTHON_STRUCT_END();
   }
   {
@@ -89,7 +102,11 @@ void addExaTrkXTrackFinding(Context& ctx) {
 
     auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
                    mex, "BoostTrackBuilding")
-                   .def(py::init<>());
+                   .def(py::init([](Logging::Level lvl) {
+                          return std::make_shared<Alg>(
+                              getDefaultLogger("EdgeClassifier", lvl));
+                        }),
+                        py::arg("level"));
   }
 #endif
 
@@ -101,7 +118,11 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
             mex, "OnnxMetricLearning")
-            .def(py::init<const Config&>(), py::arg("config"))
+            .def(py::init([](const Config &c, Logging::Level lvl) {
+                   return std::make_shared<Alg>(
+                       c, getDefaultLogger("MetricLearning", lvl));
+                 }),
+                 py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -120,7 +141,11 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
             mex, "OnnxEdgeClassifier")
-            .def(py::init<const Config&>(), py::arg("config"))
+            .def(py::init([](const Config &c, Logging::Level lvl) {
+                   return std::make_shared<Alg>(
+                       c, getDefaultLogger("EdgeClassifier", lvl));
+                 }),
+                 py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -134,15 +159,57 @@ void addExaTrkXTrackFinding(Context& ctx) {
 
     auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
                    mex, "CugraphTrackBuilding")
-                   .def(py::init<>());
+                   .def(py::init([](Logging::Level lvl) {
+                          return std::make_shared<Alg>(
+                              getDefaultLogger("EdgeClassifier", lvl));
+                        }),
+                        py::arg("level"));
   }
 #endif
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
-                                "TrackFindingAlgorithmExaTrkX",
-                                inputSpacePoints, outputProtoTracks,
-                                graphConstructor, edgeClassifiers, trackBuilder,
-                                rScale, phiScale, zScale);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
+      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
+      inputParticles, inputMeasurementSimhitsMap, outputProtoTracks,
+      graphConstructor, edgeClassifiers, trackBuilder, rScale, phiScale, zScale,
+      targetMinHits, targetMinPT);
+
+  {
+    auto cls =
+        py::class_<Acts::ExaTrkXHook, std::shared_ptr<Acts::ExaTrkXHook>>(
+            mex, "ExaTrkXHook");
+  }
+
+  {
+    using Class = Acts::TorchTruthGraphMetricsHook;
+
+    auto cls = py::class_<Class, Acts::ExaTrkXHook, std::shared_ptr<Class>>(
+                   mex, "TorchTruthGraphMetricsHook")
+                   .def(py::init(
+                       [](const std::vector<int64_t> &g, Logging::Level lvl) {
+                         return std::make_shared<Class>(
+                             g, getDefaultLogger("PipelineHook", lvl));
+                       }));
+  }
+
+  {
+    using Class = Acts::ExaTrkXPipeline;
+
+    auto cls =
+        py::class_<Class, std::shared_ptr<Class>>(mex, "ExaTrkXPipeline")
+            .def(py::init(
+                     [](std::shared_ptr<GraphConstructionBase> g,
+                        std::vector<std::shared_ptr<EdgeClassificationBase>> e,
+                        std::shared_ptr<TrackBuildingBase> t,
+                        Logging::Level lvl) {
+                       return std::make_shared<Class>(
+                           g, e, t, getDefaultLogger("MetricLearning", lvl));
+                     }),
+                 py::arg("graphConstructor"), py::arg("edgeClassifiers"),
+                 py::arg("trackBuilder"), py::arg("level"))
+            .def("run", &ExaTrkXPipeline::run, py::arg("features"),
+                 py::arg("spacepoints"), py::arg("hook") = Acts::ExaTrkXHook{});
+  }
 }
 
 }  // namespace Acts::Python

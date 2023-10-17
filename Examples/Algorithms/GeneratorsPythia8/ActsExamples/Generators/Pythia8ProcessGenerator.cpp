@@ -36,7 +36,7 @@ ActsExamples::Pythia8Generator::Pythia8Generator(const Config& cfg,
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("Pythia8Generator", lvl)),
       m_pythia8(std::make_unique<Pythia8::Pythia>("", false)) {
-  // disable all output by default but allow reenable via config
+  // disable all output by default but allow re-enable via config
   m_pythia8->settings.flag("Print:quiet", true);
   for (const auto& setting : m_cfg.settings) {
     ACTS_VERBOSE("use Pythia8 setting '" << setting << "'");
@@ -62,10 +62,17 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
 
   // pythia8 is not thread safe and generation needs to be protected
   std::lock_guard<std::mutex> lock(m_pythia8Mutex);
-  // use per-thread random engine also in pythia
+// use per-thread random engine also in pythia
+#if PYTHIA_VERSION_INTEGER >= 8310
+  m_pythia8->rndm.rndmEnginePtr(std::make_shared<FrameworkRndmEngine>(rng));
+#else
   FrameworkRndmEngine rndmEngine(rng);
   m_pythia8->rndm.rndmEnginePtr(&rndmEngine);
-  m_pythia8->next();
+#endif
+  {
+    Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Pythia8
+    m_pythia8->next();
+  }
 
   if (m_cfg.printShortEventListing) {
     m_pythia8->process.list();

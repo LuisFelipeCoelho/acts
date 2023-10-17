@@ -63,8 +63,6 @@ inline auto inverseTransformComponent(double transformed_weight,
 
 }  // namespace detail
 
-namespace Experimental {
-
 /// This class approximates the Bethe-Heitler with only one component. This is
 /// mainly inside @ref AtlasBetheHeitlerApprox, but can also be used as the
 /// only component approximation (then probably for debugging)
@@ -132,8 +130,8 @@ class AtlasBetheHeitlerApprox {
   ///
   /// @param low_data data for the lower x/x0 range
   /// @param high_data data for the higher x/x0 range
-  /// @param low_transform wether the low data need to be transformed
-  /// @param high_transform wether the high data need to be transformed
+  /// @param low_transform whether the low data need to be transformed
+  /// @param high_transform whether the high data need to be transformed
   constexpr AtlasBetheHeitlerApprox(const Data &low_data, const Data &high_data,
                                     bool low_transform, bool high_transform)
       : m_low_data(low_data),
@@ -248,8 +246,8 @@ class AtlasBetheHeitlerApprox {
       }
 
       if (PolyDegree != degree) {
-        throw std::invalid_argument("Wrong wrong polynom order in '" +
-                                    filepath + "'");
+        throw std::invalid_argument("Wrong polynom order in '" + filepath +
+                                    "'");
       }
 
       Data data;
@@ -283,5 +281,4 @@ class AtlasBetheHeitlerApprox {
 /// the GSF without the need to load files
 AtlasBetheHeitlerApprox<6, 5> makeDefaultBetheHeitlerApprox();
 
-}  // namespace Experimental
 }  // namespace Acts

@@ -106,7 +106,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   // Define start parameters from ranom input
   double p = pT / sin(theta);
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta,
-                                   dcharge / p);
+                                   dcharge / p, std::nullopt,
+                                   ParticleHypothesis::pion());
 
   using EndOfWorld = EndOfWorldReached;
 
@@ -143,7 +144,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
       surfaceSequence.push_back(cs.surface);
     }
 
-    // Action list for direct navigator with its initalizer
+    // Action list for direct navigator with its initializer
     using DirectActionList = ActionList<DirectNavigator::Initializer,
                                         MaterialInteractor, SurfaceCollector<>>;
 

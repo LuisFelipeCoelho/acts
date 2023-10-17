@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
-
 #include <any>
 #include <vector>
 
@@ -25,11 +23,14 @@ class GraphConstructionBase {
   /// Perform the graph construction
   ///
   /// @param inputValues Flattened input data
-  /// @param logger Logger instance
+  /// @param numNodes number of nodes. inputValues.size() / numNodes
+  /// then gives the number of features
   ///
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
-      std::vector<float> &inputValues, const Logger &logger) = 0;
+      std::vector<float> &inputValues, std::size_t numNodes) = 0;
+
+  virtual ~GraphConstructionBase() = default;
 };
 
 class EdgeClassificationBase {
@@ -38,11 +39,12 @@ class EdgeClassificationBase {
   ///
   /// @param nodes Node tensor with shape (n_nodes, n_node_features)
   /// @param edges Edge-index tensor with shape (2, n_edges)
-  /// @param logger Logger instance
   ///
   /// @return (node_tensor, edge_tensor, score_tensor)
   virtual std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges, const Logger &logger) = 0;
+      std::any nodes, std::any edges) = 0;
+
+  virtual ~EdgeClassificationBase() = default;
 };
 
 class TrackBuildingBase {
@@ -53,12 +55,13 @@ class TrackBuildingBase {
   /// @param edges Edge-index tensor with shape (2, n_edges)
   /// @param edgeWeights Edge-weights of the previous edge classification phase
   /// @param spacepointIDs IDs of the nodes (must have size=n_nodes)
-  /// @param logger Logger instance
   ///
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edgeWeights,
-      std::vector<int> &spacepointIDs, const Logger &logger) = 0;
+      std::vector<int> &spacepointIDs) = 0;
+
+  virtual ~TrackBuildingBase() = default;
 };
 
 }  // namespace Acts

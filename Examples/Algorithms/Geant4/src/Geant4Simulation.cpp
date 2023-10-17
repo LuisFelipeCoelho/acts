@@ -9,6 +9,7 @@
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -67,7 +68,7 @@ ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
 
   m_eventStore = std::make_shared<EventStore>();
 
-  // tweek logging
+  // tweak logging
   // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
   // 3 would be also possible, but that produces infinite amount of output.
   m_geant4Level = logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
@@ -125,8 +126,11 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   eventStore().inputParticles = &m_inputParticles;
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
-  // Start simulation. each track is simulated as a separate Geant4 event.
-  runManager().BeamOn(1);
+  {
+    Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
+    // Start simulation. each track is simulated as a separate Geant4 event.
+    runManager().BeamOn(1);
+  }
 
   // Since these are std::set, this ensures that each particle is in both sets
   throw_assert(
@@ -147,6 +151,16 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
         "- initial states: " << eventStore().particleIdCollisionsInitial);
     ACTS_WARNING("- final states: " << eventStore().particleIdCollisionsFinal);
     ACTS_WARNING("- parent ID not found: " << eventStore().parentIdNotFound);
+  }
+
+  if (eventStore().hits.empty()) {
+    ACTS_DEBUG("Step merging: No steps recorded");
+  } else {
+    ACTS_DEBUG("Step merging: mean hits per hit: "
+               << static_cast<double>(eventStore().numberGeantSteps) /
+                      eventStore().hits.size());
+    ACTS_DEBUG(
+        "Step merging: max hits per hit: " << eventStore().maxStepsForHit);
   }
 
   return ActsExamples::ProcessCode::SUCCESS;
@@ -185,10 +199,6 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     runManager().SetUserAction(primaryGeneratorAction);
   }
 
-  // Please note:
-  // The following two blocks rely on the fact that the Acts
-  // detector constructions cache the world volume
-
   // Particle action
   {
     // Clear tracking action if it exists
@@ -211,6 +221,11 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
       delete runManager().GetUserSteppingAction();
     }
 
+    ParticleKillAction::Config particleKillCfg;
+    particleKillCfg.volume = cfg.killVolume;
+    particleKillCfg.maxTime = cfg.killAfterTime;
+    particleKillCfg.secondaries = cfg.killSecondaries;
+
     SensitiveSteppingAction::Config stepCfg;
     stepCfg.eventStore = m_eventStore;
     stepCfg.charged = true;
@@ -218,15 +233,11 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     stepCfg.primary = true;
     stepCfg.secondary = cfg.recordHitsOfSecondaries;
 
-    ParticleKillAction::Config particleKillCfg;
-    particleKillCfg.volume = cfg.killVolume;
-    particleKillCfg.maxTime = cfg.killAfterTime;
-
     SteppingActionList::Config steppingCfg;
-    steppingCfg.actions.push_back(std::make_unique<SensitiveSteppingAction>(
-        stepCfg, m_logger->cloneWithSuffix("SensitiveStepping")));
     steppingCfg.actions.push_back(std::make_unique<ParticleKillAction>(
         particleKillCfg, m_logger->cloneWithSuffix("Killer")));
+    steppingCfg.actions.push_back(std::make_unique<SensitiveSteppingAction>(
+        stepCfg, m_logger->cloneWithSuffix("SensitiveStepping")));
 
     // G4RunManager will take care of deletion
     auto steppingAction = new SteppingActionList(steppingCfg);
@@ -236,6 +247,10 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
   // Get the g4World cache
   G4VPhysicalVolume* g4World = m_detectorConstruction->Construct();
 
+  // Please note:
+  // The following two blocks rely on the fact that the Acts
+  // detector constructions cache the world volume
+
   // Set the magnetic field
   if (cfg.magneticField) {
     ACTS_INFO("Setting ACTS configured field to Geant4.");
@@ -244,7 +259,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     g4FieldCfg.magneticField = cfg.magneticField;
     m_magneticField = std::make_unique<MagneticFieldWrapper>(g4FieldCfg);
 
-    // Set the field ot the G4Field manager
+    // Set the field or the G4Field manager
     m_fieldManager = std::make_unique<G4FieldManager>();
     m_fieldManager->SetDetectorField(m_magneticField.get());
     m_fieldManager->CreateChordFinder(m_magneticField.get());
@@ -343,6 +358,21 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
         prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
     // Set the primary generator action
     runManager().SetUserAction(primaryGeneratorAction);
+  }
+
+  // Particle action
+  {
+    // Clear tracking action if it exists
+    if (runManager().GetUserTrackingAction() != nullptr) {
+      delete runManager().GetUserTrackingAction();
+    }
+    ParticleTrackingAction::Config trackingCfg;
+    trackingCfg.eventStore = m_eventStore;
+    trackingCfg.keepParticlesWithoutHits = true;
+    // G4RunManager will take care of deletion
+    auto trackingAction = new ParticleTrackingAction(
+        trackingCfg, m_logger->cloneWithSuffix("ParticleTracking"));
+    runManager().SetUserAction(trackingAction);
   }
 
   // Stepping action

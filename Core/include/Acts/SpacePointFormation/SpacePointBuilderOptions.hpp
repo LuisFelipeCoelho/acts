@@ -20,8 +20,8 @@ struct SpacePointBuilderOptions {
   std::pair<const std::pair<Vector3, Vector3>,
             const std::pair<Vector3, Vector3>>
       stripEndsPair;
-  // accessor of local position and covariance from soruce link
-  std::function<std::pair<const BoundVector, const BoundSymMatrix>(
+  // accessor of local position and covariance from source link
+  std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
       const SourceLink&)>
       paramCovAccessor;
   /// vertex position
@@ -33,8 +33,8 @@ struct SpacePointBuilderOptions {
 };
 
 struct StripPairOptions {
-  // accessor of local position and covariance from soruce link
-  std::function<std::pair<const BoundVector, const BoundSymMatrix>(
+  // accessor of local position and covariance from source link
+  std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
       const SourceLink&)>
       paramCovAccessor;
   /// vertex position

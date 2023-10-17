@@ -15,6 +15,7 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <array>
+#include <limits>
 
 #include "Eigen/Dense"
 
@@ -51,7 +52,7 @@ double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
 }
 
 /// Calculate phi (transverse plane angle) from anything implementing a method
-/// like `phi()` returing anything convertible to `double`.
+/// like `phi()` returning anything convertible to `double`.
 /// @tparam T anything that has a phi method
 /// @param v Any type that implements a phi method
 /// @return The phi value
@@ -119,7 +120,11 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
     assert(v.rows() == 3 && "Eta function not valid for non-3D vectors.");
   }
 
-  return std::atanh(v[2] / v.norm());
+  if (v[0] == 0. && v[1] == 0.) {
+    return std::copysign(std::numeric_limits<double>::infinity(), v[2]);
+  } else {
+    return std::asinh(v[2] / perp(v));
+  }
 }
 
 /// @brief Fast evaluation of trigonomic functions.
@@ -209,6 +214,22 @@ inline auto makeVector4(const Eigen::MatrixBase<vector3_t>& vec3,
   vec4[ePos2] = vec3[ePos2];
   vec4[eTime] = w;
   return vec4;
+}
+
+/// Calculate the incident angles of a vector with in a given reference frame
+/// @tparam Derived Eigen derived concrete type
+/// @param direction The crossing direction in the global frame
+/// @param globalToLocal Rotation from global to local frame
+/// @return The angles of incidence in the two normal planes
+inline std::pair<double, double> incidentAngles(
+    const Acts::Vector3& direction,
+    const Acts::RotationMatrix3& globalToLocal) {
+  Acts::Vector3 trfDir = globalToLocal * direction;
+  // The angles are defined with respect to the measurement axis
+  // i.e. "head-on" == pi/2, parallel = 0
+  double phi = std::atan2(trfDir[2], trfDir[0]);
+  double theta = std::atan2(trfDir[2], trfDir[1]);
+  return {phi, theta};
 }
 
 }  // namespace VectorHelpers

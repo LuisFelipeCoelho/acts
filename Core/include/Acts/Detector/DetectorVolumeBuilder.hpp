@@ -22,6 +22,7 @@ namespace Acts {
 namespace Experimental {
 class IExternalStructureBuilder;
 class IInternalStructureBuilder;
+class IGeometryIdGenerator;
 
 /// @brief A generic detector volume builder that uses
 /// an external builder for shape and portals and an internal
@@ -41,10 +42,12 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
     std::shared_ptr<const IExternalStructureBuilder> externalsBuilder = nullptr;
     /// An internal builder
     std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
+    /// The geometry id generator
+    std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// Add eventual internal volume to root
     bool addInternalsToRoot = false;
-    /// Auxilliary information
-    std::string auxilliary = "";
+    /// Auxiliary information
+    std::string auxiliary = "";
   };
 
   /// Constructor with configuration arguments
@@ -68,7 +71,7 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
   /// configuration object
   Config m_cfg;
 
-  /// Private acces method to the logger
+  /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }
 
   /// logging instance

@@ -10,6 +10,8 @@
 
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
+#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
+#include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
 #include <algorithm>
@@ -103,10 +105,10 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
           "CylindricalContainerBuilder: 2D binning only supports wrapping in "
           "z-r.");
     } else if (m_cfg.builders.size() != 2u) {
-      // Wrapping needs exacly one inner (volume or container) and one outer
+      // Wrapping needs exactly one inner (volume or container) and one outer
       // volume
       throw std::invalid_argument(
-          "CylindricalContainerBuilder: 2D wrapping in z-r requires exaclty "
+          "CylindricalContainerBuilder: 2D wrapping in z-r requires exactly "
           "two builders.");
     }
   }
@@ -129,7 +131,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   std::vector<std::shared_ptr<DetectorVolume>> volumes;
   std::vector<DetectorComponent::PortalContainer> containers;
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
-  // Run throuth the builders
+  // Run through the builders
   std::for_each(
       m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
         auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
@@ -152,6 +154,34 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     // Connect containers
     rContainer = connect(gctx, containers, m_cfg.binning, logger().level());
   }
+  ACTS_VERBOSE("Number of root volumes: " << rootVolumes.size());
+
+  // Check if a root volume finder is provided
+  if (m_cfg.rootVolumeFinderBuilder) {
+    // Return the container
+    return Acts::Experimental::DetectorComponent{
+        {},
+        rContainer,
+        RootDetectorVolumes{
+            rootVolumes,
+            m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
+  }
+
+  // Geometry Id generation
+  if (m_cfg.geoIdGenerator != nullptr) {
+    ACTS_DEBUG("Assigning geometry ids to the detector");
+    auto cache = m_cfg.geoIdGenerator->generateCache();
+    if (m_cfg.geoIdReverseGen) {
+      std::for_each(rootVolumes.rbegin(), rootVolumes.rend(), [&](auto& v) {
+        m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
+      });
+    } else {
+      std::for_each(rootVolumes.begin(), rootVolumes.end(), [&](auto& v) {
+        m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
+      });
+    }
+  }
+
   // Return the container
   return Acts::Experimental::DetectorComponent{
       {}, rContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};

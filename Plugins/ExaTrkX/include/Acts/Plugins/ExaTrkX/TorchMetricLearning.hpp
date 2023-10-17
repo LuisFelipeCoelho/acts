@@ -27,21 +27,25 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
  public:
   struct Config {
     std::string modelPath;
-    int spacepointFeatures = 3;
+    int numFeatures = 3;
     int embeddingDim = 8;
     float rVal = 1.6;
     int knnVal = 500;
+    bool shuffleDirections = false;
   };
 
-  TorchMetricLearning(const Config &cfg);
+  TorchMetricLearning(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchMetricLearning();
 
   std::tuple<std::any, std::any> operator()(std::vector<float> &inputValues,
-                                            const Logger &logger) override;
+                                            std::size_t numNodes) override;
 
   Config config() const { return m_cfg; }
 
  private:
+  std::unique_ptr<const Acts::Logger> m_logger;
+  const auto &logger() const { return *m_logger; }
+
   Config m_cfg;
   c10::DeviceType m_deviceType;
   std::unique_ptr<torch::jit::Module> m_model;

@@ -30,12 +30,12 @@ void GreedyAmbiguityResolution::computeInitialState(
   // count and chi2 and fill the measurement map in order to relate tracks to
   // each other if they have shared hits.
   for (const auto& track : tracks) {
-    // Kick out tracks that do not fullfil our initial requirements
+    // Kick out tracks that do not fulfill our initial requirements
     if (track.nMeasurements() < m_cfg.nMeasurementsMin) {
       continue;
     }
     std::vector<std::size_t> measurements;
-    for (auto ts : track.trackStates()) {
+    for (auto ts : track.trackStatesReversed()) {
       if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         SourceLink sourceLink = ts.getUncalibratedSourceLink();
         // assign a new measurement index if the source link was not seen yet

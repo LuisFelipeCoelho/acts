@@ -38,7 +38,7 @@ using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 ///
 ///  It enables both, a global search for an asociatedVolume
 ///  (respectively, if existing, a global search of an associated Layer or the
-///  next associated Layer), such as a continous navigation by BoundarySurfaces
+///  next associated Layer), such as a continuous navigation by BoundarySurfaces
 ///  between the confined TrackingVolumes.
 class TrackingGeometry {
   /// Give the GeometryBuilder friend rights
@@ -63,6 +63,11 @@ class TrackingGeometry {
   /// Access to the world volume
   /// @return plain pointer to the world volume
   const TrackingVolume* highestTrackingVolume() const;
+
+  /// Access to the world volume
+  /// @return shared pointer to the world volume
+  const std::shared_ptr<const TrackingVolume>& highestTrackingVolumeShared()
+      const;
 
   /// return the lowest tracking Volume
   ///

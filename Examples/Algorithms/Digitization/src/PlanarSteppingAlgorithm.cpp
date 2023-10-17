@@ -151,8 +151,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
 
       Acts::Vector2 localIntersect =
           (invTransfrom * simHit.position()).head<2>();
-      Acts::Vector3 localDirection =
-          invTransfrom.linear() * simHit.unitDirection();
+      Acts::Vector3 localDirection = invTransfrom.linear() * simHit.direction();
 
       // compute digitization steps
       const auto thickness = dg.detectorElement->thickness();
@@ -169,7 +168,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
         continue;
       }
 
-      // lets create a cluster - centroid method
+      // Create a cluster - centroid method
       double localX = 0.;
       double localY = 0.;
       double totalPath = 0.;
@@ -195,13 +194,13 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       const Acts::Segmentation& segmentation = dg.digitizer->segmentation();
       auto binUtility = segmentation.binUtility();
       Acts::Vector2 localPosition(localX, localY);
-      // @todo remove unneccesary conversion
+      // @todo remove unnecessary conversion
       // size_t bin0 = binUtility.bin(localPosition, 0);
       // size_t bin1 = binUtility.bin(localPosition, 1);
       // size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});
 
       // the covariance is currently set to some arbitrary value.
-      Acts::SymMatrix3 cov;
+      Acts::SquareMatrix3 cov;
       cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0.,
           900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
       Acts::Vector3 par(localX, localY, simHit.time());

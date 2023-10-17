@@ -127,14 +127,14 @@ class AnnulusBounds : public DiscBounds {
   Vector2 moduleOrigin() const;
 
   /// This method returns the four corners of the bounds in polar coordinates
-  /// Starting from the upper right (max R, pos locX) and proceding clock-wise
+  /// Starting from the upper right (max R, pos locX) and proceeding clock-wise
   /// i.e. (max R; pos locX), (min R; pos locX), (min R; neg loc X), (max R: neg
   /// locX)
   std::vector<Vector2> corners() const;
 
   /// This method returns the xy coordinates of the four corners of the
-  /// bounds in module coorindates (in x/y)
-  /// Starting from the upper right (max R, pos locX) and proceding clock-wise
+  /// bounds in module coordinates (in x/y)
+  /// Starting from the upper right (max R, pos locX) and proceeding clock-wise
   /// i.e. (max R; pos locX), (min R; pos locX), (min R; neg loc X), (max R: neg
   /// locX)
   ///
@@ -194,7 +194,7 @@ class AnnulusBounds : public DiscBounds {
   virtual bool inside(const Vector2& lposition, double tolR,
                       double tolPhi) const final;
 
-  /// Transform the strip cartesien
+  /// Transform the strip cartesian
   /// into the module polar system
   ///
   /// @param vStripXY the position in the cartesian strip system
@@ -203,10 +203,10 @@ class AnnulusBounds : public DiscBounds {
 
   /// Private helper method
   Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
-                           const SymMatrix2& weight) const;
+                           const SquareMatrix2& weight) const;
 
-  /// Private helper mehtod
-  double squaredNorm(const Vector2& v, const SymMatrix2& weight) const;
+  /// Private helper method
+  double squaredNorm(const Vector2& v, const SquareMatrix2& weight) const;
 };
 
 inline SurfaceBounds::BoundsType AnnulusBounds::type() const {

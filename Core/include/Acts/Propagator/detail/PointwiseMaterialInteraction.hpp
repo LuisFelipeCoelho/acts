@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -22,6 +23,7 @@
 
 namespace Acts {
 namespace detail {
+
 /// @brief Struct to handle pointwise material interaction
 struct PointwiseMaterialInteraction {
   /// Data from the propagation state
@@ -34,15 +36,15 @@ struct PointwiseMaterialInteraction {
   /// The particle direction at the interaction.
   const Vector3 dir = Vector3(0., 0., 0);
   /// The particle q/p at the interaction
-  const double qOverP = 0.0;
+  const float qOverP = 0.0;
   /// The absolute particle charge
-  const double absQ = 0.0;
+  const float absQ = 0.0;
   /// The particle momentum at the interaction
-  const double momentum = 0.0;
+  const float momentum = 0.0;
   /// The particle mass
-  const double mass = 0.0;
-  /// The particle pdg
-  const int pdg = 0.0;
+  const float mass = 0.0;
+  /// The particle absolute pdg
+  const PdgParticle absPdg = PdgParticle::eInvalid;
   /// The covariance transport decision at the interaction
   const bool performCovarianceTransport = false;
   /// The navigation direction
@@ -79,13 +81,13 @@ struct PointwiseMaterialInteraction {
         pos(stepper.position(state.stepping)),
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
-        qOverP(stepper.qop(state.stepping)),
-        absQ(std::abs(stepper.charge(state.stepping))),
-        momentum(stepper.momentum(state.stepping)),
-        mass(state.options.mass),
-        pdg(state.options.absPdgCode),
+        qOverP(stepper.qOverP(state.stepping)),
+        absQ(stepper.particleHypothesis(state.stepping).absoluteCharge()),
+        momentum(stepper.absoluteMomentum(state.stepping)),
+        mass(stepper.particleHypothesis(state.stepping).mass()),
+        absPdg(stepper.particleHypothesis(state.stepping).absolutePdg()),
         performCovarianceTransport(state.stepping.covTransport),
-        navDir(state.stepping.navDir) {}
+        navDir(state.options.direction) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///
@@ -124,9 +126,9 @@ struct PointwiseMaterialInteraction {
 
   /// @brief This function evaluate the material effects
   ///
-  /// @param [in] multipleScattering Boolean to indiciate the application of
+  /// @param [in] multipleScattering Boolean to indicate the application of
   /// multiple scattering
-  /// @param [in] energyLoss Boolean to indiciate the application of energy loss
+  /// @param [in] energyLoss Boolean to indicate the application of energy loss
   void evaluatePointwiseMaterialInteraction(bool multipleScattering,
                                             bool energyLoss);
 
@@ -167,9 +169,9 @@ struct PointwiseMaterialInteraction {
  private:
   /// @brief Evaluates the contributions to the covariance matrix
   ///
-  /// @param [in] multipleScattering Boolean to indiciate the application of
+  /// @param [in] multipleScattering Boolean to indicate the application of
   /// multiple scattering
-  /// @param [in] energyLoss Boolean to indiciate the application of energy loss
+  /// @param [in] energyLoss Boolean to indicate the application of energy loss
   void covarianceContributions(bool multipleScattering, bool energyLoss);
 
   /// @brief Convenience method for better readability
@@ -182,5 +184,6 @@ struct PointwiseMaterialInteraction {
   double updateVariance(double variance, double change,
                         NoiseUpdateMode updateMode = addNoise) const;
 };
+
 }  // namespace detail
 }  // end of namespace Acts

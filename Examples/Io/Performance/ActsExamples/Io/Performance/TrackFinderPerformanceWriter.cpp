@@ -176,7 +176,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
         // extract per-particle reconstruction counts
         // empty track hits counts could originate from a  buggy track finder
         // that results in empty tracks or from purely noise track where no hits
-        // is from a particle.
+        // are from a particle.
         if (not particleHitCounts.empty()) {
           auto it = majorityCount
                         .try_emplace(particleHitCounts.front().particleId, 0u)
@@ -226,9 +226,9 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
         prtVz = particle.position().z() / Acts::UnitConstants::mm;
         prtVt = particle.time() / Acts::UnitConstants::ns;
         const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
-        prtPx = p * particle.unitDirection().x();
-        prtPy = p * particle.unitDirection().y();
-        prtPz = p * particle.unitDirection().z();
+        prtPx = p * particle.direction().x();
+        prtPy = p * particle.direction().y();
+        prtPz = p * particle.direction().z();
         prtM = particle.mass() / Acts::UnitConstants::GeV;
         prtQ = particle.charge() / Acts::UnitConstants::e;
         // reconstruction

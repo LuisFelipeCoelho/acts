@@ -18,6 +18,7 @@
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
+#include "Acts/TrackFinding/TrackSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -70,7 +71,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   /// Create the track finder function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
+  /// contains shared_ptr anyway.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
@@ -85,12 +86,19 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output find trajectories collection.
     std::string outputTracks;
+
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Compute shared hit information
     bool computeSharedHits = false;
+    /// Track selector config
+    std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
+    /// Run backward finding
+    bool backward = false;
+    /// Maximum number of propagation steps
+    unsigned int maxSteps = 100000;
   };
 
   /// Constructor of the track finding algorithm
@@ -118,6 +126,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
+  std::optional<Acts::TrackSelector> m_trackSelector;
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
@@ -155,7 +164,7 @@ void TrackFindingAlgorithm::computeSharedHits(
       sourceLinks.size(), std::numeric_limits<std::size_t>::max());
 
   for (auto track : tracks) {
-    for (auto state : track.trackStates()) {
+    for (auto state : track.trackStatesReversed()) {
       if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         continue;
       }

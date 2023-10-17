@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     ao("output,o", value<std::string>()->default_value(""),
        "Output ROOT file with histograms");
     ao("hist-bins", value<unsigned int>()->default_value(61),
-       "Numer of bins for the residual/pull histograms");
+       "Number of bins for the residual/pull histograms");
     ao("pull-range", value<float>()->default_value(5.),
        "Number of sigmas for the pull range.");
     ao("eta-bins", value<unsigned int>()->default_value(10),
@@ -83,9 +83,9 @@ int main(int argc, char** argv) {
     ao("pt-borders", value<VariableReals>()->required(),
        "Transverse momentum borders.");
     ao("config-output", value<std::string>()->default_value(""),
-       "(Optional) output histrogram configuration json file.");
+       "(Optional) output histogram configuration json file.");
     ao("config-input", value<std::string>()->default_value(""),
-       "(Optional) input histrogram configuration json file.");
+       "(Optional) input histogram configuration json file.");
     // Define all parameters (overwrites individual parameters)
     ao("all", bool_switch(),
        "Process all residual/pull and auxiliary parameters");
