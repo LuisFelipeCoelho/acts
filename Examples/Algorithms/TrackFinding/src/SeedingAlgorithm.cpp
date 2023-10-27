@@ -151,6 +151,18 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
   }
 
+  // construct the seeding tools
+  // covariance tool, extracts covariances per spacepoint as required
+  auto extractGlobalQuantities =
+      [=](const SimSpacePoint& sp, float, float,
+          float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+    Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
+    Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
+    return std::make_pair(position, covariance);
+  };
+
+  auto start = std::chrono::high_resolution_clock::now();
+
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
@@ -161,21 +173,15 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
          ctx.eventStore.get<SimSpacePointContainer>(isp)) {
       // since the event store owns the space points, their pointers should be
       // stable and we do not need to create local copies.
+
+      //std::cout << "spacePoint.radius() " << spacePoint.r() << std::endl;
+      //if (spacePoint.r() > 320) {continue;}
+
       spacePointPtrs.push_back(&spacePoint);
       // store x,y,z values in extent
       rRangeSPExtent.check({spacePoint.x(), spacePoint.y(), spacePoint.z()});
     }
   }
-
-  // construct the seeding tools
-  // covariance tool, extracts covariances per spacepoint as required
-  auto extractGlobalQuantities =
-      [=](const SimSpacePoint& sp, float, float,
-          float) -> std::pair<Acts::Vector3, Acts::Vector2> {
-    Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
-    Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
-    return std::make_pair(position, covariance);
-  };
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsBottom,
@@ -194,6 +200,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   static thread_local SimSeedContainer seeds;
   seeds.clear();
   static thread_local decltype(finder)::State state;
+
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+  //std::cout << "|Seeding Time| Grid Creation: " << duration.count()*0.001 << " ms" << std::endl;
+
+  auto start2 = std::chrono::high_resolution_clock::now();
 
   auto group = spacePointsGrouping.begin();
   auto groupEnd = spacePointsGrouping.end();
@@ -216,6 +228,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
+  auto stop2 = std::chrono::high_resolution_clock::now();
+  auto duration2 = std::chrono::duration_cast<std::chrono::nanoseconds>(stop2 - start2);
+  std::cout << "|Seeding Time (ms)| " << duration.count()*0.000001 << " " << duration2.count()*0.000001 << " " << seeds.size() << " PPP " << spacePointPtrs.size() << std::endl;		
+	
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 

@@ -2,8 +2,10 @@
 import pathlib, acts, acts.examples
 from acts.examples.itk import buildITkGeometry
 
+from acts.examples import RootParticleReader
+
 u = acts.UnitConstants
-geo_dir = pathlib.Path("acts-itk")
+geo_dir = pathlib.Path("/afs/cern.ch/user/l/lfaldaul/work/actsODD/acts-itk")
 outputDir = pathlib.Path.cwd()
 
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
@@ -32,30 +34,28 @@ from acts.examples.reconstruction import (
 
 from acts.examples.itk import itkSeedingAlgConfig
 
-s = acts.examples.Sequencer(events=100, numThreads=-1)
-s = addParticleGun(
-    s,
-    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-4.0, 4.0, True),
-    ParticleConfig(1, acts.PdgParticle.eMuon, True),
-    rnd=rnd,
+s = acts.examples.Sequencer(events=100, numThreads=1)
+
+s.addReader(
+	RootParticleReader(
+		level=acts.logging.INFO,
+		filePath=str("/eos/home-l/lfaldaul/ACTS_v19Xv30/pythia8_particles.root"),
+		particleCollection="particles_input",
+		orderedEvents=False,
+	)
 )
-# # Uncomment addPythia8 and ParticleSelectorConfig, instead of addParticleGun, to generate ttbar with mu=200 pile-up.
-# s = addPythia8(
-#     s,
-#     hardProcess=["Top:qqbar2ttbar=on"],
-#     vtxGen=acts.examples.GaussianVertexGenerator(
-#         stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
-#         mean=acts.Vector4(0, 0, 0, 0),
-#     ),
-#     rnd=rnd,
-#     outputDirRoot=outputDir,
-# )
+
 s = addFatras(
     s,
     trackingGeometry,
     field,
-    # ParticleSelectorConfig(eta=(-4.0, 4.0), pt=(150 * u.MeV, None), removeNeutral=True),
+    ParticleSelectorConfig(
+        rho=(0.0 * u.mm, 28.0 * u.mm),
+        absZ=(0.0 * u.mm, 1000.0 * u.mm),
+        eta=(-4.0, 4.0),
+        pt=(150 * u.MeV, None),
+        removeNeutral=True,
+    ),
     outputDirRoot=outputDir,
     rnd=rnd,
 )
@@ -76,13 +76,6 @@ s = addSeeding(
     # SeedingAlgorithm.TruthSmeared, ParticleSmearingSigmas(pRel=0.01), rnd=rnd,
     *itkSeedingAlgConfig("PixelSpacePoints"),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
-    outputDirRoot=outputDir,
-)
-s = addCKFTracks(
-    s,
-    trackingGeometry,
-    field,
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
 

@@ -270,7 +270,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     maxSeedsPerSpM = 4
     cotThetaMax = 27.2899
     sigmaScattering = 2
-    radLengthPerSeed = 0.1
+    radLengthPerSeed = 0.0975
     minPt = 900 * u.MeV
     bFieldInZ = 2 * u.T
     deltaRMin = 20 * u.mm
@@ -280,10 +280,10 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         -2500.0,
         -1400.0,
         -925.0,
-        -450.0,
+        -500.0,
         -250.0,
         250.0,
-        450.0,
+        500.0,
         925.0,
         1400.0,
         2500.0,
@@ -307,8 +307,8 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     forceRadialSorting = True
     seedConfirmation = True
     centralSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
-        zMinSeedConf=-250 * u.mm,
-        zMaxSeedConf=250 * u.mm,
+        zMinSeedConf=-500 * u.mm,
+        zMaxSeedConf=500 * u.mm,
         rMaxSeedConf=140 * u.mm,
         nTopForLargeR=1,
         nTopForSmallR=2,
@@ -329,10 +329,10 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         -2500.0,
         -1400.0,
         -925.0,
-        -450.0,
+        -500.0,
         -250.0,
         250.0,
-        450.0,
+        500.0,
         925.0,
         1400.0,
         2500.0,
@@ -350,10 +350,10 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         deltaRMinSP = 6 * u.mm
         deltaRMax = 280 * u.mm
         deltaRMaxTopSP = 280 * u.mm
-        deltaRMaxBottomSP = 120 * u.mm
+        deltaRMaxBottomSP = 150 * u.mm
         interactionPointCut = True
         arithmeticAverageCotTheta = False
-        deltaZMax = 600 * u.mm
+        deltaZMax = float("inf") * u.mm
         impactMax = 2 * u.mm
         zBinsCustomLooping = [
             1,
