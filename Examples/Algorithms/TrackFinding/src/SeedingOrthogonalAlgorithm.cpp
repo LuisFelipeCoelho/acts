@@ -75,6 +75,18 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
 ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     const AlgorithmContext &ctx) const {
   std::vector<const SimSpacePoint *> spacePoints;
+			
+	ACTS_INFO("deltaRMinTopSP        " << m_cfg.seedFinderConfig.deltaRMinTopSP);
+	ACTS_INFO("deltaRMaxTopSP        " << m_cfg.seedFinderConfig.deltaRMaxTopSP);
+	ACTS_INFO("deltaRMinBottomSP     "
+						 << m_cfg.seedFinderConfig.deltaRMinBottomSP);
+	ACTS_INFO("deltaRMaxBottomSP     "
+						 << m_cfg.seedFinderConfig.deltaRMaxBottomSP);
+	ACTS_INFO("deltaPhiMax             " << m_cfg.seedFinderConfig.deltaPhiMax);
+	ACTS_INFO("collisionRegionMin    "
+						 << m_cfg.seedFinderConfig.collisionRegionMin);
+	ACTS_INFO("collisionRegionMax    "
+						 << m_cfg.seedFinderConfig.collisionRegionMax);
 
   for (const auto &isp : m_inputSpacePoints) {
     for (const auto &spacePoint : (*isp)(ctx)) {

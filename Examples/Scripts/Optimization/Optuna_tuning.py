@@ -48,7 +48,7 @@ def run_ckf(params, names, outDir):
         raise Exception("Length of Params must equal names")
 
     ckf_script = srcDir / "ckf.py"
-    nevts = "--nEvents=1"
+    nevts = "--nEvents=10"
     indir = "--indir=" + str(srcDir)
     outdir = "--output=" + str(outDir)
 
@@ -83,31 +83,31 @@ class Objective:
     def __call__(self, trial):
         params = []
 
-        maxSeedsPerSpM = trial.suggest_int("maxSeedsPerSpM", 0, 10)
-        params.append(maxSeedsPerSpM)
-        cotThetaMax = trial.suggest_float("cotThetaMax", 5.0, 10.0)
+        deltaPhiMax = trial.suggest_float("deltaPhiMax1", 0.030, 0.050)
+        params.append(deltaPhiMax)
+        cotThetaMax = trial.suggest_float("cotThetaMax", 20.0, 30.0)
         params.append(cotThetaMax)
-        sigmaScattering = trial.suggest_float("sigmaScattering", 0.2, 50)
-        params.append(sigmaScattering)
-        radLengthPerSeed = trial.suggest_float("radLengthPerSeed", 0.001, 0.1)
-        params.append(radLengthPerSeed)
-        impactMax = trial.suggest_float("impactMax", 0.1, 25)
-        params.append(impactMax)
-        maxPtScattering = trial.suggest_float("maxPtScattering", 1, 50)
-        params.append(maxPtScattering)
-        deltaRMin = trial.suggest_float("deltaRMin", 0.25, 30)
-        params.append(deltaRMin)
-        deltaRMax = trial.suggest_float("deltaRMax", 50, 300)
-        params.append(deltaRMax)
+        collisionRegionMin = trial.suggest_float("collisionRegionMin", -280., -220.)
+        params.append(collisionRegionMin)
+        collisionRegionMax = trial.suggest_float("collisionRegionMax", 220., 280.)
+        params.append(collisionRegionMax)
+        deltaRMinTopSP = trial.suggest_float("deltaRMinTopSP", 20, 28.)
+        params.append(deltaRMinTopSP)
+        deltaRMaxTopSP = trial.suggest_float("deltaRMaxTopSP", 100., 200.)
+        params.append(deltaRMaxTopSP)
+        deltaRMinBottomSP = trial.suggest_float("deltaRMinBottomSP", 20, 30.)
+        params.append(deltaRMinBottomSP)
+        deltaRMaxBottomSP = trial.suggest_float("deltaRMaxBottomSP", 70., 120.)
+        params.append(deltaRMaxBottomSP)
         keys = [
-            "maxSeedsPerSpM",
+            "deltaPhiMax1",
             "cotThetaMax",
-            "sigmaScattering",
-            "radLengthPerSeed",
-            "impactMax",
-            "maxPtScattering",
-            "deltaRMin",
-            "deltaRMax",
+            "collisionRegionMin",
+            "collisionRegionMax",
+            "deltaRMinTopSP",
+            "deltaRMaxTopSP",
+            "deltaRMinBottomSP",
+            "deltaRMaxBottomSP",
         ]
 
         outputDir = Path(srcDir / "Output_CKF")
@@ -134,12 +134,12 @@ class Objective:
             ]
         )
         self.res["runtime"].append(time_ckf + time_seeding)
-
+        
         efficiency = self.res["eff"][-1]
         penalty = (
             self.res["fakerate"][-1]
             + self.res["duplicaterate"][-1] / self.k_dup
-            + self.res["runtime"][-1] / self.k_time
+            + 2 * self.res["runtime"][-1] / self.k_time
         )
 
         return efficiency - penalty
@@ -153,19 +153,19 @@ def main():
     # Initializing the objective (score) function
     objective = Objective(k_dup, k_time)
 
-    """
-    start_values = {
-        "maxSeedsPerSpM": 1,
-        "cotThetaMax": 7.40627,
-        "sigmaScattering": 50,
-        "radLengthPerSeed": 0.1,
-        "impactMax": 3.0,
-        "maxPtScattering": 10.0,
-        "deltaRMin": 1.0,
-        "deltaRMax": 60.0
-}
 
-    """
+    start_values = {
+        "deltaPhiMax1": 0.025,
+        "cotThetaMax": 27.2899,
+        "collisionRegionMin": -200,
+        "collisionRegionMax": 200,
+				"deltaRMinTopSP": 6,
+        "deltaRMaxTopSP": 280,
+        "deltaRMinBottomSP": 6,
+        "deltaRMaxBottomSP": 150
+    }
+
+
     # Optuna logger
     optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
     study_name = "test_study"
@@ -179,9 +179,9 @@ def main():
         load_if_exists=True,
     )
 
-    # study.enqueue_trial(start_values)
+    #study.enqueue_trial(start_values)
     # Start Optimization
-    study.optimize(objective, n_trials=3)
+    study.optimize(objective, n_trials=30)
 
     # Printout the best trial values
     print("Best Trial until now", flush=True)
@@ -197,3 +197,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+                                                   

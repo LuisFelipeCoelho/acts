@@ -12,6 +12,28 @@ import acts
 
 from acts import UnitConstants as u
 
+import pathlib, acts, acts.examples, acts.examples.itk
+from acts.examples.simulation import (
+    addParticleGun,
+    MomentumConfig,
+    EtaConfig,
+    ParticleConfig,
+    addPythia8,
+    addFatras,
+    ParticleSelectorConfig,
+    addDigitization,
+)
+from acts.examples.reconstruction import (
+    addSeeding,
+    SeedingAlgorithm,
+    TruthSeedRanges,
+    addCKFTracks,
+    TrackSelectorConfig,
+    addAmbiguityResolution,
+    AmbiguityResolutionConfig,
+    addVertexFitting,
+    VertexFinder,
+)
 
 def getArgumentParser():
     """Get arguments from command line"""
@@ -76,18 +98,53 @@ def getArgumentParser():
         default=10.0,
     )
     parser.add_argument(
-        "--sf_deltaRMin",
-        dest="sf_deltaRMin",
+        "--sf_deltaRMinTopSP",
+        dest="sf_deltaRMinTopSP",
         help="minimum value for deltaR separation in mm",
         type=float,
         default=1.0,
     )
     parser.add_argument(
-        "--sf_deltaRMax",
-        dest="sf_deltaRMax",
+        "--sf_deltaRMaxTopSP",
+        dest="sf_deltaRMaxTopSP",
         help="maximum value for deltaR separation in mm",
         type=float,
         default=60.0,
+    )
+    parser.add_argument(
+        "--sf_deltaRMinBottomSP",
+        dest="sf_deltaRMinBottomSP",
+        help="minimum value for deltaR separation in mm",
+        type=float,
+        default=1.0,
+    )
+    parser.add_argument(
+        "--sf_deltaRMaxBottomSP",
+        dest="sf_deltaRMaxBottomSP",
+        help="maximum value for deltaR separation in mm",
+        type=float,
+        default=60.0,
+    )
+    parser.add_argument(
+        "--sf_deltaPhiMax1",
+        dest="sf_deltaPhiMax1",
+        help="maximum value for deltaPhiMax separation for the Orthogonal Seeding",
+        type=float,
+        default=0.025,
+    )
+    parser.add_argument(
+        "--sf_collisionRegionMin",
+        dest="sf_collisionRegionMin",
+        help="",
+        type=float,
+        default=-300,
+    )
+    parser.add_argument(
+        "--sf_collisionRegionMax",
+        dest="sf_collisionRegionMax",
+        help="",
+        type=float,
+        default=300,
     )
 
     return parser
@@ -112,8 +169,13 @@ def runCKFTracks(
     RadLengthPerSeed=0.1,
     ImpactMax=3.0,
     MaxPtScattering=10.0,
-    DeltaRMin=1.0,
-    DeltaRMax=60.0,
+    DeltaPhiMax=0.025,
+    CollisionRegionMin=-200,
+    CollisionRegionMax=200,
+    DeltaRMinTopSP=1.0,
+    DeltaRMaxTopSP=60.0,
+    DeltaRMinBottomSP=1.0,
+    DeltaRMaxBottomSP=60.0,
 ):
     from acts.examples.simulation import (
         addParticleGun,
@@ -150,7 +212,7 @@ def runCKFTracks(
         addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
-            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            ParticleConfig(10, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
             multiplicity=2,
             rnd=rnd,
@@ -173,6 +235,13 @@ def runCKFTracks(
         s,
         trackingGeometry,
         field,
+        preSelectParticles=ParticleSelectorConfig(
+          rho=(0.0 * u.mm, 28.0 * u.mm),
+          absZ=(0.0 * u.mm, 1.0 * u.m),
+          eta=(-4.0, 4.0),
+          pt=(150 * u.MeV, None),
+          removeNeutral=True,
+        ),
         rnd=rnd,
     )
 
@@ -188,28 +257,26 @@ def runCKFTracks(
         s,
         trackingGeometry,
         field,
-        TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
         ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
-        SeedFinderConfigArg(
-            r=(None, 200 * u.mm),  # rMin=default, 33mm
-            deltaR=(DeltaRMin * u.mm, DeltaRMax * u.mm),
-            collisionRegion=(-250 * u.mm, 250 * u.mm),
-            z=(-2000 * u.mm, 2000 * u.mm),
-            maxSeedsPerSpM=MaxSeedsPerSpM,
-            cotThetaMax=CotThetaMax,
-            sigmaScattering=SigmaScattering,
-            radLengthPerSeed=RadLengthPerSeed,
-            maxPtScattering=MaxPtScattering * u.GeV,
-            minPt=500 * u.MeV,
-            impactMax=ImpactMax * u.mm,
+        *acts.examples.itk.itkSeedingAlgConfig(
+          acts.examples.itk.InputSpacePointsType.PixelSpacePoints,
+          highOccupancyConfig=False,
+          deltaPhiMax=DeltaPhiMax,
+          cotThetaMax=CotThetaMax,
+          collisionRegionMin=CollisionRegionMin,
+          collisionRegionMax=CollisionRegionMax,
+          deltaRMinTopSP=DeltaRMinTopSP,
+          deltaRMaxTopSP=DeltaRMaxTopSP,
+          deltaRMinBottomSP=DeltaRMinBottomSP,
+          deltaRMaxBottomSP=DeltaRMaxBottomSP
         ),
-        SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0, 0)),
         TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared
         if truthSmearedSeeded
         else SeedingAlgorithm.TruthEstimated
         if truthEstimatedSeeded
-        else SeedingAlgorithm.Default,
+        else SeedingAlgorithm.Orthogonal,
         geoSelectionConfigFile=geometrySelection,
         outputDirRoot=outputDir,
         rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
@@ -234,22 +301,23 @@ if "__main__" == __name__:
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    geo_dir = pathlib.Path("/Users/luiscoelho/lcoelho/acts/acts-itk")
+    detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
 
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 
     inputParticlePath = Path(Inputdir) / "pythia8_particles.root"
     if not inputParticlePath.exists():
         inputParticlePath = None
+    else:
+        print("--> Using particles from ", inputParticlePath)
 
     runCKFTracks(
         trackingGeometry,
         decorators,
         field=field,
-        geometrySelection=srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        geometrySelection=geo_dir / "itk-hgtd/geoSelection-ITk.json",
+        digiConfigFile=geo_dir / "itk-hgtd/itk-smearing-config.json",
         outputCsv=True,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,
@@ -262,6 +330,11 @@ if "__main__" == __name__:
         RadLengthPerSeed=options.sf_radLengthPerSeed,
         ImpactMax=options.sf_impactMax,
         MaxPtScattering=options.sf_maxPtScattering,
-        DeltaRMin=options.sf_deltaRMin,
-        DeltaRMax=options.sf_deltaRMax,
+        DeltaPhiMax=options.sf_deltaPhiMax1,
+        CollisionRegionMin=options.sf_collisionRegionMin,
+        CollisionRegionMax=options.sf_collisionRegionMax,
+        DeltaRMinTopSP=options.sf_deltaRMinTopSP,
+        DeltaRMaxTopSP=options.sf_deltaRMaxTopSP,
+        DeltaRMinBottomSP=options.sf_deltaRMinBottomSP,
+        DeltaRMaxBottomSP=options.sf_deltaRMaxBottomSP,
     ).run()
