@@ -83,63 +83,65 @@ class Objective:
     def __call__(self, trial):
         params = []
 
-        deltaPhiMax = trial.suggest_float("deltaPhiMax1", 0.030, 0.050)
-        params.append(deltaPhiMax)
-        cotThetaMax = trial.suggest_float("cotThetaMax", 20.0, 30.0)
-        params.append(cotThetaMax)
-        collisionRegionMin = trial.suggest_float("collisionRegionMin", -280., -220.)
-        params.append(collisionRegionMin)
-        collisionRegionMax = trial.suggest_float("collisionRegionMax", 220., 280.)
-        params.append(collisionRegionMax)
-        deltaRMinTopSP = trial.suggest_float("deltaRMinTopSP", 20, 28.)
+        #deltaPhiMax = trial.suggest_float("deltaPhiMax1", 0.025, 0.060)
+        #params.append(deltaPhiMax)
+        #cotThetaMax = trial.suggest_float("cotThetaMax", 20.0, 30.0)
+        #params.append(cotThetaMax)
+        #collisionRegionMin = trial.suggest_float("collisionRegionMin", -280., -220.)
+        #params.append(collisionRegionMin)
+        #collisionRegionMax = trial.suggest_float("collisionRegionMax", 220., 280.)
+        #params.append(collisionRegionMax)
+        deltaRMinTopSP = trial.suggest_float("deltaRMinTopSP", 10., 15.) #3, 28.)
         params.append(deltaRMinTopSP)
-        deltaRMaxTopSP = trial.suggest_float("deltaRMaxTopSP", 100., 200.)
+        deltaRMaxTopSP = trial.suggest_float("deltaRMaxTopSP", 100., 110.) #100., 300.)
         params.append(deltaRMaxTopSP)
-        deltaRMinBottomSP = trial.suggest_float("deltaRMinBottomSP", 20, 30.)
+        deltaRMinBottomSP = trial.suggest_float("deltaRMinBottomSP", 17., 23.) #3, 30.)
         params.append(deltaRMinBottomSP)
-        deltaRMaxBottomSP = trial.suggest_float("deltaRMaxBottomSP", 70., 120.)
+        deltaRMaxBottomSP = trial.suggest_float("deltaRMaxBottomSP", 120., 130.) #70., 180.)
         params.append(deltaRMaxBottomSP)
         keys = [
-            "deltaPhiMax1",
-            "cotThetaMax",
-            "collisionRegionMin",
-            "collisionRegionMax",
+            #"deltaPhiMax1",
+            #"cotThetaMax",
+            #"collisionRegionMin",
+            #"collisionRegionMax",
             "deltaRMinTopSP",
             "deltaRMaxTopSP",
             "deltaRMinBottomSP",
             "deltaRMaxBottomSP",
         ]
 
-        outputDir = Path(srcDir / "Output_CKF")
-        outputfile = srcDir / "Output_CKF/performance_ckf.root"
+        outputDir = Path(srcDir / "Output_seeding")
+        outputfile = srcDir / "Output_seeding/performance_seeding.root"
         outputDir.mkdir(exist_ok=True)
         run_ckf(params, keys, outputDir)
         rootFile = uproot.open(outputfile)
-        self.res["eff"].append(rootFile["eff_particles"].member("fElements")[0])
-        self.res["fakerate"].append(rootFile["fakerate_tracks"].member("fElements")[0])
+        self.res["eff"].append(rootFile["eff_seeds"].member("fElements")[0])
+        self.res["fakerate"].append(rootFile["fakerate_seeds"].member("fElements")[0])
         self.res["duplicaterate"].append(
-            rootFile["duplicaterate_tracks"].member("fElements")[0]
+            rootFile["duplicaterate_seeds"].member("fElements")[0]
         )
 
-        timingfile = srcDir / "Output_CKF/timing.tsv"
+        timingfile = srcDir / "Output_seeding/timing.tsv"
         timing = pd.read_csv(timingfile, sep="\t")
-        time_ckf = float(
-            timing[timing["identifier"].str.match("Algorithm:TrackFindingAlgorithm")][
-                "time_perevent_s"
-            ]
-        )
+#        time_ckf = float(
+#            timing[timing["identifier"].str.match("Algorithm:TrackFindingAlgorithm")][
+#                "time_perevent_s"
+#            ]
+#        )
         time_seeding = float(
             timing[timing["identifier"].str.match("Algorithm:SeedingAlgorithm")][
                 "time_perevent_s"
             ]
         )
-        self.res["runtime"].append(time_ckf + time_seeding)
+        #self.res["runtime"].append(time_ckf + time_seeding)
+        
+        self.res["runtime"].append(time_seeding)
         
         efficiency = self.res["eff"][-1]
         penalty = (
             self.res["fakerate"][-1]
             + self.res["duplicaterate"][-1] / self.k_dup
-            + 2 * self.res["runtime"][-1] / self.k_time
+            + self.res["runtime"][-1] / self.k_time
         )
 
         return efficiency - penalty
@@ -155,20 +157,20 @@ def main():
 
 
     start_values = {
-        "deltaPhiMax1": 0.025,
-        "cotThetaMax": 27.2899,
-        "collisionRegionMin": -200,
-        "collisionRegionMax": 200,
-				"deltaRMinTopSP": 6,
-        "deltaRMaxTopSP": 280,
-        "deltaRMinBottomSP": 6,
-        "deltaRMaxBottomSP": 150
+        #"deltaPhiMax1": 0.03,
+        #"cotThetaMax": 27.2899,
+        #"collisionRegionMin": -200,
+        #"collisionRegionMax": 200,
+				"deltaRMinTopSP": 13, #6,
+        "deltaRMaxTopSP": 101, #280,
+        "deltaRMinBottomSP": 20, #6,
+        "deltaRMaxBottomSP": 126, #150
     }
 
 
     # Optuna logger
     optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
-    study_name = "test_study"
+    study_name = "test_study_default"
     storage_name = "sqlite:///{}.db".format(study_name)
 
     # creating a new optuna study
@@ -179,9 +181,9 @@ def main():
         load_if_exists=True,
     )
 
-    #study.enqueue_trial(start_values)
+    study.enqueue_trial(start_values)
     # Start Optimization
-    study.optimize(objective, n_trials=30)
+    study.optimize(objective, n_trials=10)
 
     # Printout the best trial values
     print("Best Trial until now", flush=True)

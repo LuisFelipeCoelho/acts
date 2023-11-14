@@ -299,7 +299,14 @@ def buildITkGeometry(
 
 
 def itkSeedingAlgConfig(
-    inputSpacePointsType: InputSpacePointsType, highOccupancyConfig=False
+    inputSpacePointsType: InputSpacePointsType, highOccupancyConfig=False, deltaPhiMax=0.025,
+        cotThetaMax=27.2899,
+        collisionRegionMin= -200,
+        collisionRegionMax= 200,
+        deltaRMinTopSP= 6,
+				deltaRMaxTopSP= 280,
+        deltaRMinBottomSP= 6,
+			  deltaRMaxBottomSP= 150
 ):
     assert isinstance(inputSpacePointsType, InputSpacePointsType)
 
@@ -308,10 +315,10 @@ def itkSeedingAlgConfig(
     zMin = -3000 * u.mm
     zOutermostLayers = (-2700 * u.mm, 2700 * u.mm)
     beamPos = (0 * u.mm, 0 * u.mm)
-    collisionRegionMin = -200 * u.mm
-    collisionRegionMax = 200 * u.mm
+    #collisionRegionMin = -200 * u.mm
+    #collisionRegionMax = 200 * u.mm
     maxSeedsPerSpM = 4
-    cotThetaMax = 27.2899  # (4.0 eta) --> 27.2899 = 1/tan(2*arctan(exp(-4)))
+    #cotThetaMax = 27.2899  # (4.0 eta) --> 27.2899 = 1/tan(2*arctan(exp(-4)))
     sigmaScattering = 2
     radLengthPerSeed = 0.0975
     minPt = 900 * u.MeV
@@ -376,7 +383,7 @@ def itkSeedingAlgConfig(
     numPhiNeighbors = 1
     maxPhiBins = 200
     # only used in orthogonal seeding
-    deltaPhiMax = 0.025
+    #deltaPhiMax = 0.025
 
     # variables that change for pixel and strip SPs:
     if inputSpacePointsType is InputSpacePointsType.PixelSpacePoints:
@@ -384,10 +391,10 @@ def itkSeedingAlgConfig(
         allowSeparateRMax = False
         rMaxGridConfig = 320 * u.mm
         rMaxSeedFinderConfig = rMaxGridConfig
-        deltaRMinSP = 6 * u.mm
-        deltaRMax = 280 * u.mm
-        deltaRMaxTopSP = 280 * u.mm
-        deltaRMaxBottomSP = 150 * u.mm
+        #deltaRMinSP = 6 * u.mm
+        #deltaRMax = 280 * u.mm
+        #deltaRMaxTopSP = 280 * u.mm
+        #deltaRMaxBottomSP = 150 * u.mm
         deltaZMax = float("inf") * u.mm
         interactionPointCut = True
         impactMax = 2 * u.mm
@@ -444,7 +451,7 @@ def itkSeedingAlgConfig(
 
         if highOccupancyConfig == True:
             rMaxGridConfig = 250 * u.mm
-            deltaRMax = 200 * u.mm
+            #deltaRMax = 200 * u.mm
             zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
             # variables that are only used for highOccupancyConfig configuration:
             skipZMiddleBinSearch = 2
@@ -454,10 +461,10 @@ def itkSeedingAlgConfig(
         allowSeparateRMax = True
         rMaxGridConfig = 1000.0 * u.mm
         rMaxSeedFinderConfig = 1200.0 * u.mm
-        deltaRMinSP = 20 * u.mm
-        deltaRMax = 600 * u.mm
-        deltaRMaxTopSP = 300 * u.mm
-        deltaRMaxBottomSP = deltaRMaxTopSP
+        #deltaRMinSP = 20 * u.mm
+        #deltaRMax = 600 * u.mm
+        #deltaRMaxTopSP = 300 * u.mm
+        #deltaRMaxBottomSP = deltaRMaxTopSP
         deltaZMax = 900 * u.mm
         interactionPointCut = False
         impactMax = 20 * u.mm
@@ -542,9 +549,9 @@ def itkSeedingAlgConfig(
         seedConfirmation=seedConfirmation,
         centralSeedConfirmationRange=centralSeedConfirmationRange,
         forwardSeedConfirmationRange=forwardSeedConfirmationRange,
-        deltaR=(deltaRMin, deltaRMax),
-        deltaRBottomSP=(deltaRMinSP, deltaRMaxBottomSP),
-        deltaRTopSP=(deltaRMinSP, deltaRMaxTopSP),
+        deltaR=(deltaRMin, deltaRMaxTopSP),
+        deltaRBottomSP=(deltaRMinBottomSP, deltaRMaxBottomSP),
+        deltaRTopSP=(deltaRMinTopSP, deltaRMaxTopSP),
         deltaRMiddleSPRange=(deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange),
         collisionRegion=(collisionRegionMin, collisionRegionMax),
         r=(None, rMaxSeedFinderConfig),
@@ -568,7 +575,7 @@ def itkSeedingAlgConfig(
     )
     spacePointGridConfigArg = SpacePointGridConfigArg(
         rMax=rMaxGridConfig,
-        deltaRMax=deltaRMax,
+        deltaRMax=deltaRMaxTopSP,
         zBinEdges=zBinEdges,
         phiBinDeflectionCoverage=phiBinDeflectionCoverage,
         phi=(phiMin, phiMax),

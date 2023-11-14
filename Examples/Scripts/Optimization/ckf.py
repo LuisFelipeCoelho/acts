@@ -35,6 +35,8 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
+ttbar_pu200 = True
+
 def getArgumentParser():
     """Get arguments from command line"""
     parser = argparse.ArgumentParser(description="Command line arguments for CKF")
@@ -209,14 +211,27 @@ def runCKFTracks(
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
-        addParticleGun(
+        if not ttbar_pu200:
+          addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
             ParticleConfig(10, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
             multiplicity=2,
             rnd=rnd,
-        )
+          )
+        else:
+          addPythia8(
+            s,
+            hardProcess=["Top:qqbar2ttbar=on"],
+            npileup=200,
+            vtxGen=acts.examples.GaussianVertexGenerator(
+              stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+              mean=acts.Vector4(0, 0, 0, 0),
+            ),
+            rnd=rnd,
+            outputDirRoot=outputDir,
+          )
     else:
         acts.logging.getLogger("CKFExample").info(
             "Reading particles from %s", inputParticlePath.resolve()
@@ -262,10 +277,10 @@ def runCKFTracks(
         *acts.examples.itk.itkSeedingAlgConfig(
           acts.examples.itk.InputSpacePointsType.PixelSpacePoints,
           highOccupancyConfig=False,
-          deltaPhiMax=DeltaPhiMax,
-          cotThetaMax=CotThetaMax,
-          collisionRegionMin=CollisionRegionMin,
-          collisionRegionMax=CollisionRegionMax,
+          #deltaPhiMax=DeltaPhiMax,
+          #cotThetaMax=CotThetaMax,
+          #collisionRegionMin=CollisionRegionMin,
+          #collisionRegionMax=CollisionRegionMax,
           deltaRMinTopSP=DeltaRMinTopSP,
           deltaRMaxTopSP=DeltaRMaxTopSP,
           deltaRMinBottomSP=DeltaRMinBottomSP,
@@ -276,19 +291,19 @@ def runCKFTracks(
         if truthSmearedSeeded
         else SeedingAlgorithm.TruthEstimated
         if truthEstimatedSeeded
-        else SeedingAlgorithm.Orthogonal,
+        else SeedingAlgorithm.Default,
         geoSelectionConfigFile=geometrySelection,
         outputDirRoot=outputDir,
         rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
     )
 
-    addCKFTracks(
-        s,
-        trackingGeometry,
-        field,
-        outputDirRoot=outputDir,
-        outputDirCsv=outputDir / "csv" if outputCsv else None,
-    )
+#    addCKFTracks(
+#        s,
+#        trackingGeometry,
+#        field,
+#        outputDirRoot=outputDir,
+#        outputDirCsv=outputDir / "csv" if outputCsv else None,
+#    )
 
     return s
 
