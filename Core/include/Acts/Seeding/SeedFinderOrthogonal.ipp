@@ -84,6 +84,12 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
    */
   res[DimPhi].shrinkMin(pL - m_config.deltaPhiMax);
   res[DimPhi].shrinkMax(pL + m_config.deltaPhiMax);
+			
+	/*
+	 * Cut: Ensure that z-distance between SPs is within max and min values.
+	 */
+	res[DimZ].shrinkMin(zL - m_config.deltaZMax);
+	res[DimZ].shrinkMax(zL + m_config.deltaZMax);
 
   return res;
 }
@@ -142,7 +148,13 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
    */
   res[DimPhi].shrinkMin(pM - m_config.deltaPhiMax);
   res[DimPhi].shrinkMax(pM + m_config.deltaPhiMax);
-
+			
+	/*
+	 * Cut: Ensure that z-distance between SPs is within max and min values.
+	 */
+	res[DimZ].shrinkMin(high.z() - m_config.deltaZMax);
+	res[DimZ].shrinkMax(high.z() + m_config.deltaZMax);
+			
   return res;
 }
 
@@ -217,12 +229,6 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * which is to say the absolute value must be smaller than the max cot(θ).
    */
   if (std::fabs(cotTheta) > m_config.cotThetaMax) {
-    return false;
-  }
-  /*
-   * Cut: Ensure that z-distance between SPs is within max and min values.
-   */
-  if (std::abs(deltaZ) > m_config.deltaZMax) {
     return false;
   }
 
@@ -453,7 +459,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
 
     // continue if number of top SPs is smaller than minimum required for filter
-    if (top.size() < minCompatibleTopSPs) {
+    if (top_valid.size() < minCompatibleTopSPs) {
       continue;
     }
 

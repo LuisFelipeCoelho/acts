@@ -83,24 +83,26 @@ class Objective:
     def __call__(self, trial):
         params = []
 
-        #deltaPhiMax = trial.suggest_float("deltaPhiMax1", 0.025, 0.060)
-        #params.append(deltaPhiMax)
+        deltaPhiMax = trial.suggest_float("deltaPhiMax1", 0.04, 0.05)
+        params.append(deltaPhiMax)
         #cotThetaMax = trial.suggest_float("cotThetaMax", 20.0, 30.0)
         #params.append(cotThetaMax)
         #collisionRegionMin = trial.suggest_float("collisionRegionMin", -280., -220.)
         #params.append(collisionRegionMin)
         #collisionRegionMax = trial.suggest_float("collisionRegionMax", 220., 280.)
         #params.append(collisionRegionMax)
-        deltaRMinTopSP = trial.suggest_float("deltaRMinTopSP", 10., 15.) #3, 28.)
+        deltaRMinTopSP = trial.suggest_float("deltaRMinTopSP", 13., 15.7) #3, 28.)
         params.append(deltaRMinTopSP)
-        deltaRMaxTopSP = trial.suggest_float("deltaRMaxTopSP", 100., 110.) #100., 300.)
+        deltaRMaxTopSP = trial.suggest_float("deltaRMaxTopSP", 104., 106.) #100., 300.)
         params.append(deltaRMaxTopSP)
-        deltaRMinBottomSP = trial.suggest_float("deltaRMinBottomSP", 17., 23.) #3, 30.)
+        deltaRMinBottomSP = trial.suggest_float("deltaRMinBottomSP", 13., 15.2) #3, 30.)
         params.append(deltaRMinBottomSP)
-        deltaRMaxBottomSP = trial.suggest_float("deltaRMaxBottomSP", 120., 130.) #70., 180.)
+        deltaRMaxBottomSP = trial.suggest_float("deltaRMaxBottomSP", 94., 110.) #70., 180.)
         params.append(deltaRMaxBottomSP)
+        deltaZMax = trial.suggest_float("deltaZMax", 510., 580.)
+        params.append(deltaZMax)
         keys = [
-            #"deltaPhiMax1",
+            "deltaPhiMax1",
             #"cotThetaMax",
             #"collisionRegionMin",
             #"collisionRegionMax",
@@ -108,6 +110,7 @@ class Objective:
             "deltaRMaxTopSP",
             "deltaRMinBottomSP",
             "deltaRMaxBottomSP",
+            "deltaZMax",
         ]
 
         outputDir = Path(srcDir / "Output_seeding")
@@ -157,20 +160,21 @@ def main():
 
 
     start_values = {
-        #"deltaPhiMax1": 0.03,
+        "deltaPhiMax1": 0.025654820492628683,
         #"cotThetaMax": 27.2899,
         #"collisionRegionMin": -200,
         #"collisionRegionMax": 200,
-				"deltaRMinTopSP": 13, #6,
-        "deltaRMaxTopSP": 101, #280,
-        "deltaRMinBottomSP": 20, #6,
-        "deltaRMaxBottomSP": 126, #150
+        "deltaRMinTopSP": 20.77219902622318, #6,
+        "deltaRMaxTopSP": 103.53101731157517, #280,
+        "deltaRMinBottomSP": 23.098873484561146, #6,
+        "deltaRMaxBottomSP": 70.04377419904499, #150
+        "deltaZMax": 600,
     }
 
 
     # Optuna logger
     optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
-    study_name = "test_study_default"
+    study_name = "test_study_orthogonal_deltaZ"
     storage_name = "sqlite:///{}.db".format(study_name)
 
     # creating a new optuna study
@@ -181,7 +185,7 @@ def main():
         load_if_exists=True,
     )
 
-    study.enqueue_trial(start_values)
+    #study.enqueue_trial(start_values)
     # Start Optimization
     study.optimize(objective, n_trials=10)
 
@@ -190,7 +194,7 @@ def main():
     for key, value in study.best_trial.params.items():
         print(f"    {key}: {value}", flush=True)
 
-    outputDir = Path("OptunaResults")
+    outputDir = Path("OptunaResultsOrtDeltaZ")
     outputDir.mkdir(exist_ok=True)
 
     with open(outputDir / "results.json", "w") as fp:

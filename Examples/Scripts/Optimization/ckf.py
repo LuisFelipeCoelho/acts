@@ -148,6 +148,13 @@ def getArgumentParser():
         type=float,
         default=300,
     )
+    parser.add_argument(
+        "--sf_deltaZMax",
+        dest="sf_deltaZMax",
+        help="",
+        type=float,
+        default=300,
+    )
 
     return parser
 
@@ -178,6 +185,7 @@ def runCKFTracks(
     DeltaRMaxTopSP=60.0,
     DeltaRMinBottomSP=1.0,
     DeltaRMaxBottomSP=60.0,
+    DeltaZMax=1500,
 ):
     from acts.examples.simulation import (
         addParticleGun,
@@ -284,14 +292,15 @@ def runCKFTracks(
           deltaRMinTopSP=DeltaRMinTopSP,
           deltaRMaxTopSP=DeltaRMaxTopSP,
           deltaRMinBottomSP=DeltaRMinBottomSP,
-          deltaRMaxBottomSP=DeltaRMaxBottomSP
+          deltaRMaxBottomSP=DeltaRMaxBottomSP,
+          deltaZMax=DeltaZMax,
         ),
         TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared
         if truthSmearedSeeded
         else SeedingAlgorithm.TruthEstimated
         if truthEstimatedSeeded
-        else SeedingAlgorithm.Default,
+        else SeedingAlgorithm.Orthogonal,
         geoSelectionConfigFile=geometrySelection,
         outputDirRoot=outputDir,
         rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
@@ -352,4 +361,5 @@ if "__main__" == __name__:
         DeltaRMaxTopSP=options.sf_deltaRMaxTopSP,
         DeltaRMinBottomSP=options.sf_deltaRMinBottomSP,
         DeltaRMaxBottomSP=options.sf_deltaRMaxBottomSP,
+        DeltaZMax=options.sf_deltaZMax,
     ).run()

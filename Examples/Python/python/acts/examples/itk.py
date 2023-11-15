@@ -301,12 +301,13 @@ def buildITkGeometry(
 def itkSeedingAlgConfig(
     inputSpacePointsType: InputSpacePointsType, highOccupancyConfig=False, deltaPhiMax=0.025,
         cotThetaMax=27.2899,
-        collisionRegionMin= -200,
-        collisionRegionMax= 200,
-        deltaRMinTopSP= 6,
-				deltaRMaxTopSP= 280,
-        deltaRMinBottomSP= 6,
-			  deltaRMaxBottomSP= 150
+        collisionRegionMin= -200 * u.mm,
+        collisionRegionMax= 200 * u.mm,
+        deltaRMinTopSP= 6 * u.mm,
+				deltaRMaxTopSP= 280 * u.mm,
+        deltaRMinBottomSP= 6 * u.mm,
+			  deltaRMaxBottomSP= 150 * u.mm,
+			  deltaZMax = 600 * u.mm
 ):
     assert isinstance(inputSpacePointsType, InputSpacePointsType)
 
@@ -395,7 +396,7 @@ def itkSeedingAlgConfig(
         #deltaRMax = 280 * u.mm
         #deltaRMaxTopSP = 280 * u.mm
         #deltaRMaxBottomSP = 150 * u.mm
-        deltaZMax = float("inf") * u.mm
+        #deltaZMax = float("inf") * u.mm
         interactionPointCut = True
         impactMax = 2 * u.mm
         zBinsCustomLooping = [
@@ -465,7 +466,7 @@ def itkSeedingAlgConfig(
         #deltaRMax = 600 * u.mm
         #deltaRMaxTopSP = 300 * u.mm
         #deltaRMaxBottomSP = deltaRMaxTopSP
-        deltaZMax = 900 * u.mm
+        #deltaZMax = 900 * u.mm
         interactionPointCut = False
         impactMax = 20 * u.mm
         zBinsCustomLooping = [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
