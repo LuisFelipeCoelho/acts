@@ -249,6 +249,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
+  auto start = std::chrono::high_resolution_clock::now();
+
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
       m_cfg.gridConfig, m_cfg.gridOptions);
 
@@ -274,6 +276,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   state.spacePointData.resize(
       spacePointPtrs.size(),
       m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo);
+
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
     for (std::size_t grid_glob_bin(0);
@@ -303,11 +308,17 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
+  auto start2 = std::chrono::high_resolution_clock::now();
+
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(
         m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
         std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
   }
+
+  auto stop2 = std::chrono::high_resolution_clock::now();
+  auto duration2 = std::chrono::duration_cast<std::chrono::nanoseconds>(stop2 - start2);
+  std::cout << "|Seeding Time (ms)| " << duration.count()*0.000001 << " " << duration2.count()*0.000001 << " " << seeds.size() << " PPP " << spacePointPtrs.size() << std::endl;
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
