@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -25,9 +23,6 @@
 
 #include "SurfaceStub.hpp"
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
 namespace Acts {
 /// Mock track object with minimal methods implemented for compilation
 class MockTrack {
@@ -44,8 +39,9 @@ class MockTrack {
   Vector3 m_mom;
   Vector3 m_pos;
 };
+}  // namespace Acts
 
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -180,6 +176,4 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

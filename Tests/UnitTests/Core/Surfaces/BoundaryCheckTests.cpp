@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -20,8 +18,8 @@
 
 #include "BoundaryCheckTestsRefs.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 // See: https://en.wikipedia.org/wiki/Bounding_volume
 //
@@ -50,7 +48,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance) {
   BoundaryCheck bcheck(true);
 
-  for (size_t i = 0; i < rectTestPoints.size(); i++) {
+  for (std::size_t i = 0; i < rectTestPoints.size(); i++) {
     const Vector2& testPoint = rectTestPoints.at(i);
     double refDistance = rectDistances.at(i);
     Vector2 ll(rectDimensions.xmin, rectDimensions.ymin);
@@ -59,7 +57,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance) {
     CHECK_CLOSE_REL(refDistance, distance, 1e-6);
   }
 
-  for (size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
+  for (std::size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
     const Vector2& testPoint = rectShiftedTestPoints.at(i);
     double refDistance = rectShiftedDistances.at(i);
     Vector2 ll(rectShiftedDimensions.xmin, rectShiftedDimensions.ymin);
@@ -88,14 +86,14 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckPolyDistance) {
 
   BoundaryCheck bcheck(true);
 
-  for (size_t i = 0; i < rectTestPoints.size(); i++) {
+  for (std::size_t i = 0; i < rectTestPoints.size(); i++) {
     const Vector2& testPoint = rectTestPoints.at(i);
     double refDistance = rectDistances.at(i);
     double distance = bcheck.distance(testPoint, rectVertices);
     CHECK_CLOSE_REL(refDistance, distance, 1e-6);
   }
 
-  for (size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
+  for (std::size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
     const Vector2& testPoint = rectShiftedTestPoints.at(i);
     double refDistance = rectShiftedDistances.at(i);
     double distance = bcheck.distance(testPoint, rectShiftedVertices);
@@ -126,5 +124,5 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleCovariance) {
   BOOST_CHECK(!check.isInside({0, 5}, vertices));
 }
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

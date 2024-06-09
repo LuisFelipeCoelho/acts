@@ -12,8 +12,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 
 /// Combine multiple selectors with a configurable combine function.
 template <bool Initial, typename Combine, typename... Selectors>
@@ -38,7 +37,7 @@ class CombineSelectors {
   }
 
   /// Access a specific selector by index.
-  template <size_t I>
+  template <std::size_t I>
   std::tuple_element_t<I, std::tuple<Selectors...>> &get() {
     return std::get<I>(m_selectors);
   }
@@ -51,7 +50,7 @@ class CombineSelectors {
  private:
   std::tuple<Selectors...> m_selectors;
 
-  template <size_t... Is, typename... Ts>
+  template <std::size_t... Is, typename... Ts>
   bool impl(std::index_sequence<Is...> /*indices*/, const Ts &...things) const {
     Combine combine;
     // compute status for all selectors
@@ -65,5 +64,4 @@ class CombineSelectors {
   }
 };
 
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail

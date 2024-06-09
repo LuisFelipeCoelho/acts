@@ -11,8 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -87,7 +86,7 @@ class MultivariateNormalDistribution {
 // Sample data from a multi-component multivariate distribution
 template <int D>
 auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
-                            size_t n_samples, std::mt19937 &gen) {
+                            std::size_t n_samples, std::mt19937 &gen) {
   using MultiNormal = MultivariateNormalDistribution<double, D>;
 
   std::vector<MultiNormal> dists;
@@ -188,7 +187,7 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   FreeVector mean = FreeVector::Zero();
 
   for (const auto &cmp : cmps) {
-    mean += cmp.weight * detail::transformBoundToFreeParameters(
+    mean += cmp.weight * transformBoundToFreeParameters(
                              surface, GeometryContext{}, cmp.boundPars);
   }
 
@@ -205,8 +204,7 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
                           .closest();
   mean.head<3>() = intersection.position();
 
-  return *detail::transformFreeToBoundParameters(mean, surface,
-                                                 GeometryContext{});
+  return *transformFreeToBoundParameters(mean, surface, GeometryContext{});
 }
 
 // Typedef to describe local positions of 4 components

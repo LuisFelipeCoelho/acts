@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/context.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/TrackStatePropMask.hpp"
@@ -60,8 +58,8 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
   // test orthogonality
   std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
                            PM::Jacobian, PM::Calibrated};
-  for (size_t i = 0; i < values.size(); i++) {
-    for (size_t j = 0; j < values.size(); j++) {
+  for (std::size_t i = 0; i < values.size(); i++) {
+    for (std::size_t j = 0; j < values.size(); j++) {
       PM a = values[i];
       PM b = values[j];
 

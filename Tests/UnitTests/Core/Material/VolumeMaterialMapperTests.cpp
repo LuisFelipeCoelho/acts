@@ -78,7 +78,9 @@ struct MaterialCollector {
   }
 };
 
-namespace Test {
+}  // namespace Acts
+
+namespace Acts::Test {
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
@@ -213,8 +215,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set up a random engine for sampling material
   std::random_device rd;
   std::mt19937 gen(42);
-  std::uniform_real_distribution<> disX(0., 3_m);
-  std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
+  std::uniform_real_distribution<double> disX(0., 3_m);
+  std::uniform_real_distribution<double> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
   RecordedMaterialVolumePoint matRecord;
@@ -289,5 +291,4 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -58,8 +58,9 @@ unsigned int NuclearInteraction::sampleDiscreteValues(
   const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
-  size_t iBin = std::min((size_t)std::distance(distribution.second.begin(), it),
-                         distribution.second.size() - 1);
+  std::size_t iBin = std::min(
+      static_cast<std::size_t>(std::distance(distribution.second.begin(), it)),
+      distribution.second.size() - 1);
 
   // Return the corresponding bin
   return static_cast<unsigned int>(distribution.first[iBin]);
@@ -77,14 +78,15 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
 
   // Find the bin
   const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
-  // Fast exit for non-normalised CDFs like interaction probabiltiy
+  // Fast exit for non-normalised CDFs like interaction probability
   if (int_rnd > distribution.second.back()) {
     return std::numeric_limits<Scalar>::infinity();
   }
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
-  size_t iBin = std::min((size_t)std::distance(distribution.second.begin(), it),
-                         distribution.second.size() - 1);
+  std::size_t iBin = std::min(
+      static_cast<std::size_t>(std::distance(distribution.second.begin(), it)),
+      distribution.second.size() - 1);
 
   if (interpolate) {
     // Interpolate between neighbouring bins and return a diced intermediate

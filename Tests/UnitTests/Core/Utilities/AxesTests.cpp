@@ -15,11 +15,9 @@
 #include <cstddef>
 #include <vector>
 
-namespace Acts {
+using namespace Acts::detail;
 
-using namespace detail;
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(equidistant_axis) {
   EquidistantAxis a(0.0, 10.0, 10u);
@@ -201,7 +199,7 @@ BOOST_AUTO_TEST_CASE(closed_axis) {
 }
 
 BOOST_AUTO_TEST_CASE(neighborhood) {
-  using bins_t = std::vector<size_t>;
+  using bins_t = std::vector<std::size_t>;
   Axis<AxisType::Equidistant, AxisBoundaryType::Open> a1(0.0, 1.0, 10u);
 
   BOOST_CHECK(a1.neighborHoodIndices(0, 1).collect() == bins_t({0, 1}));
@@ -374,6 +372,4 @@ BOOST_AUTO_TEST_CASE(wrapBin) {
   BOOST_CHECK_EQUAL(a6.wrapBin(7), 2u);
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

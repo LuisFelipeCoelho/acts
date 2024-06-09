@@ -8,6 +8,8 @@
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 
+#include <algorithm>
+
 namespace Acts {
 
 ExaTrkXPipeline::ExaTrkXPipeline(
@@ -44,7 +46,7 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     timing->graphBuildingTime = t1 - t0;
   }
 
-  hook(nodes, edges);
+  hook(nodes, edges, {});
 
   std::any edge_weights;
   timing->classifierTimes.clear();
@@ -63,7 +65,7 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     edges = std::move(newEdges);
     edge_weights = std::move(newWeights);
 
-    hook(nodes, edges);
+    hook(nodes, edges, edge_weights);
   }
 
   t0 = std::chrono::high_resolution_clock::now();

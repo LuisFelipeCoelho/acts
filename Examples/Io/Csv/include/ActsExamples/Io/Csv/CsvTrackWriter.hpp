@@ -11,17 +11,14 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstddef>
 #include <cstdint>
-#include <fstream>
 #include <string>
 #include <vector>
 
@@ -48,16 +45,14 @@ namespace ActsExamples {
 /// and each line in the file corresponds to one track.
 class CsvTrackWriter : public WriterT<ConstTrackContainer> {
  public:
-  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-
   struct Config {
     std::string inputTracks;                 ///< Input track collection
     std::string outputDir;                   ///< where to place output files
     std::string fileName = "CKFtracks.csv";  ///< name of the output files
     std::string
         inputMeasurementParticlesMap;  ///< Input hit-particles map collection
-    size_t outputPrecision = 6;        ///< floating point precision
-    size_t nMeasurementsMin = 7;       ///< Min number of measurements
+    std::size_t outputPrecision = 6;   ///< floating point precision
+    std::size_t nMeasurementsMin = 7;  ///< Min number of measurements
     bool onlyTruthMatched = false;     ///< Only write truth matched tracks
     double truthMatchProbMin = 0.5;  ///< Probability threshold for fake tracks
     double ptMin = 1_GeV;            ///< Min pt of tracks
@@ -88,9 +83,10 @@ class CsvTrackWriter : public WriterT<ConstTrackContainer> {
   /// @brief Struct for brief trajectory summary info
   ///
   struct TrackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
-    size_t trackId = 0;
+    std::size_t trackId = 0;
+    unsigned int seedID = 0;
     ActsFatras::Barcode particleId;
-    size_t nMajorityHits = 0;
+    std::size_t nMajorityHits = 0;
     std::string trackType;
     double truthMatchProb = 0;
     std::optional<TrackParameters> fittedParameters;

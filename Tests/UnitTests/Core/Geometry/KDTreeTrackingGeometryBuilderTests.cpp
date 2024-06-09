@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -34,11 +33,9 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
+using namespace Acts::UnitLiterals;
 
-using namespace UnitLiterals;
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Geometry)
 
@@ -65,7 +62,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   std::vector<ActsScalar> pModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
   // Fill surfaces from cylinder layers
-  for (size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
+  for (std::size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
         detectorStore, pModuleHalfX[ilp], pModuleHalfY[ilp],
         pModuleThickness[ilp], pModuleTiltPhi[ilp], pLayerRadii[ilp], 2_mm,
@@ -89,7 +86,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   std::vector<ActsScalar> dModuleTilt = {0.075, 0.075, 0.075, 0.075};
   std::vector<ActsScalar> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
-  for (size_t ilp = 0; ilp < discZ.size(); ++ilp) {
+  for (std::size_t ilp = 0; ilp < discZ.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
         detectorStore, dModuleHalfXMinY[ilp], dModuleHalfXMaxY[ilp],
         dModuleHalfY[ilp], dModuleThickness[ilp], dModuleTilt[ilp],
@@ -256,5 +253,4 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

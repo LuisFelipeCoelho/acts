@@ -35,8 +35,9 @@ Acts::GreedyAmbiguityResolution::Config transformConfig(
   return result;
 }
 
-size_t sourceLinkHash(const Acts::SourceLink& a) {
-  return static_cast<size_t>(a.get<ActsExamples::IndexSourceLink>().index());
+std::size_t sourceLinkHash(const Acts::SourceLink& a) {
+  return static_cast<std::size_t>(
+      a.get<ActsExamples::IndexSourceLink>().index());
 }
 
 bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
@@ -86,7 +87,7 @@ ActsExamples::GreedyAmbiguityResolutionAlgorithm::execute(
   solvedTracks.ensureDynamicColumns(tracks);
 
   for (auto iTrack : state.selectedTracks) {
-    auto destProxy = solvedTracks.getTrack(solvedTracks.addTrack());
+    auto destProxy = solvedTracks.makeTrack();
     auto srcProxy = tracks.getTrack(state.trackTips.at(iTrack));
     destProxy.copyFrom(srcProxy, false);
     destProxy.tipIndex() = srcProxy.tipIndex();

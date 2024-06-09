@@ -232,7 +232,7 @@ struct Simulation {
         // only need to switch between charged/neutral.
         SingleParticleSimulationResult result =
             SingleParticleSimulationResult::success({});
-        if (initialParticle.charge() != Particle::Scalar(0)) {
+        if (initialParticle.charge() != Particle::Scalar{0}) {
           result = charged.simulate(geoCtx, magCtx, generator, initialParticle);
         } else {
           result = neutral.simulate(geoCtx, magCtx, generator, initialParticle);
@@ -268,7 +268,7 @@ struct Simulation {
  private:
   /// Select if the particle should be simulated at all.
   bool selectParticle(const Particle &particle) const {
-    if (particle.charge() != Particle::Scalar(0)) {
+    if (particle.charge() != Particle::Scalar{0}) {
       return selectCharged(particle);
     } else {
       return selectNeutral(particle);
@@ -310,7 +310,7 @@ struct Simulation {
   ///
   template <typename particles_t>
   static void renumberTailParticleIds(particles_t &particles,
-                                      size_t lastValid) {
+                                      std::size_t lastValid) {
     // iterate over adjacent pairs; potentially modify the second element.
     // assume e.g. a primary particle 2 with generation=subparticle=0 that
     // generates two secondaries during simulation. we have the following

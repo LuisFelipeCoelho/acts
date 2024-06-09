@@ -12,11 +12,9 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class Detector;
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 namespace ActsExamples {
 
@@ -31,7 +29,7 @@ class VolumeAssociationTest final : public IAlgorithm {
     /// Name of the object
     std::string name = "VolumeAssociationTets";
     /// Number of tests
-    size_t ntests = 1000;
+    std::size_t ntests = 1000;
     /// The random number service
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The random number range

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,10 +12,8 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/ParticleOutcome.hpp"
 
-#include <memory>
-#include <mutex>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -48,33 +46,35 @@ struct EventStore {
   std::vector<ActsFatras::Hit> hitBuffer;
 
   /// Some statistics for the step merging
-  size_t numberGeantSteps = 0;
-  size_t maxStepsForHit = 0;
+  std::size_t numberGeantSteps = 0;
+  std::size_t maxStepsForHit = 0;
 
   /// Tracks recorded in material mapping
-  std::unordered_map<size_t, Acts::RecordedMaterialTrack> materialTracks;
+  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack> materialTracks;
 
   /// Particle hit count (for hit indexing)
-  std::unordered_map<SimBarcode, size_t> particleHitCount;
+  std::unordered_map<SimBarcode, std::size_t> particleHitCount;
+  /// Particle status
+  std::unordered_map<SimBarcode, ActsFatras::ParticleOutcome> particleOutcome;
   /// Geant4 Track ID to Barcode mapping
   std::unordered_map<G4int, SimBarcode> trackIdMapping;
   /// Geant4 Track ID subparticle counter (for subparticle indexing)
-  std::unordered_map<G4int, size_t> trackIdSubparticleCount;
+  std::unordered_map<G4int, std::size_t> trackIdSubparticleCount;
 
   /// Data handles to read particles from the whiteboard
   const ReadDataHandle<SimParticleContainer>* inputParticles{nullptr};
 
   /// Count particle ID collisions
-  size_t particleIdCollisionsInitial = 0;
-  size_t particleIdCollisionsFinal = 0;
-  size_t parentIdNotFound = 0;
+  std::size_t particleIdCollisionsInitial = 0;
+  std::size_t particleIdCollisionsFinal = 0;
+  std::size_t parentIdNotFound = 0;
 
   /// Store subparticle count for {primVertex, secVertex, part, gen}
   /// This is done using a pseudo-barcode that contains all fields but not the
   /// subparticle counter. This can be used as key in a map to store the
   /// subparticle information
   using BarcodeWithoutSubparticle = Acts::MultiIndex<uint64_t, 16, 16, 16, 16>;
-  std::unordered_map<BarcodeWithoutSubparticle, size_t> subparticleMap;
+  std::unordered_map<BarcodeWithoutSubparticle, std::size_t> subparticleMap;
 };
 
 }  // namespace ActsExamples

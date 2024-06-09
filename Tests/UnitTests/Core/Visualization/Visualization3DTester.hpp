@@ -15,9 +15,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 /// This is a test function that tests the validity of an obj stream
 /// It tests for special characters that are not allowed to be contained
@@ -107,7 +105,7 @@ inline static std::vector<std::string> testObjString(const std::string& tString,
 /// Ply element struct
 struct PlyElement {
   std::string name = "none";
-  size_t copies = 0;
+  std::size_t copies = 0;
   int properties = 0;  // -1 for list
 };
 
@@ -122,7 +120,7 @@ struct PlyElement {
 ///
 /// @return a vector of failure messages
 inline static std::vector<std::string> testPlyString(const std::string& tString,
-                                                     bool triMesh = false) {
+                                                     bool /*triMesh*/ = false) {
   std::vector<std::string> errorStrings;
   const std::string w = "[ Invalid ply : ";
 
@@ -131,8 +129,8 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
   auto ss = std::stringstream{tString};
   bool inHeader = false;
 
-  size_t lNumber = 0;
-  size_t cElement = 0;
+  std::size_t lNumber = 0;
+  std::size_t cElement = 0;
   std::vector<PlyElement> elements;
   PlyElement currentElement;
 
@@ -202,14 +200,15 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
         boost::split(lineSplit, line, boost::is_any_of(" "));
         if (elements[cElement].properties == -1) {
           int nprops = std::stoi(lineSplit[0]);
-          if (nprops != (int(lineSplit.size()) - 1)) {
+          if (nprops != (static_cast<int>(lineSplit.size()) - 1)) {
             errorStrings.push_back(w + line + std::string(" ] List expected ") +
                                    std::to_string(nprops) +
                                    std::string(" properties, while found ") +
                                    std::to_string(lineSplit.size() - 1) +
                                    std::string("."));
           }
-        } else if (lineSplit.size() != size_t(elements[cElement].properties)) {
+        } else if (lineSplit.size() !=
+                   static_cast<std::size_t>(elements[cElement].properties)) {
           errorStrings.push_back(
               w + line + std::string(" ] Element expected ") +
               std::to_string(elements[cElement].properties) +
@@ -220,11 +219,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
     }
   }
 
-  (void)triMesh;
-
   return errorStrings;
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test
